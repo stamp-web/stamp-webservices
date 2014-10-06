@@ -23,7 +23,6 @@ var albums = extend(true, {}, persistentCollection, function () {
             var existing_links = "SELECT COUNTRY_ID FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=?";
             connection.query(existing_links, [obj.ID], function (err, results) {
                 if (err) {
-                    console.log(err);
                     defer.reject(dataTranslator.getErrorMessage(err));
                 } else {
                     var remove_ids = [];

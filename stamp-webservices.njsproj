@@ -37,6 +37,7 @@
     <Compile Include="app\model\preference.js" />
     <Compile Include="app\model\stamp-collection.js" />
     <Compile Include="app\pom\connection-manager.js" />
+    <Compile Include="app\pom\connection-mysql.js" />
     <Compile Include="app\routes\rest-stampCollections.js" />
     <Compile Include="app\routes\rest-albums.js" />
     <Compile Include="app\routes\rest-countries.js" />

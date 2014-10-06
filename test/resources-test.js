@@ -454,6 +454,157 @@ describe('REST Services tests', function (done) {
     });
     
     describe('Stamp Collection REST API tests', function (done) {
+        
+        it('GET Collection with 200 status', function (done) {
+            superagent.get('http://' + hostname + ':' + server_port + '/rest/stampCollections')
+          .end(function (e, res) {
+                expect(e).to.eql(null);
+                expect(res.status).to.eql(200);
+                expect(res.body.total).to.be.above(0);
+                expect(res.body.stampCollections).to.not.be(undefined);
+                var stampCollections = res.body.stampCollections[0];
+                if (stampCollections) {
+                    expect(stampCollections.name).to.not.be(undefined);
+                    expect(stampCollections.id).to.be.above(0);
+                } else {
+                    expect().fail("No stampCollections data present.");
+                }
+                done()
+            })
+        });
+        
+        it('GET by ID with 200 status', function (done) {
+            superagent.get('http://' + hostname + ':' + server_port + '/rest/stampCollections/1')
+          .end(function (e, res) {
+                expect(e).to.eql(null);
+                expect(res.status).to.eql(200);
+                expect(res.body).to.not.eql(null);
+                expect(res.body.name).to.be.eql("British Commonwealth");
+                expect(res.body.id).to.be.eql(1);
+                done();
+            })
+        });
+        
+        it('GET collection with Name query with 200 status', function (done) {
+            superagent.get('http://' + hostname + ':' + server_port + '/rest/stampCollections?$filter=(name eq \'British Commonwealth\')')
+          .end(function (e, res) {
+                expect(e).to.eql(null);
+                expect(res.status).to.eql(200);
+                expect(res.body.total).to.be.eql(1);
+                expect(res.body.stampCollections).to.not.be(undefined);
+                var collection = res.body.stampCollections[0];
+                expect(collection.name).to.be.eql("British Commonwealth");
+                expect(collection.id).to.be.eql(1);
+                done();
+            })
+        });
+        
+        it('GET by invalid ID with 404 status', function (done) {
+            superagent.get('http://' + hostname + ':' + server_port + '/rest/stampCollections/' + RANDOM_ID)
+          .end(function (e, res) {
+                expect(e).to.eql(null);
+                expect(res.status).to.eql(404);
+                done();
+            })
+        });
+        
+        it('POST valid creation with 201 status', function (done) {
+            superagent.post('http://' + hostname + ':' + server_port + '/rest/stampCollections')
+            .send({ name: 'The World Collection', description: 'Stamps of the world' })
+          .end(function (e, res) {
+                expect(e).to.eql(null);
+                expect(res.status).to.eql(201);
+                var body = res.body;
+                expect(body.id).to.not.eql(null);
+                expect(body.name).to.eql("The World Collection");
+                expect(body.description).to.eql("Stamps of the world");
+                done();
+            })
+        });
+        
+        it('POST duplicate creation with 409 status', function (done) {
+            superagent.post('http://' + hostname + ':' + server_port + '/rest/stampCollections')
+            .send({ name: 'German States' })
+          .end(function (e, res) {
+                expect(e).to.eql(null);
+                expect(res.status).to.eql(201);
+                var body = res.body;
+                delete body.id;
+                superagent.post('http://' + hostname + ':' + server_port + '/rest/stampCollections')
+                .send(body).end(function (e, res) {
+                    expect(e).to.eql(null);
+                    expect(res.status).to.eql(409);
+                    done();
+                });
+                
+            })
+        });
+        
+        it('POST missing name field with 400 status', function (done) {
+            superagent.post('http://' + hostname + ':' + server_port + '/rest/stampCollections')
+            .send({ description: 'some description' })
+          .end(function (e, res) {
+                expect(e).to.eql(null);
+                expect(res.status).to.eql(400);
+                done();
+            })
+        });
+        
+        it('PUT successfully with 200 status', function (done) {
+            var name = 'POST album';
+            superagent.post('http://' + hostname + ':' + server_port + '/rest/stampCollections')
+            .send({ name: name })
+            .end(function (e, res) {
+                expect(e).to.eql(null);
+                expect(res.status).to.eql(201);
+                var id = res.body.id;
+                superagent.put('http://' + hostname + ':' + server_port + '/rest/stampCollections/' + id)
+                .send({ name: 'PUT collection', description: 'Description on update' })
+                  .end(function (e, res) {
+                    expect(e).to.eql(null);
+                    expect(res.status).to.eql(200);
+                    expect(res.body.name).to.eql('PUT collection');
+                    expect(res.body.description).to.eql('Description on update');
+                    done();
+                });
+            });
+        });
+        
+        it('PUT with invalid non-existing ID', function (done) {
+            superagent.put('http://' + hostname + ':' + server_port + '/rest/stampCollections/' + RANDOM_ID)
+            .send({ description: 'some description' })
+          .end(function (e, res) {
+                expect(e).to.eql(null);
+                expect(res.status).to.eql(404);
+                done();
+            })
+        });
+        
+        it('PUT causing a conflict', function (done) {
+            var conflict_name = 'PUT with conflict (orignial)';
+            superagent.post('http://' + hostname + ':' + server_port + '/rest/stampCollections')
+            .send({ name: conflict_name })
+            .end(function (e, res) {
+                expect(e).to.eql(null);
+                expect(res.status).to.eql(201);
+                superagent.post('http://' + hostname + ':' + server_port + '/rest/stampCollections')
+                .send({ name: 'PUT causing conflict' })
+                  .end(function (e, res) {
+                    expect(e).to.eql(null);
+                    expect(res.status).to.eql(201);
+                    var id = res.body.id;
+                    superagent.put('http://' + hostname + ':' + server_port + '/rest/stampCollections/' + id)
+                        .send({ name: conflict_name })
+                        .end(function (e, res) {
+                        expect(e).to.eql(null);
+                        expect(res.status).to.eql(409);
+                        done();
+                    });
+                });
+            });
+        });
+        
+
         it('DELETE successful removes albums and countries', function (done) {
             var count = 0;
             var total = 10;
@@ -474,7 +625,6 @@ describe('REST Services tests', function (done) {
             var theInterval;
             var f = function () {
                 if (count === total) {
-                    console.log("all are finished");
                     clearInterval(theInterval);
                     superagent.del('http://' + hostname + ':' + server_port + '/rest/stampCollections/1')
                         .end(function (e, res) {

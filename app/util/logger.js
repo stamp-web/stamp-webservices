@@ -3,7 +3,7 @@ var fs = require('fs');
 function logger() {
     
     var levels = ['error', 'warn', 'info', 'debug', 'trace', 'all'];
-    var debugLevel = "error";
+    var debugLevel = "warn";
     var target = "console";
     var targetPath;
 

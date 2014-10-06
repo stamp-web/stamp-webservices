@@ -1,4 +1,5 @@
 var express = require("express");
+var connectionMgr = require('./pom/connection-mysql');
 var favicon = require('serve-favicon');
 var bodyParser = require('body-parser');
 var nconf = require('nconf');
@@ -27,6 +28,11 @@ if (!port) {
 
 logger.log(logger.INFO, "HTTPServer listening on port " + port);
 app.listen(port);
+connectionMgr.startup();
+
+process.on('exit', function () {
+    connectionMgr.shutdown();
+});
 
 // See if the server is running as a child process and if so signal completion of startup
 if (process.send) {
