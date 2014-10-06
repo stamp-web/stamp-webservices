@@ -30,7 +30,6 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="app.js" />
     <Compile Include="app\model\album.js" />
     <Compile Include="app\model\country.js" />
     <Compile Include="app\model\field-definition.js" />
@@ -53,8 +52,6 @@
     <Compile Include="app\util\logger.js" />
     <Compile Include="app\util\odata-parser.js" />
     <Compile Include="app\util\string-utilities.js" />
-    <Compile Include="routes\index.js" />
-    <Compile Include="routes\user.js" />
     <Compile Include="test\fielddefinition-test.js" />
     <Compile Include="test\mysql-translator-test.js" />
     <Compile Include="test\odata-parser-test.js" />
@@ -65,8 +62,6 @@
     <Content Include="public\stylesheets\style.styl" />
     <Content Include="README.md" />
     <Content Include="test\dbscript\initial-data.sql" />
-    <Content Include="views\index.jade" />
-    <Content Include="views\layout.jade" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="app\" />
@@ -81,11 +76,9 @@
     <Folder Include="public\images\" />
     <Folder Include="public\javascripts\" />
     <Folder Include="public\stylesheets\" />
-    <Folder Include="routes\" />
     <Folder Include="test\" />
     <Folder Include="test\dbscript\" />
     <Folder Include="test\util\" />
-    <Folder Include="views\" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsTools.targets" />
   <ProjectExtensions>
