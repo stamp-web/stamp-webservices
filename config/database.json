@@ -1,0 +1,18 @@
+{
+    "database": "test",
+    "databases": {
+        "mysql": {
+            "host": "testStampweb.db.4368567.hostedresource.com",
+            "user": "testStampweb",
+            "password": "SerenaLoves2EatHotdogs!",
+            "schema": "testStampweb"
+        },
+        "test": {
+            "host": "localhost",
+            "user": "tester",
+            "password": "tester",
+            "schema":  "unittest"
+        }
+    }
+
+}
