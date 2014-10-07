@@ -2,3 +2,4 @@ node_modules
 obj
 lib
 /.ntvs_analysis.dat
+coverage

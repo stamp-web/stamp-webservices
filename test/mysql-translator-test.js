@@ -39,7 +39,7 @@ describe('MySQL Translator tests', function (done) {
                 value: "some image path"
             };
             expect(translator.generateInsertStatement(preference, p)).to.be.eql(
-                "INSERT INTO PREFERENCES (ID,NAME,CATEGORY,VALUE) VALUES(675,'imagePath','stamps','some image path')"
+                "INSERT INTO PREFERENCES (ID,NAME,CATEGORY,VALUE,CREATESTAMP) VALUES(675,'imagePath','stamps','some image path',CURDATE())"
             );
         });
 

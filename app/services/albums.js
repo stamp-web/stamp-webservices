@@ -10,7 +10,7 @@ var albums = extend(true, {}, persistentCollection, function () {
 
     function mergeCountries(connection, obj) {
         var defer = q.defer();
-        if (!obj.COUNTRIES || obj.COUNTRIES.length === 0) {
+        if (obj.COUNTRIES && obj.COUNTRIES.length === 0) {
             var clear_link = "DELETE FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=?";
             connection.query(clear_link, [obj.ID], function (err, results) {
                 if (err) {
@@ -36,6 +36,9 @@ var albums = extend(true, {}, persistentCollection, function () {
                             current.splice(indx, 1);
                         }  
                     }
+                    var totalUpdates = remove_ids.length + current.length;
+                    var updates = 0;
+
                     if (remove_ids.length > 0) {
                         var qs = "DELETE FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=? AND COUNTRY_ID IN (";
                         for (var i = 0; i < remove_ids.length; i++) {
@@ -46,14 +49,29 @@ var albums = extend(true, {}, persistentCollection, function () {
                         }
                         qs += ")";
                         connection.query(qs, [obj.ID], function (err, results) {
-                            console.log(results);
+                            if (err) {
+                                defer.reject(dataTranslator.getErrorMessage(err));   
+                            }
+                            updates++;
+                            if (totalUpdates === updates) {
+                                defer.resolve(obj);   
+                            }
                         });
                     }
-//                    console.log("ids to add: ");
-//                    console.log(current);
-//                    console.log("ids to remove:");
- //                   console.log(remove_ids);
-                    defer.resolve(obj);
+                    if (current.length > 0) {
+                        var qs = "INSERT INTO ALBUMS_COUNTRIES (ALBUM_ID,COUNTRY_ID) VALUES(?,?)";
+                        for (var i = 0; i < current.length; i++) {
+                            connection.query(qs, [obj.ID, current[i]], function (err, results) {
+                                if (err) {
+                                    defer.reject(dataTranslator.getErrorMessage(err));
+                                }
+                                updates++;
+                                if (totalUpdates === updates) {
+                                    defer.resolve(obj);
+                                }
+                            });
+                        }   
+                    }
                 }
             });
         }

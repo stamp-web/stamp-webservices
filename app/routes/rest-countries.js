@@ -24,11 +24,16 @@ function _delete(req, res) {
     restInterfaces.remove(req, res, countries);
 }
 
+function count(req, res) {
+    restInterfaces.count(req, res, countries, country);   
+}
+
 
 exports.configure = function (app, basePath) {
     app.get(basePath + RESOURCE_PATH, list);
     app.post(basePath + RESOURCE_PATH, create);
     app.put(basePath + RESOURCE_PATH + "/:id", update);
+    app.get(basePath + RESOURCE_PATH + "/!count", count);
     app.get(basePath + RESOURCE_PATH + "/:id", _findById);
     app.delete(basePath + RESOURCE_PATH + '/:id', _delete);
 }

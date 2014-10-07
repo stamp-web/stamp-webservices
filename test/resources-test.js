@@ -26,6 +26,78 @@ if (nconf.get("hostname")) {
 
 var RANDOM_ID = (new Date()).getTime() % (2048 * 2048);
 
+var NamedCollectionVerifications = {
+    verifyCollection: function (collectionName, done, fn) {
+        superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName)
+        .end(function (e, res) {
+            expect(e).to.eql(null);
+            expect(res.status).to.eql(200);
+            expect(res.body.total).to.be.above(0);
+            expect(res.body[collectionName]).to.not.be(undefined);
+            var obj = res.body[collectionName][0];
+            if (obj) {
+                expect(obj.name).to.not.be(undefined);
+                expect(obj.id).to.be.above(0);
+                if (fn) {
+                    fn(obj);
+                }
+            } else {
+                expect().fail("No data present.");
+            }
+            done();
+        });
+
+    },
+    verifySingleItem: function (collectionName, props, done, fn) {
+        superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + props.id)
+          .end(function (e, res) {
+            expect(e).to.eql(null);
+            expect(res.status).to.eql(200);
+            expect(res.body).to.not.eql(null);
+            expect(res.body.name).to.be.eql(props.name);
+            expect(res.body.id).to.be.eql(props.id);
+            if (fn) {
+                fn(res.body);
+            }
+            done();
+        })
+    },
+    verifyNotFound: function (collectionName, done) {
+        superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + RANDOM_ID)
+          .end(function (e, res) {
+            expect(e).to.eql(null);
+            expect(res.status).to.eql(404);
+            done();
+        })
+    },
+    verifyPutNotFound: function (collectionName, props, done) {
+        superagent.put('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + RANDOM_ID)
+            .send(props)
+          .end(function (e, res) {
+            expect(e).to.eql(null);
+            expect(res.status).to.eql(404);
+            done();
+        })
+    },
+    verifyPost: function (collectionName, props, done, fn) {
+        superagent.post('http://' + hostname + ':' + server_port + '/rest/' + collectionName)
+            .send(props)
+          .end(function (e, res) {
+            expect(e).to.eql(null);
+            expect(res.status).to.eql(201);
+            var body = res.body;
+            expect(body.id).to.not.eql(null);
+            expect(body.id).to.be.above(1000);
+            expect(body.name).to.eql(props.name);
+            expect(body.description).to.eql(props.description);
+            if (fn) {
+                fn(body);
+            }
+            done();
+        });
+    }
+}
+
 
 describe('REST Services tests', function (done) {
     before(function (done) {
@@ -48,7 +120,9 @@ describe('REST Services tests', function (done) {
             cwd: "..",
             env: {
                 database: "test",
-                port: server_port
+                port: server_port,
+                logger_target: "file",
+                logger_file: __dirname + "/../logs/output.log"
             }
         });
         
@@ -71,39 +145,52 @@ describe('REST Services tests', function (done) {
 
     });
     
+    
     describe('Preference REST API tests', function (done) {
+        it('GET Collection with 200 status', function (done) {
+            NamedCollectionVerifications.verifyCollection('preferences', done, function (obj) {
+                expect(obj.category).to.not.be(undefined);
+                expect(obj.value).to.not.be(undefined);
+            });
+        });
+        it('GET by ID with 200 status', function (done) {
+            NamedCollectionVerifications.verifySingleItem('preferences', {
+                id: 1,
+                name: 'imagePath',
+            }, done, function (obj) {
+                expect(obj.category).to.be.eql('stamps');
+                expect(obj.value).to.be.eql('http://drake-server.dnsdynamic.com');
+            });
+        });
+        it('GET by invalid ID with 404 status', function (done) {
+            NamedCollectionVerifications.verifyNotFound('preferences', done);
+        });
+        
+        it('PUT with invalid non-existing ID', function (done) {
+            NamedCollectionVerifications.verifyPutNotFound('preferences', { value: 'some value' }, done);
+        });
+        
+        it('POST valid creation with 201 status', function (done) {
+            NamedCollectionVerifications.verifyPost('preferences', {
+                name: 'somePref', category: 'stamps', value: 'someValue'
+            }, done, function (obj) {
+                expect(obj.category).to.be.eql('stamps');
+            });
+        });
+       
     });
     
     describe('Country REST API tests', function (done) {
         
         it('GET Collection with 200 status', function (done) {
-            superagent.get('http://' + hostname + ':' + server_port + '/rest/countries')
-          .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(200);
-                expect(res.body.total).to.be.above(0);
-                expect(res.body.countries).to.not.be(undefined);
-                var country = res.body.countries[0];
-                if (country) {
-                    expect(country.name).to.not.be(undefined);
-                    expect(country.id).to.be.above(0);
-                } else {
-                    expect().fail("No country data present.");
-                }
-                done()
-            })
+            NamedCollectionVerifications.verifyCollection("countries", done);
         });
         
         it('GET by ID with 200 status', function (done) {
-            superagent.get('http://' + hostname + ':' + server_port + '/rest/countries/2')
-          .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(200);
-                expect(res.body).to.not.eql(null);
-                expect(res.body.name).to.be.eql("Canada");
-                expect(res.body.id).to.be.eql(2);
-                done();
-            })
+            NamedCollectionVerifications.verifySingleItem('countries', {
+                id: 2,
+                name: 'Canada',
+            }, done);
         });
         
         it('GET collection with Name query with 200 status', function (done) {
@@ -121,27 +208,13 @@ describe('REST Services tests', function (done) {
         });
         
         it('GET by invalid ID with 404 status', function (done) {
-            superagent.get('http://' + hostname + ':' + server_port + '/rest/countries/' + RANDOM_ID)
-          .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(404);
-                done();
-            })
+            NamedCollectionVerifications.verifyNotFound('countries', done);
         });
         
         it('POST valid creation with 201 status', function (done) {
-            superagent.post('http://' + hostname + ':' + server_port + '/rest/countries')
-            .send({ name: 'German States - Bavaria', description: 'State of Germany' })
-          .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(201);
-                var body = res.body;
-                expect(body.id).to.not.eql(null);
-                expect(body.id).to.be.above(1000);
-                expect(body.name).to.eql("German States - Bavaria");
-                expect(body.description).to.eql("State of Germany");
-                done();
-            })
+            NamedCollectionVerifications.verifyPost('countries', {
+                name: 'German States - Bavaria', description: 'State of Germany'
+            }, done);
         });
         
         it('POST duplicate creation with 409 status', function (done) {
@@ -193,13 +266,7 @@ describe('REST Services tests', function (done) {
         });
         
         it('PUT with invalid non-existing ID', function (done) {
-            superagent.put('http://' + hostname + ':' + server_port + '/rest/countries/' + RANDOM_ID)
-            .send({ description: 'some description' })
-          .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(404);
-                done();
-            })
+            NamedCollectionVerifications.verifyPutNotFound('countries', { description: 'some description' }, done);
         });
         
         it('PUT causing a conflict', function (done) {
@@ -262,33 +329,18 @@ describe('REST Services tests', function (done) {
     describe('Album REST API tests', function (done) {
         
         it('GET Collection with 200 status', function (done) {
-            superagent.get('http://' + hostname + ':' + server_port + '/rest/albums')
-          .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(200);
-                expect(res.body.total).to.be.above(0);
-                expect(res.body.albums).to.not.be(undefined);
-                var album = res.body.albums[0];
-                if (album) {
-                    expect(album.name).to.not.be(undefined);
-                    expect(album.id).to.be.above(0);
-                } else {
-                    expect().fail("No album data present.");
-                }
-                done()
-            })
+            NamedCollectionVerifications.verifyCollection('albums', done, function (obj) {
+                expect(obj.stampCollectionRef).to.be.greaterThan(0);
+            });
         });
         
         it('GET by ID with 200 status', function (done) {
-            superagent.get('http://' + hostname + ':' + server_port + '/rest/albums/1')
-          .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(200);
-                expect(res.body).to.not.eql(null);
-                expect(res.body.name).to.be.eql("Australia");
-                expect(res.body.id).to.be.eql(1);
-                done();
-            })
+            NamedCollectionVerifications.verifySingleItem('albums', {
+                id: 1,
+                name: 'Australia',
+            }, done, function (obj) {
+                expect(obj.stampCollectionRef).to.be.eql(1);
+            });
         });
         
         it('GET collection with Name query with 200 status', function (done) {
@@ -306,26 +358,15 @@ describe('REST Services tests', function (done) {
         });
         
         it('GET by invalid ID with 404 status', function (done) {
-            superagent.get('http://' + hostname + ':' + server_port + '/rest/albums/' + RANDOM_ID)
-          .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(404);
-                done();
-            })
+            NamedCollectionVerifications.verifyNotFound('albums', done);
         });
         
         it('POST valid creation with 201 status', function (done) {
-            superagent.post('http://' + hostname + ':' + server_port + '/rest/albums')
-            .send({ name: 'British Europe', stampCollectionRef: 1, description: 'European countries' })
-          .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(201);
-                var body = res.body;
-                expect(body.id).to.not.eql(null);
-                expect(body.name).to.eql("British Europe");
-                expect(body.description).to.eql("European countries");
-                done();
-            })
+            NamedCollectionVerifications.verifyPost('albums', {
+                name: 'British Europe', stampCollectionRef: 1, description: 'European countries'
+            }, done, function (obj) {
+                expect(obj.stampCollectionRef).to.be.eql(1);
+            });
         });
         
         it('POST duplicate creation with 409 status', function (done) {
@@ -379,21 +420,19 @@ describe('REST Services tests', function (done) {
                   .end(function (e, res) {
                     expect(e).to.eql(null);
                     expect(res.status).to.eql(200);
-                    expect(res.body.name).to.eql('PUT album');
-                    expect(res.body.description).to.eql('Description on update');
+                    var body = res.body;
+                    expect(body.name).to.eql('PUT album');
+                    expect(body.description).to.eql('Description on update');
+                    expect(body.countries).to.not.eql(null);
+                    expect(body.countries.length).to.eql(1);
+                    expect(body.countries[0]).to.eql(2);
                     done();
                 });
             });
         });
         
         it('PUT with invalid non-existing ID', function (done) {
-            superagent.put('http://' + hostname + ':' + server_port + '/rest/albums/' + RANDOM_ID)
-            .send({ description: 'some description' })
-          .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(404);
-                done();
-            })
+            NamedCollectionVerifications.verifyPutNotFound('albums', { description: 'some description' }, done);
         });
         
         it('PUT causing a conflict', function (done) {
@@ -456,33 +495,14 @@ describe('REST Services tests', function (done) {
     describe('Stamp Collection REST API tests', function (done) {
         
         it('GET Collection with 200 status', function (done) {
-            superagent.get('http://' + hostname + ':' + server_port + '/rest/stampCollections')
-          .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(200);
-                expect(res.body.total).to.be.above(0);
-                expect(res.body.stampCollections).to.not.be(undefined);
-                var stampCollections = res.body.stampCollections[0];
-                if (stampCollections) {
-                    expect(stampCollections.name).to.not.be(undefined);
-                    expect(stampCollections.id).to.be.above(0);
-                } else {
-                    expect().fail("No stampCollections data present.");
-                }
-                done()
-            })
+            NamedCollectionVerifications.verifyCollection('stampCollections', done);
         });
         
         it('GET by ID with 200 status', function (done) {
-            superagent.get('http://' + hostname + ':' + server_port + '/rest/stampCollections/1')
-          .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(200);
-                expect(res.body).to.not.eql(null);
-                expect(res.body.name).to.be.eql("British Commonwealth");
-                expect(res.body.id).to.be.eql(1);
-                done();
-            })
+            NamedCollectionVerifications.verifySingleItem('stampCollections', {
+                id: 1,
+                name: 'British Commonwealth',
+            }, done);
         });
         
         it('GET collection with Name query with 200 status', function (done) {
@@ -500,26 +520,14 @@ describe('REST Services tests', function (done) {
         });
         
         it('GET by invalid ID with 404 status', function (done) {
-            superagent.get('http://' + hostname + ':' + server_port + '/rest/stampCollections/' + RANDOM_ID)
-          .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(404);
-                done();
-            })
+            NamedCollectionVerifications.verifyNotFound('stampCollections', done);
         });
         
+        
         it('POST valid creation with 201 status', function (done) {
-            superagent.post('http://' + hostname + ':' + server_port + '/rest/stampCollections')
-            .send({ name: 'The World Collection', description: 'Stamps of the world' })
-          .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(201);
-                var body = res.body;
-                expect(body.id).to.not.eql(null);
-                expect(body.name).to.eql("The World Collection");
-                expect(body.description).to.eql("Stamps of the world");
-                done();
-            })
+            NamedCollectionVerifications.verifyPost('stampCollections', {
+                name: 'The World Collection', description: 'Stamps of the world' 
+            }, done);
         });
         
         it('POST duplicate creation with 409 status', function (done) {
@@ -571,13 +579,7 @@ describe('REST Services tests', function (done) {
         });
         
         it('PUT with invalid non-existing ID', function (done) {
-            superagent.put('http://' + hostname + ':' + server_port + '/rest/stampCollections/' + RANDOM_ID)
-            .send({ description: 'some description' })
-          .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(404);
-                done();
-            })
+            NamedCollectionVerifications.verifyPutNotFound('stampCollections', { value: 'some description' }, done);
         });
         
         it('PUT causing a conflict', function (done) {
@@ -604,37 +606,52 @@ describe('REST Services tests', function (done) {
             });
         });
         
-
+        
         it('DELETE successful removes albums and countries', function (done) {
             var count = 0;
             var total = 10;
-            var post = function (name, callback) {
-                superagent.post('http://' + hostname + ':' + server_port + '/rest/albums')
-                    .send({ name: name, stampCollectionRef: 1 })
+            
+            var id = -1;
+            
+            superagent.post('http://' + hostname + ':' + server_port + '/rest/stampCollections')
+                    .send({ name: "DeletingStampCollection" })
                   .end(function (e, res) {
-                    callback();
-                });
-            };
-            var postCallback = function () {
-                count++;
-                if (count !== total) {
+                id = res.body.id;
+                if (id > 0) {
+                    var post = function (name, callback) {
+                        superagent.post('http://' + hostname + ':' + server_port + '/rest/albums')
+                    .send({ name: name, stampCollectionRef: id })
+                  .end(function (e, res) {
+                            callback();
+                        });
+                    };
+                    var postCallback = function () {
+                        count++;
+                        if (count !== total) {
+                            post("Album-" + count, postCallback);
+                        }
+                    }
                     post("Album-" + count, postCallback);
-                }
-            }
-            post("Album-" + count, postCallback);
-            var theInterval;
-            var f = function () {
-                if (count === total) {
-                    clearInterval(theInterval);
-                    superagent.del('http://' + hostname + ':' + server_port + '/rest/stampCollections/1')
+                    var theInterval;
+                    var f = function () {
+                        if (count === total) {
+                            clearInterval(theInterval);
+                            superagent.del('http://' + hostname + ':' + server_port + '/rest/stampCollections/1')
                         .end(function (e, res) {
-                            expect(e).to.eql(null);
-                            expect(res.status).to.eql(204);
-                            done();
-                    });
+                                expect(e).to.eql(null);
+                                expect(res.status).to.eql(204);
+                                done();
+                            });
+                        }
+                    }
+                    theInterval = setInterval(f, 50);
+                } else {
+                    expect().fail("No id is available.");
                 }
-            }
-            theInterval = setInterval(f, 50);
+            });
+            
+            
+            
             
         });
         

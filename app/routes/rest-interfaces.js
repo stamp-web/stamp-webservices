@@ -1,6 +1,7 @@
 var url = require('url');
 var _ = require('../../lib/underscore/underscore');
 var odata = require('../util/odata-parser');
+var logger = require('../util/logger');
 
 function restInterfaces() {
     var StatusCode = {
@@ -16,7 +17,8 @@ function restInterfaces() {
         INTERNAL_ERROR: "An unexpected error occured on the server."
     };
     var ContentType = {
-        JSON: "application/json"
+        JSON: "application/json",
+        TEXT: "text/plain"
     };
     var Headers = {
         CONTENT_TYPE: "Content-Type"
@@ -68,6 +70,7 @@ function restInterfaces() {
                 var data = field.externalize(obj);
                 res.send(JSON.stringify(data));
             }, function (err) {
+                logger.log(logger.ERROR, err);
                 setErrorStatus(res, err);
             });
         },
@@ -79,9 +82,26 @@ function restInterfaces() {
                 var data = field.externalize(obj);
                 res.send(JSON.stringify(data));
             }, function (err) {
+                logger.log(logger.ERROR, err);
                 setErrorStatus(res, err);
             });
-
+    
+        },
+        count: function (req, res, collection, field) {
+            var filter = (req.query && req.query.$filter) ? odata.toPredicates(req.query.$filter) : null;
+            var that = this;
+            collection.count(filter).then(function (result) {
+                res.format({
+                    'text/plain': function () {
+                        res.send('' + result);
+                    },
+                    'application/json': function () {
+                        res.json({ count: result });
+                    }
+                });
+            }, function (err) {
+                res.status(StatusCode.INTERNAL_ERROR).send(ClientMessages.INTERNAL_ERROR).end();
+            });
         },
         find: function (req, res, collection, field) {
             var filter = (req.query && req.query.$filter) ? odata.toPredicates(req.query.$filter) : null;
@@ -98,7 +118,7 @@ function restInterfaces() {
                 
                 res.set(Headers.CONTENT_TYPE, ContentType.JSON);
                 res.status(StatusCode.OK);
-                res.send(JSON.stringify(result));
+                res.json(result);
             }, function (err) {
                 res.status(StatusCode.INTERNAL_ERROR).send(ClientMessages.INTERNAL_ERROR).end();
             });

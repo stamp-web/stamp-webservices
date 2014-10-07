@@ -38,10 +38,10 @@ function persistentCollection() {
                 defer.reject(dataTranslator.getErrorMessage(err));
             });
             return true;
-        } 
+        }
         return false;
     }
-
+    
     function getNextSequence(collectionName, fieldDefinition, callback) {
         connectionManager.getConnection(collectionName).then(function (connection) {
             connection.query("SELECT ID_VAL FROM SEQUENCE_GEN WHERE ID_NAME='" + fieldDefinition.getSequenceColumn() + "'", function (err, result) {
@@ -58,7 +58,7 @@ function persistentCollection() {
         });
         
     }
-
+    
     return {
         
         update: function (obj, id) {
@@ -68,7 +68,7 @@ function persistentCollection() {
             
             connectionManager.getConnection(this.collectionName).then(function (connection) {
                 connection.beginTransaction(function (err) {
-                    if( !rollbackOnError(connection, defer, err)) {
+                    if (!rollbackOnError(connection, defer, err)) {
                         var qs = dataTranslator.generateUpdateStatement(that.fieldDefinition, obj, id);
                         logger.log(logger.TRACE, qs);
                         connection.query(qs, function (err, rows) {
@@ -116,7 +116,7 @@ function persistentCollection() {
                             var insertStatement = dataTranslator.generateInsertStatement(that.fieldDefinition, _obj);
                             logger.log(logger.TRACE, insertStatement);
                             connection.query(insertStatement, function (err, rows) {
-                                if( !rollbackOnError(connection, defer, err)) {
+                                if (!rollbackOnError(connection, defer, err)) {
                                     var finish = function (connection, _obj) {
                                         var id = _obj.id;
                                         that.postCreate(connection, _obj).then(function (_obj) {
@@ -128,7 +128,7 @@ function persistentCollection() {
                                                     defer.reject(dataTranslator.getErrorMessage(err));
                                                 });
                                             });
-                                            
+    
                                         }, function (err) {
                                             rollbackOnError(connection, defer, err);
                                         });
@@ -154,7 +154,7 @@ function persistentCollection() {
                                     obj.id = new_id;
                                     insert(obj, true);
                                 }
-                            }); 
+                            });
                         } else {
                             insert(obj, false);
                         }
@@ -163,7 +163,7 @@ function persistentCollection() {
             });
             return defer.promise;
         },
-
+        
         remove: function (id) {
             var defer = q.defer();
             var that = this;
@@ -196,7 +196,31 @@ function persistentCollection() {
             });
             return defer.promise;
         },
-        
+
+        count: function ($filter) {
+            var defer = q.defer();
+            var that = this;
+            var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, that.fieldDefinition) : '';
+            var qs = 'SELECT COUNT(id) FROM ' + that.fieldDefinition.getTableName() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '');
+            
+            connectionManager.getConnection(this.collectionName).then(function (connection) {
+                connection.query(qs, function (err, result) {
+                    if (err !== null) {
+                        defer.reject(dataTranslator.getErrorMessage(err));
+                    }
+                    else if (result.length > 0) {
+                        connectionManager.release(connection);
+                        defer.resolve(result[0]['COUNT(id)']);
+                    } else {
+                        defer.reject({ message: "No object found", code: "NOT_FOUND" });
+                    }
+                });
+            }, function (err) {
+                defer.reject(dataTranslator.getErrorMessage(err));
+            });
+            return defer.promise;
+        },
+
         findById: function (id) {
             var filter = odata.toPredicates("id eq " + id);
             var defer = q.defer();
@@ -225,7 +249,6 @@ function persistentCollection() {
             connectionManager.getConnection(this.collectionName).then(function (connection) {
                 connection.query(qs, function (err, result) {
                     if (err !== null) {
-                        connectionManager.release(connection);
                         defer.reject(dataTranslator.getErrorMessage(err));
                     }
                     else if (result.length > 0) {

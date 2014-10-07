@@ -27,6 +27,9 @@ if (!port) {
 }
 
 logger.log(logger.INFO, "HTTPServer listening on port " + port);
+if (nconf.get("logger_target") === "file" && nconf.get("logger_file")) {
+    logger.setTarget(nconf.get("logger_target"), nconf.get("logger_file"));   
+}
 app.listen(port);
 connectionMgr.startup();
 

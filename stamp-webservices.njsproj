@@ -62,6 +62,7 @@
     <Content Include="package.json" />
     <Content Include="public\stylesheets\style.styl" />
     <Content Include="README.md" />
+    <Content Include="test\country.json" />
     <Content Include="test\dbscript\initial-data.sql" />
   </ItemGroup>
   <ItemGroup>
