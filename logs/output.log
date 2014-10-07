@@ -302,3 +302,343 @@ ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","pro
 ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
 ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
 ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: HTTPServer listening on port 9001
+INFO: MySQL database pool created
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+INFO: Server started but SQL statements are still executing...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+INFO: Server started but SQL statements are still executing...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+INFO: Server started but SQL statements are still executing...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+INFO: Server started but SQL statements are still executing...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+INFO: Reading SQL contents...
+INFO: Received message that server is successfully started...
+INFO: Server started but SQL statements are still executing...
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"No value provided for required field 'COLLECTION_ID'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}
+ERROR: {"message":"No value provided for required field 'NAME'","code":"REQUIRED_FIELD","processed":true}
+ERROR: {"message":"Not object found.","code":"NOT_FOUND"}
+ERROR: {"message":"The object already exists","code":"UNIQUENESS_EXCEPTION","processed":true}

@@ -526,7 +526,7 @@ describe('REST Services tests', function (done) {
         
         it('POST valid creation with 201 status', function (done) {
             NamedCollectionVerifications.verifyPost('stampCollections', {
-                name: 'The World Collection', description: 'Stamps of the world' 
+                name: 'The World Collection', description: 'Stamps of the world'
             }, done);
         });
         
@@ -636,11 +636,16 @@ describe('REST Services tests', function (done) {
                     var f = function () {
                         if (count === total) {
                             clearInterval(theInterval);
-                            superagent.del('http://' + hostname + ':' + server_port + '/rest/stampCollections/1')
+                            superagent.del('http://' + hostname + ':' + server_port + '/rest/stampCollections/' + id)
                         .end(function (e, res) {
                                 expect(e).to.eql(null);
                                 expect(res.status).to.eql(204);
-                                done();
+                                // should be a LIKE filter but that is not supported yet
+                                superagent.get('http://' + hostname + ':' + server_port + '/rest/albums?$filter=(name eq \'Album-5\')')
+                            .end(function (e, res) {
+                                    expect(res.body.total).to.eql(0);
+                                    done();
+                                });
                             });
                         }
                     }

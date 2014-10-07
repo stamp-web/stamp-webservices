@@ -173,7 +173,7 @@ function persistentCollection() {
                         that.preDelete(connection, id).then(function () {
                             var qs = 'DELETE FROM ' + that.fieldDefinition.getTableName() + ' WHERE ID=?';
                             logger.log(logger.TRACE, qs);
-                            connection.query(qs, id, function (err, rows) {
+                            connection.query(qs, [id], function (err, rows) {
                                 if (err || rows.affectedRows === 0) {
                                     if (err) {
                                         logger.log(logger.ERROR, "Issue during deletion" + err);
@@ -245,7 +245,6 @@ function persistentCollection() {
             
             var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, that.fieldDefinition) : '';
             var qs = 'SELECT * FROM ' + that.fieldDefinition.getTableName() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '');
-            
             connectionManager.getConnection(this.collectionName).then(function (connection) {
                 connection.query(qs, function (err, result) {
                     if (err !== null) {

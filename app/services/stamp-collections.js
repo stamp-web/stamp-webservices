@@ -1,6 +1,7 @@
 var extend = require('node.extend');
 var persistentCollection = require('./persistent-collection');
 var stampCollection = require('../model/stamp-collection');
+var odata = require('../util/odata-parser');
 var album = require('../model/album');
 var albums = require('./albums');
 var q = require('q');
@@ -20,7 +21,8 @@ var collections = extend(true, {}, persistentCollection, function() {
          */
         preDelete: function (connection, id) {
             var defer = q.defer();
-            var albumCollection = albums.find("(" + _.findWhere(album.getFieldDefinitions(), { column: "COLLECTION_ID" }).field + " eq " + id + ")").then(function (results) {
+            var $filter = odata.toPredicates("(" + _.findWhere(album.getFieldDefinitions(), { column: "COLLECTION_ID" }).field + " eq " + id + ")");
+            var albumCollection = albums.find($filter).then(function (results) {
                 var deleteCount = 0;
                 var len = results.length;
                 for (var i = 0; i < len; i++) {
