@@ -25,6 +25,9 @@ var collections = extend(true, {}, persistentCollection, function() {
             var albumCollection = albums.find($filter).then(function (results) {
                 var deleteCount = 0;
                 var len = results.length;
+                if (len === 0) {
+                    defer.resolve();   
+                }
                 for (var i = 0; i < len; i++) {
                     var row = results[i];
                     albums.remove(row.ID).then(function (affected) {

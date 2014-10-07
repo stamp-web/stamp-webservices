@@ -44,8 +44,23 @@ function restInterfaces() {
         }
         res.status(code).send(err.message);
     };
+    
+    var collection;
+    var field;
+
     return {
-        findById: function (req, res, collection, field) {
+        initialize: function (app, basePath, col, f) {
+            collection = col;
+            field = f;
+
+            app.get(basePath, this.find);
+            app.post(basePath, this.create);
+            app.put(basePath + "/:id", this.update);
+            app.get(basePath + "/!count", this.count);
+            app.get(basePath + "/:id", this.findById);
+            app.delete(basePath + '/:id', this.remove);
+        },
+        findById: function (req, res) {
             var that = this;
             var id = findIdFromPath(req.url);
             collection.findById(id).then(function (row) {
@@ -61,7 +76,7 @@ function restInterfaces() {
                 res.status(StatusCode.INTERNAL_ERROR).send(ClientMessages.INTERNAL_ERROR);
             });
         },
-        update: function (req, res, collection, field) {
+        update: function (req, res) {
             var that = this;
             var id = findIdFromPath(req.url);
             collection.update(req.body, id).then(function (obj) {
@@ -74,7 +89,7 @@ function restInterfaces() {
                 setErrorStatus(res, err);
             });
         },
-        create: function (req, res, collection, field) {
+        create: function (req, res) {
             var that = this;
             collection.create(req.body).then(function (obj) {
                 res.set(Headers.CONTENT_TYPE, ContentType.JSON);
@@ -87,7 +102,7 @@ function restInterfaces() {
             });
     
         },
-        count: function (req, res, collection, field) {
+        count: function (req, res) {
             var filter = (req.query && req.query.$filter) ? odata.toPredicates(req.query.$filter) : null;
             var that = this;
             collection.count(filter).then(function (result) {
@@ -103,7 +118,7 @@ function restInterfaces() {
                 res.status(StatusCode.INTERNAL_ERROR).send(ClientMessages.INTERNAL_ERROR).end();
             });
         },
-        find: function (req, res, collection, field) {
+        find: function (req, res) {
             var filter = (req.query && req.query.$filter) ? odata.toPredicates(req.query.$filter) : null;
             var that = this;
             collection.find(filter).then(function (rows) {
@@ -123,7 +138,7 @@ function restInterfaces() {
                 res.status(StatusCode.INTERNAL_ERROR).send(ClientMessages.INTERNAL_ERROR).end();
             });
         },
-        remove: function (req, res, collection) {
+        remove: function (req, res) {
             var that = this;
             var id = findIdFromPath(req.url);
             collection.remove(id).then(function () {
@@ -135,4 +150,4 @@ function restInterfaces() {
     };
 }
 
-module.exports = new restInterfaces();
+module.exports = restInterfaces;

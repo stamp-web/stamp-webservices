@@ -58,6 +58,7 @@
     <Compile Include="test\odata-parser-test.js" />
     <Compile Include="test\resources-test.js" />
     <Compile Include="test\util\connection-helper.js" />
+    <Compile Include="test\util\named-collection-verifier.js" />
     <Content Include="config\database.json" />
     <Content Include="package.json" />
     <Content Include="public\stylesheets\style.styl" />

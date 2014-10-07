@@ -7,6 +7,7 @@ var mysql = require('mysql');
 var fs = require('fs');
 
 var connectionHelper = require('./util/connection-helper');
+var NamedCollectionVerifications = require('./util/named-collection-verifier');
 
 var nconf = require('nconf');
 nconf.argv().env();
@@ -23,81 +24,6 @@ if (nconf.get("port")) {
 if (nconf.get("hostname")) {
     hostname = nconf.get("hostname");
 }
-
-var RANDOM_ID = (new Date()).getTime() % (2048 * 2048);
-
-var NamedCollectionVerifications = {
-    verifyCollection: function (collectionName, done, fn) {
-        superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName)
-        .end(function (e, res) {
-            expect(e).to.eql(null);
-            expect(res.status).to.eql(200);
-            expect(res.body.total).to.be.above(0);
-            expect(res.body[collectionName]).to.not.be(undefined);
-            var obj = res.body[collectionName][0];
-            if (obj) {
-                expect(obj.name).to.not.be(undefined);
-                expect(obj.id).to.be.above(0);
-                if (fn) {
-                    fn(obj);
-                }
-            } else {
-                expect().fail("No data present.");
-            }
-            done();
-        });
-
-    },
-    verifySingleItem: function (collectionName, props, done, fn) {
-        superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + props.id)
-          .end(function (e, res) {
-            expect(e).to.eql(null);
-            expect(res.status).to.eql(200);
-            expect(res.body).to.not.eql(null);
-            expect(res.body.name).to.be.eql(props.name);
-            expect(res.body.id).to.be.eql(props.id);
-            if (fn) {
-                fn(res.body);
-            }
-            done();
-        })
-    },
-    verifyNotFound: function (collectionName, done) {
-        superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + RANDOM_ID)
-          .end(function (e, res) {
-            expect(e).to.eql(null);
-            expect(res.status).to.eql(404);
-            done();
-        })
-    },
-    verifyPutNotFound: function (collectionName, props, done) {
-        superagent.put('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + RANDOM_ID)
-            .send(props)
-          .end(function (e, res) {
-            expect(e).to.eql(null);
-            expect(res.status).to.eql(404);
-            done();
-        })
-    },
-    verifyPost: function (collectionName, props, done, fn) {
-        superagent.post('http://' + hostname + ':' + server_port + '/rest/' + collectionName)
-            .send(props)
-          .end(function (e, res) {
-            expect(e).to.eql(null);
-            expect(res.status).to.eql(201);
-            var body = res.body;
-            expect(body.id).to.not.eql(null);
-            expect(body.id).to.be.above(1000);
-            expect(body.name).to.eql(props.name);
-            expect(body.description).to.eql(props.description);
-            if (fn) {
-                fn(body);
-            }
-            done();
-        });
-    }
-}
-
 
 describe('REST Services tests', function (done) {
     before(function (done) {
@@ -176,6 +102,16 @@ describe('REST Services tests', function (done) {
             }, done, function (obj) {
                 expect(obj.category).to.be.eql('stamps');
             });
+        });
+        
+        it('DELETE successful with no retained state', function (done) {
+            NamedCollectionVerifications.verifyDelete('preferences', {
+                name: 'prefName', category: 'stamps', value: 'a value'
+            }, done);
+        });
+
+        it('DELETE no existing ID', function (done) {
+            NamedCollectionVerifications.verifyDeleteNotFound('preferences', done);
         });
        
     });
@@ -295,34 +231,11 @@ describe('REST Services tests', function (done) {
         });
         
         it('DELETE no existing ID', function (done) {
-            superagent.del('http://' + hostname + ':' + server_port + '/rest/countries/' + RANDOM_ID)
-          .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(404);
-                done();
-            })
+            NamedCollectionVerifications.verifyDeleteNotFound('countries', done);
         });
         
         it('DELETE successful with no retained state', function (done) {
-            superagent.post('http://' + hostname + ':' + server_port + '/rest/countries')
-            .send({ name: 'TEST DELETE' })
-            .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(201);
-                var id = res.body.id;
-                superagent.del('http://' + hostname + ':' + server_port + '/rest/countries/' + id)
-                  .end(function (e, res) {
-                    expect(e).to.eql(null);
-                    expect(res.status).to.eql(204);
-                    // Now verify it is not found.
-                    superagent.get('http://' + hostname + ':' + server_port + '/rest/countries/' + id)
-                        .end(function (e, res) {
-                        expect(e).to.eql(null);
-                        expect(res.status).to.eql(404);
-                        done();
-                    });
-                });
-            });
+            NamedCollectionVerifications.verifyDelete('countries', { name: 'Test Delete' }, done);
         });
     });
     
@@ -461,34 +374,21 @@ describe('REST Services tests', function (done) {
         });
         
         it('DELETE no existing ID', function (done) {
-            superagent.del('http://' + hostname + ':' + server_port + '/rest/albums/' + RANDOM_ID)
-          .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(404);
-                done();
-            })
+            NamedCollectionVerifications.verifyDeleteNotFound('albums', done);
         });
         
         it('DELETE successful with no retained state', function (done) {
-            superagent.post('http://' + hostname + ':' + server_port + '/rest/albums')
-            .send({ name: 'TEST DELETE', stampCollectionRef: 1 })
-            .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(201);
-                var id = res.body.id;
-                superagent.del('http://' + hostname + ':' + server_port + '/rest/albums/' + id)
-                  .end(function (e, res) {
+            NamedCollectionVerifications.verifyDelete('albums', {
+                name: 'TEST DELETE', stampCollectionRef: 1, countries: [1]
+            }, done, function (done) {
+                superagent.get('http://' + hostname + ':' + server_port + '/rest/countries/1').end(function (e, res) {
                     expect(e).to.eql(null);
-                    expect(res.status).to.eql(204);
-                    // Now verify it is not found.
-                    superagent.get('http://' + hostname + ':' + server_port + '/rest/albums/' + id)
-                        .end(function (e, res) {
-                        expect(e).to.eql(null);
-                        expect(res.status).to.eql(404);
-                        done();
-                    });
+                    expect(res.status).to.eql(200);
+                    expect(res.body.id).to.be.eql(1);
+                    done();
                 });
             });
+
         });
     });
     
@@ -606,11 +506,13 @@ describe('REST Services tests', function (done) {
             });
         });
         
+        it('DELETE no existing ID', function (done) {
+            NamedCollectionVerifications.verifyDeleteNotFound('stampCollections', done);
+        });
         
         it('DELETE successful removes albums and countries', function (done) {
             var count = 0;
             var total = 10;
-            
             var id = -1;
             
             superagent.post('http://' + hostname + ':' + server_port + '/rest/stampCollections')
@@ -654,10 +556,6 @@ describe('REST Services tests', function (done) {
                     expect().fail("No id is available.");
                 }
             });
-            
-            
-            
-            
         });
         
         it.skip('DELETE successful removes all associated stamps', function (done) {
