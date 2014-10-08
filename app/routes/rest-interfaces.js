@@ -59,6 +59,8 @@ function restInterfaces() {
             app.get(basePath + "/!count", this.count);
             app.get(basePath + "/:id", this.findById);
             app.delete(basePath + '/:id', this.remove);
+
+            console.log("   Registering services at " + basePath);
         },
         findById: function (req, res) {
             var that = this;

@@ -47,11 +47,14 @@ function persistentCollection() {
             connection.query("SELECT ID_VAL FROM SEQUENCE_GEN WHERE ID_NAME='" + fieldDefinition.getSequenceColumn() + "'", function (err, result) {
                 if (err) {
                     callback(err, null);
-                } else {
+                } else if (result.length > 0) {
                     var id_val = result[0].ID_VAL;
                     id_val = Math.max(id_val, last_id) + 1;
                     last_id = id_val;
                     callback(null, id_val);
+                } else {
+                    last_id = last_id++;
+                    callback(null, last_id);
                 }
                 connectionManager.release(connection);
             });

@@ -18,6 +18,7 @@ require("./routes/rest-preferences").configure(app, SERVICES_PATH);
 require("./routes/rest-countries").configure(app, SERVICES_PATH);
 require("./routes/rest-albums").configure(app, SERVICES_PATH);
 require("./routes/rest-stampCollections").configure(app, SERVICES_PATH);
+require("./routes/rest-catalogues").configure(app, SERVICES_PATH);
 
 var port = nconf.get("port");
 if (!port) {
@@ -25,12 +26,12 @@ if (!port) {
 } else {
     port = +port;
 }
-
-logger.log(logger.INFO, "HTTPServer listening on port " + port);
+logger.setLevel(nconf.get("logger_level") ? nconf.get("logger_level") : logger.INFO);
 if (nconf.get("logger_target") === "file" && nconf.get("logger_file")) {
     logger.setTarget(nconf.get("logger_target"), nconf.get("logger_file"));   
 }
 app.listen(port);
+logger.log(logger.INFO, "HTTPServer listening on port " + port);
 connectionMgr.startup();
 
 process.on('exit', function () {
