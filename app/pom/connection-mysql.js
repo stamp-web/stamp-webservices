@@ -51,33 +51,66 @@ module.exports = function () {
         }
         return pending;
     }
-        
+    
+    function determineDBPassword(config) {
+        var defer = q.defer();
+        if (config.password && config.password.length > 0) {
+            defer.resolve();
+        } else {
+            config.password = nconf.get("db_password");
+            if (config.password && config.password.length > 0) {
+                defer.resolve();
+            }
+            else {
+                var pw = require('pw');
+                process.stdout.write('\nConfiguration did not contain a database password.\nEnter database password: ');
+                pw(function (value) {
+                    config.password = value;
+                    defer.resolve();
+                });
+            } 
+        }
+        return defer.promise;
+    }
+
     return {
         
         startup: function () {
-            
+            var startDefer = q.defer();
             if (!dbPool) {
                 var dbName = nconf.get("database");
                 if (!dbName) {
-                    throw new Error("No database was specified.");
+                    startDefer.reject("No database was selected.");
                 }
                 var config = nconf.get("databases")[dbName];
+
                 if (config) {
-                    dbPool = mysql.createPool({
-                        connectionLimit: 20,
-                        host: config.host,
-                        user: config.user,
-                        password: config.password,
-                        database: config.schema
+                    determineDBPassword(config).then(function () {
+                        dbPool = mysql.createPool({
+                            connectionLimit: 20,
+                            host: config.host,
+                            user: config.user,
+                            password: config.password,
+                            database: config.schema
+                        });
+                        logger.log(logger.INFO, "MySQL database pool created");
+                        dbPool.getConnection(function (err, connection) {
+                            if (!err) {
+                                connection.release();
+                                startDefer.resolve();
+                            } else {
+                                startDefer.reject(err);
+                            }
+                        });
                     });
-                    logger.log(logger.INFO, "MySQL database pool created");
                 }
                 else {
                     var msg = "The database " + dbName + " was not found in the configuration.";
                     logger.log(logger.ERROR, msg);
-                    throw new Error(msg);
+                    startDefer.reject(msg);
                 }
             }
+            return startDefer.promise;
         },
         shutdown: function () {
             dbPool.end();

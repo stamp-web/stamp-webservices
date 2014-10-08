@@ -6,6 +6,6 @@ var extend = require('node.extend');
 var RESOURCE_PATH = "/catalogues";
 
 exports.configure = function (app, basePath) {
-    var albumsRest = extend(true, {}, restInterfaces);
-    albumsRest.initialize(app, basePath + RESOURCE_PATH, catalogues, catalogue);
+    var service = extend(true, {}, restInterfaces);
+    service.initialize(app, basePath + RESOURCE_PATH, catalogues, catalogue);
 }

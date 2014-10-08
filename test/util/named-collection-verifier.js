@@ -48,6 +48,11 @@ var NamedCollectionVerifications = {
             expect(res.body).to.not.eql(null);
             expect(res.body.name).to.be.eql(props.name);
             expect(res.body.id).to.be.eql(props.id);
+            if (props.description) {
+                expect(res.body.description).to.be.eql(props.description);   
+            }
+            expect(res.body.createTimestamp).to.be(undefined);
+            expect(res.body.modifyTimestamp).to.be(undefined);
             if (fn) {
                 fn(res.body);
             }

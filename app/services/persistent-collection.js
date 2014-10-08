@@ -9,6 +9,7 @@ function persistentCollection() {
     
     var last_id = 0;
     
+
     function updateSequence(collectionName, _id, fieldDefinition) {
         var defer = q.defer();
         var qs = "UPDATE SEQUENCE_GEN SET ID_VAL=? WHERE ID_NAME='" + fieldDefinition.getSequenceColumn() + "'";

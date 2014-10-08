@@ -1,10 +1,9 @@
 {
-    "database": "test",
+    "database": "mysql",
     "databases": {
         "mysql": {
             "host": "testStampweb.db.4368567.hostedresource.com",
             "user": "testStampweb",
-            "password": "SerenaLoves2EatHotdogs!",
             "schema": "testStampweb"
         },
         "test": {

@@ -30,20 +30,28 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="app\model\seller.js" />
+    <Compile Include="app\model\catalogue.js" />
     <Compile Include="app\model\album.js" />
     <Compile Include="app\model\country.js" />
     <Compile Include="app\model\field-definition.js" />
     <Compile Include="app\model\data-model.js" />
     <Compile Include="app\model\preference.js" />
     <Compile Include="app\model\stamp-collection.js" />
-    <Compile Include="app\pom\connection-manager.js" />
     <Compile Include="app\pom\connection-mysql.js" />
+    <Compile Include="app\routes\rest-sellers.js" />
+    <Compile Include="app\routes\rest-catalogues.js" />
     <Compile Include="app\routes\rest-stampCollections.js" />
     <Compile Include="app\routes\rest-albums.js" />
     <Compile Include="app\routes\rest-countries.js" />
     <Compile Include="app\routes\rest-interfaces.js" />
     <Compile Include="app\routes\rest-preferences.js" />
-    <Compile Include="app\server.js" />
+    <Compile Include="app\server.js">
+      <TestFramework>
+      </TestFramework>
+    </Compile>
+    <Compile Include="app\services\sellers.js" />
+    <Compile Include="app\services\catalogues.js" />
     <Compile Include="app\services\albums.js" />
     <Compile Include="app\services\countries.js" />
     <Compile Include="app\services\mysql-translator.js" />
@@ -53,10 +61,18 @@
     <Compile Include="app\util\logger.js" />
     <Compile Include="app\util\odata-parser.js" />
     <Compile Include="app\util\string-utilities.js" />
-    <Compile Include="test\fielddefinition-test.js" />
-    <Compile Include="test\mysql-translator-test.js" />
-    <Compile Include="test\odata-parser-test.js" />
-    <Compile Include="test\resources-test.js" />
+    <Compile Include="test\fielddefinition-test.js">
+      <TestFramework>Mocha</TestFramework>
+    </Compile>
+    <Compile Include="test\mysql-translator-test.js">
+      <TestFramework>Mocha</TestFramework>
+    </Compile>
+    <Compile Include="test\odata-parser-test.js">
+      <TestFramework>Mocha</TestFramework>
+    </Compile>
+    <Compile Include="test\resources-test.js">
+      <TestFramework>Mocha</TestFramework>
+    </Compile>
     <Compile Include="test\util\connection-helper.js" />
     <Compile Include="test\util\named-collection-verifier.js" />
     <Content Include="config\database.json" />

@@ -28,7 +28,9 @@ if (nconf.get("hostname")) {
 describe('REST Services tests', function (done) {
     before(function (done) {
         logger.log(logger.INFO, "Reading SQL contents...");
-        var contents = fs.readFileSync('test/dbscript/initial-data.sql', { encoding: 'utf-8' }).toString();
+        var pro = process.cwd();
+        var file = ((process.cwd().indexOf('\\test') > 0 )? '../' : '') + 'test/dbscript/initial-data.sql';
+        var contents = fs.readFileSync( file , { encoding: 'utf-8' }).toString();
         
         var connection = mysql.createConnection({
             host     : 'localhost',
@@ -160,6 +162,43 @@ describe('REST Services tests', function (done) {
         
         it('DELETE no existing ID', function (done) {
             NamedCollectionVerifications.verifyDeleteNotFound('catalogues', done);
+        });
+       
+    });
+    
+    describe('Seller REST API tests', function (done) {
+        it('GET Collection with 200 status', function (done) {
+            NamedCollectionVerifications.verifyCollection('sellers', done);
+        });
+        it('GET by ID with 200 status', function (done) {
+            NamedCollectionVerifications.verifySingleItem('sellers', {
+                id: 1,
+                name: 'APS Indian States',
+                description: 'API Circuit'
+            }, done);
+        });
+        it('GET by invalid ID with 404 status', function (done) {
+            NamedCollectionVerifications.verifyNotFound('sellers', done);
+        });
+        
+        it('PUT with invalid non-existing ID', function (done) {
+            NamedCollectionVerifications.verifyPutNotFound('sellers', { description: 'some value' }, done);
+        });
+        
+        it('POST valid creation with 201 status', function (done) {
+            NamedCollectionVerifications.verifyPost('sellers', {
+                name: 'Iain Kennedy', description: 'British dealer'
+            }, done);
+        });
+        
+        it('DELETE successful with no retained state', function (done) {
+            NamedCollectionVerifications.verifyDelete('sellers', {
+                name: 'Seaside Stamp and Coin'
+            }, done);
+        });
+        
+        it('DELETE no existing ID', function (done) {
+            NamedCollectionVerifications.verifyDeleteNotFound('sellers', done);
         });
        
     });
