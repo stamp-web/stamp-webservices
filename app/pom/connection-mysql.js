@@ -6,7 +6,7 @@ var nconf = require('nconf');
 var path = require('path');
 var _ = require('../../lib/underscore/underscore');
 
-nconf.argv().env().file(__dirname + '/../../config/database.json');
+nconf.argv().env().file(__dirname + '/../../config/application.json');
 
 module.exports = function () {
     var dbPool;

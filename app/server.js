@@ -20,6 +20,8 @@ require("./routes/rest-albums").configure(app, SERVICES_PATH);
 require("./routes/rest-stampCollections").configure(app, SERVICES_PATH);
 require("./routes/rest-catalogues").configure(app, SERVICES_PATH);
 require("./routes/rest-sellers").configure(app, SERVICES_PATH);
+require("./routes/rest-stamps").configure(app, SERVICES_PATH);
+require("./routes/reports").configure(app, SERVICES_PATH);
 
 var port = nconf.get("port");
 if (!port) {

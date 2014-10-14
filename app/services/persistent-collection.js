@@ -240,15 +240,21 @@ function persistentCollection() {
             });
             return defer.promise;
         },
-        findAll: function ($limit) {
-            return this.find(null, $limit);
+        findAll: function ($limi, $offset) {
+            return this.find(null, $limit, $offset);
         },
-        find: function ($filter, $limit) {
+        find: function ($filter, $limit, $offset) {
             var defer = q.defer();
             var that = this;
-            
-            var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, that.fieldDefinition) : '';
-            var qs = 'SELECT * FROM ' + that.fieldDefinition.getTableName() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '');
+            var definitions = [ that.fieldDefinition ];
+            var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, definitions) : '';
+            if (!$limit) {
+                $limit = 1000;
+            }
+            if (!$offset) {
+                $offset = 0;
+            }
+            var qs = 'SELECT * FROM ' + that.fieldDefinition.getTableName() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
             connectionManager.getConnection(this.collectionName).then(function (connection) {
                 connection.query(qs, function (err, result) {
                     if (err !== null) {

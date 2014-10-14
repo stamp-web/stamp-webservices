@@ -30,6 +30,8 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="app\model\catalogue-number.js" />
+    <Compile Include="app\model\ownership.js" />
     <Compile Include="app\model\seller.js" />
     <Compile Include="app\model\catalogue.js" />
     <Compile Include="app\model\album.js" />
@@ -38,7 +40,9 @@
     <Compile Include="app\model\data-model.js" />
     <Compile Include="app\model\preference.js" />
     <Compile Include="app\model\stamp-collection.js" />
+    <Compile Include="app\model\stamp.js" />
     <Compile Include="app\pom\connection-mysql.js" />
+    <Compile Include="app\routes\reports.js" />
     <Compile Include="app\routes\rest-sellers.js" />
     <Compile Include="app\routes\rest-catalogues.js" />
     <Compile Include="app\routes\rest-stampCollections.js" />
@@ -46,10 +50,13 @@
     <Compile Include="app\routes\rest-countries.js" />
     <Compile Include="app\routes\rest-interfaces.js" />
     <Compile Include="app\routes\rest-preferences.js" />
+    <Compile Include="app\routes\rest-stamps.js" />
+    <Compile Include="app\routes\route-helper.js" />
     <Compile Include="app\server.js">
       <TestFramework>
       </TestFramework>
     </Compile>
+    <Compile Include="app\services\reports.js" />
     <Compile Include="app\services\sellers.js" />
     <Compile Include="app\services\catalogues.js" />
     <Compile Include="app\services\albums.js" />
@@ -58,6 +65,7 @@
     <Compile Include="app\services\persistent-collection.js" />
     <Compile Include="app\services\preferences.js" />
     <Compile Include="app\services\stamp-collections.js" />
+    <Compile Include="app\services\stamps.js" />
     <Compile Include="app\util\logger.js" />
     <Compile Include="app\util\odata-parser.js" />
     <Compile Include="app\util\string-utilities.js" />
@@ -75,7 +83,7 @@
     </Compile>
     <Compile Include="test\util\connection-helper.js" />
     <Compile Include="test\util\named-collection-verifier.js" />
-    <Content Include="config\database.json" />
+    <Content Include="config\application-example.json" />
     <Content Include="package.json" />
     <Content Include="public\stylesheets\style.styl" />
     <Content Include="README.md" />

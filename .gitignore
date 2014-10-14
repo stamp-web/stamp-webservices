@@ -6,3 +6,5 @@ coverage
 /logs/output.log
 
 logs/output.log
+/config/application.json
+/config/exchange-rates.json

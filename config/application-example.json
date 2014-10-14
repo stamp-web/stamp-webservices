@@ -1,17 +1,14 @@
-{
+﻿{
+    "openexchangerates.org": {
+        "app_id": "YOUR_APP_ID_HERE"
+    },
     "database": "mysql",
     "databases": {
         "mysql": {
-            "host": "testStampweb.db.4368567.hostedresource.com",
-            "user": "testStampweb",
-            "schema": "testStampweb"
-        },
-        "test": {
             "host": "localhost",
             "user": "tester",
             "password": "tester",
             "schema":  "unittest"
         }
     }
-
 }

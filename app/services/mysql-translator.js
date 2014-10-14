@@ -12,6 +12,7 @@ function DataTranslator() {
     
     return {
         MYSQL_DATEFORMAT : "YYYY-MM-DD HH:MI:SS",
+    
         getErrorMessage: function (err) {
             var msg;
             if (!err.processed) {
@@ -115,7 +116,7 @@ function DataTranslator() {
         },
        
         
-        toWhereClause: function ($filter, fieldDefinition) {
+        toWhereClause: function ($filter, fieldDefinition, selectors) {
             var expression = '';
             var that = this;
             if (!fieldDefinition) {
@@ -145,8 +146,8 @@ function DataTranslator() {
                         case 'and':
                         case 'or':
                             binaryOp = false;
-                            var left = that.toWhereClause(el['left'], fieldDefinition);
-                            var right = that.toWhereClause(el['right'], fieldDefinition);
+                            var left = that.toWhereClause(el['left'], fieldDefinition, selectors);
+                            var right = that.toWhereClause(el['right'], fieldDefinition, selectors);
                             expression += left + ' ' + el['type'].toUpperCase() + ' ' + right;
                             break;
                         default:
@@ -160,7 +161,18 @@ function DataTranslator() {
                             var val = el['right'];
                             value = (_.isNumber(val)) ? +val : '' + val;
                         }
-                        expression += ((fieldDefinition) ? fieldDefinition.toInternal(subject) : subject) + op + value;
+                        var predicate = subject;
+                        if (fieldDefinition) {
+                            for (var i = 0; i < fieldDefinition.length; i++) {
+                                var definition = fieldDefinition[i];
+                                var internal = definition.toInternal(subject);
+                                if (internal) {
+                                    predicate = ((selectors && selectors.length > 0) ? selectors[i] + '.' : '') + internal;
+                                    break;
+                                }
+                            }
+                        }
+                        expression += predicate + op + value;
                     }
                 }
             };

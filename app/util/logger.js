@@ -44,4 +44,4 @@ function logger() {
         }
     }
 };
-module.exports = logger();
+module.exports = new logger();
