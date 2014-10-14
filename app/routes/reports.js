@@ -1,7 +1,9 @@
-﻿var logger = require('../util/logger');
+﻿var Logger = require('../util/logger');
 var odata = require('../util/odata-parser');
 var service = require('../services/reports');
 var routeHelper = require('./route-helper');
+
+var logger = Logger.getLogger("server");
 
 function reports() {
 
@@ -43,7 +45,7 @@ function reports() {
         },
         configure: function (app, basePath) {
             app.get(basePath + "/reports", this.executeReport);
-            console.log("   Registering services at " + basePath + "/reports");
+            logger.log(Logger.INFO, "   Registering services at " + basePath + "/reports");
         },
     }
 }

@@ -7,12 +7,15 @@ var stamp = require('../model/stamp');
 var catalogue = require('../model/catalogue');
 var ownership = require('../model/ownership');
 var catalogueNumber = require('../model/catalogue-number');
-var logger = require('../util/logger');
+var Logger = require('../util/logger');
 var fx = require('money');
 var accounting = require('accounting');
 var http = require('http');
 var fs = require('fs');
 var nconf = require('nconf');
+
+var sqlTrace = Logger.getLogger("sql");
+var logger = Logger.getLogger("server");
 
 nconf.argv().env().file(__dirname + '/../../config/application.json');
 
@@ -57,9 +60,9 @@ var report = function () {
                 var chunks = "";
                 var appId = nconf.get("openexchangerates.org")["app_id"];
                 if (!appId) {
-                    logger.log(logger.WARN, "No app_id found for openexchangerates.org so no new rates can be obtained.");
+                    logger.log(Logger.WARN, "No app_id found for openexchangerates.org so no new rates can be obtained.");
                 } else {
-                    logger.log(logger.INFO, "Fetching rates from openexchangerates.org");
+                    logger.log(Logger.INFO, "Fetching rates from openexchangerates.org");
                     http.get('http://openexchangerates.org/api/latest.json?app_id=' + appId, function (res) {
                         if (res.statusCode === 200) {
                             res.on('data', function (chunk) {
@@ -73,7 +76,7 @@ var report = function () {
                                 });
                             });
                         } else {
-                            logger.log(logger.ERROR, "Open Exchange responded with status code " + res.statusCode);
+                            logger.log(Logger.ERROR, "Open Exchange responded with status code " + res.statusCode);
                         }
                     });
                 }
@@ -98,7 +101,7 @@ var report = function () {
                     sql += whereClause + " ";
                 }
                 sql += "GROUP BY c.CATALOGUE_REF";
-                logger.log(logger.DEBUG, sql);
+                sqlTrace.log(Logger.DEBUG, sql);
                 var query = connection.query(sql, function (err, results) {
                     if (err) {
                         defer.reject(dataTranslator.getErrorMessage(err));

@@ -3,7 +3,10 @@ var q = require('q');
 var connectionManager = require('../pom/connection-mysql');
 var dataTranslator = require('./mysql-translator');
 var odata = require('../util/odata-parser');
-var logger = require('../util/logger');
+var Logger = require('../util/logger');
+
+var sqlTrace = Logger.getLogger("sql");
+var logger = Logger.getLogger("server");
 
 function persistentCollection() {
     
@@ -74,7 +77,7 @@ function persistentCollection() {
                 connection.beginTransaction(function (err) {
                     if (!rollbackOnError(connection, defer, err)) {
                         var qs = dataTranslator.generateUpdateStatement(that.fieldDefinition, obj, id);
-                        logger.log(logger.TRACE, qs);
+                        sqlTrace.log(Logger.DEBUG, qs);
                         connection.query(qs, function (err, rows) {
                             if (!rollbackOnError(connection, defer, err)) {
                                 if (rows.changedRows === 0) {
@@ -118,7 +121,7 @@ function persistentCollection() {
                     } else {
                         var insert = function (_obj, generateId) {
                             var insertStatement = dataTranslator.generateInsertStatement(that.fieldDefinition, _obj);
-                            logger.log(logger.TRACE, insertStatement);
+                            sqlTrace.log(Logger.DEBUG, insertStatement);
                             connection.query(insertStatement, function (err, rows) {
                                 if (!rollbackOnError(connection, defer, err)) {
                                     var finish = function (connection, _obj) {
@@ -176,11 +179,11 @@ function persistentCollection() {
                     if (!rollbackOnError(connection, defer, err)) {
                         that.preDelete(connection, id).then(function () {
                             var qs = 'DELETE FROM ' + that.fieldDefinition.getTableName() + ' WHERE ID=?';
-                            logger.log(logger.TRACE, qs);
+                            sqlTrace.log(Logger.DEBUG, qs);
                             connection.query(qs, [id], function (err, rows) {
                                 if (err || rows.affectedRows === 0) {
                                     if (err) {
-                                        logger.log(logger.ERROR, "Issue during deletion" + err);
+                                        logger.log(Logger.ERROR, "Issue during deletion" + err);
                                     }
                                     connection.rollback(function () {
                                         defer.reject({ message: "No object found", code: "NOT_FOUND" });
@@ -255,6 +258,7 @@ function persistentCollection() {
                 $offset = 0;
             }
             var qs = 'SELECT * FROM ' + that.fieldDefinition.getTableName() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
+            sqlTrace.log(Logger.DEBUG, qs);
             connectionManager.getConnection(this.collectionName).then(function (connection) {
                 connection.query(qs, function (err, result) {
                     if (err !== null) {

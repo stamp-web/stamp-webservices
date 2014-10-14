@@ -1,47 +1,65 @@
 
 var fs = require('fs');
-function logger() {
-    
-    var levels = ['error', 'warn', 'info', 'debug', 'trace', 'all'];
-    var debugLevel = "warn";
+
+function Logger(loggerName) {
+    var name = loggerName;
+    var debugLevel = Logger.INFO;
     var target = "console";
     var targetPath;
-
-    return {
-        
-        ERROR : levels[0],
-        WARN : levels[1],
-        INFO : levels[2],
-        DEBUG : levels[3],
-        TRACE : levels[4],
-        ALL : levels[5],
-        
-        setTarget: function (type, item) {
-            target = type;
-            targetPath = item;
-        },
-        
-        log : function (level, message) {
-            if (this.enabled(level)) {
-                if (typeof message !== 'string') {
-                    message = JSON.stringify(message);
-                }
-                var msg = level.toUpperCase() + ': ' + message;
-                if (target === "file" && targetPath) {
-                    fs.appendFileSync(targetPath, msg + '\n');
-                } else {
-                    console.log(msg);
-                }
+  
+    this.log = function(level, message) {
+        if (this.isEnabled(level)) {
+            if (typeof message !== 'string') {
+                message = JSON.stringify(message);
             }
-        },
-        
-        setLevel : function (level) {
-            debugLevel = level;
-        },
-        
-        enabled : function (level) {
-            return (levels.indexOf(level) <= levels.indexOf(debugLevel));
+            var msg = level.toUpperCase() + ': ' + message;
+            if (target === "file" && targetPath) {
+                fs.appendFileSync(targetPath, msg + '\n');
+            } else {
+                console.log(msg);
+            }
         }
     }
+    
+    this.setLevel = function (level) {
+        debugLevel = level; 
+    }
+    
+    this.getLevel = function () {
+        return debugLevel;   
+    }
+    
+    this.setTarget = function (type, item) {
+        target = type;
+        targetPath = item;
+    }
+
+    this.isEnabled = function (level) {
+        return (Logger.levels.indexOf(level) <= Logger.levels.indexOf(debugLevel));
+    }
+
 };
-module.exports = new logger();
+
+Logger.levels = ['error', 'warn', 'info', 'debug', 'trace', 'all'];
+Logger.ERROR = Logger.levels[0];
+Logger.WARN = Logger.levels[1];
+Logger.INFO = Logger.levels[2];
+Logger.DEBUG = Logger.levels[3];
+Logger.TRACE = Logger.levels[4];
+Logger.ALL = Logger.levels[5];
+
+Logger.loggers = {};
+
+Logger.getLogger = function(loggerName) {
+    if (!Logger.loggers[loggerName]) {
+        Logger.loggers[loggerName] = new Logger(loggerName);
+    }
+    return Logger.loggers[loggerName];
+}
+
+Logger.getRegisteredLoggerNames = function () {
+    return Object.keys(Logger.loggers);   
+}
+
+
+module.exports = Logger;

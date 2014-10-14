@@ -2,7 +2,7 @@ var superagent = require('superagent')
 var child_process = require('child_process');
 var path = require('path');
 var expect = require('expect.js')
-var logger = require('../app/util/logger');
+var Logger = require('../app/util/logger');
 var mysql = require('mysql');
 var fs = require('fs');
 
@@ -12,7 +12,8 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
 var nconf = require('nconf');
 nconf.argv().env();
 
-logger.setLevel(logger.INFO);
+var logger = Logger.getLogger("server");
+logger.setLevel(Logger.INFO);
 logger.setTarget("file", __dirname + "/../logs/output.log");
 
 var server_port = 9002;
@@ -27,7 +28,7 @@ if (nconf.get("hostname")) {
 
 describe('REST Services tests', function (done) {
     before(function (done) {
-        logger.log(logger.INFO, "Reading SQL contents...");
+        logger.log(Logger.INFO, "Reading SQL contents...");
         var pro = process.cwd();
         var file = ((process.cwd().indexOf('\\test') > 0 )? '../' : '') + 'test/dbscript/initial-data.sql';
         var contents = fs.readFileSync( file , { encoding: 'utf-8' }).toString();
@@ -56,13 +57,13 @@ describe('REST Services tests', function (done) {
         
         child.on("message", function (m) {
             if (m && m === "SERVER_STARTED") {
-                logger.log(logger.INFO, "Received message that server is successfully started...");
+                logger.log(Logger.INFO, "Received message that server is successfully started...");
                 var f = function () {
                     setTimeout(function () {
                         if (totalCount && count === totalCount) {
                             done();
                         } else {
-                            logger.log(logger.INFO, "Server started but SQL statements are still executing...");
+                            logger.log(Logger.INFO, "Server started but SQL statements are still executing...");
                             f();
                         }
                     }, 150);

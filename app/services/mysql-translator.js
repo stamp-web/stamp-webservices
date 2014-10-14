@@ -1,7 +1,9 @@
 var _ = require('../../lib/underscore/underscore');
-var logger = require('../util/logger');
+var Logger = require('../util/logger');
 require("date-utils");
 require("../util/string-utilities");
+
+var logger = Logger.getLogger("server");
 
 function DataTranslator() {
     function validateBinaryOperation(el) {
@@ -120,7 +122,7 @@ function DataTranslator() {
             var expression = '';
             var that = this;
             if (!fieldDefinition) {
-                logger.log(logger.WARN, "The fieldDefinition parameter was not defined.");
+                logger.log(Logger.WARN, "The fieldDefinition parameter was not defined.");
             }
             var processExpression = function (el) {
                 if (typeof el === 'string') {
@@ -181,7 +183,7 @@ function DataTranslator() {
             } else if (typeof $filter === 'object') {
                 processExpression($filter);
             }
-            logger.log(logger.DEBUG, "Expression is: " + expression);
+            logger.log(Logger.DEBUG, "Expression is: " + expression);
             return expression;
 
         }

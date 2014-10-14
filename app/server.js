@@ -3,7 +3,9 @@ var connectionMgr = require('./pom/connection-mysql');
 var favicon = require('serve-favicon');
 var bodyParser = require('body-parser');
 var nconf = require('nconf');
-var logger = require('./util/logger');
+var Logger = require('./util/logger');
+
+var BASEPATH = "";
 
 var SERVICES_PATH = "/rest";
 nconf.argv().env();
@@ -14,14 +16,14 @@ app.use(favicon(__dirname + '/../public/favicon.ico'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-require("./routes/rest-preferences").configure(app, SERVICES_PATH);
-require("./routes/rest-countries").configure(app, SERVICES_PATH);
-require("./routes/rest-albums").configure(app, SERVICES_PATH);
-require("./routes/rest-stampCollections").configure(app, SERVICES_PATH);
-require("./routes/rest-catalogues").configure(app, SERVICES_PATH);
-require("./routes/rest-sellers").configure(app, SERVICES_PATH);
-require("./routes/rest-stamps").configure(app, SERVICES_PATH);
-require("./routes/reports").configure(app, SERVICES_PATH);
+require("./routes/rest-preferences").configure(app, BASEPATH + SERVICES_PATH);
+require("./routes/rest-countries").configure(app, BASEPATH + SERVICES_PATH);
+require("./routes/rest-albums").configure(app, BASEPATH + SERVICES_PATH);
+require("./routes/rest-stampCollections").configure(app, BASEPATH + SERVICES_PATH);
+require("./routes/rest-catalogues").configure(app, BASEPATH + SERVICES_PATH);
+require("./routes/rest-sellers").configure(app, BASEPATH + SERVICES_PATH);
+require("./routes/rest-stamps").configure(app, BASEPATH + SERVICES_PATH);
+require("./routes/reports").configure(app, BASEPATH + SERVICES_PATH);
 
 var port = nconf.get("port");
 if (!port) {
@@ -30,12 +32,35 @@ if (!port) {
     port = +port;
 }
 
-logger.setLevel(nconf.get("logger_level") ? nconf.get("logger_level") : logger.INFO);
-if (nconf.get("logger_target") === "file" && nconf.get("logger_file")) {
-    logger.setTarget(nconf.get("logger_target"), nconf.get("logger_file"));   
+function configureLogger(aLogger, name) {
+    aLogger.setLevel(nconf.get(name + "_level") ? nconf.get(name + "_level") : Logger.INFO);
+    if (nconf.get(name + "_target") === "file" && nconf.get(name + "_file")) {
+        logger.setTarget(nconf.get(name + "_target"), nconf.get(name + "_file"));
+    }
 }
+
+function configureLoggerRemotely(req, resp) {
+    var loggerName = req.params.logger;
+    var level = req.query.level;
+    var log = Logger.getLogger(loggerName);
+    if (level) {
+        log.setLevel(level);
+        resp.status(200).send("Logger \"" + loggerName + "\" successful set to " + level);
+    } else {
+        resp.status(200).send("Logger \"" + loggerName + "\" is set to " + log.getLevel());
+    }
+}
+
+var logger = Logger.getLogger("server");
+var sqlTrace = Logger.getLogger("sql");
+
+configureLogger(logger, "logger");
+configureLogger(sqlTrace, "sql");
+
+app.get(BASEPATH + "/config/logger/:logger", configureLoggerRemotely);
+
 app.listen(port);
-logger.log(logger.INFO, "HTTPServer listening on port " + port);
+logger.log(Logger.INFO, "HTTPServer listening on port " + port);
 connectionMgr.startup().then(function () {
     process.on('exit', function () {
         connectionMgr.shutdown();
@@ -45,7 +70,7 @@ connectionMgr.startup().then(function () {
         process.send("SERVER_STARTED");
     }
 }, function (err) {
-    logger.log(logger.ERROR, err);
+    logger.log(Logger.ERROR, err);
     process.exit(1);
 });
 

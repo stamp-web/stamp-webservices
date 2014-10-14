@@ -1,7 +1,9 @@
 var _ = require('../../lib/underscore/underscore');
 var odata = require('../util/odata-parser');
-var logger = require('../util/logger');
+var Logger = require('../util/logger');
 var routeHelper = require('./route-helper');
+
+var logger = Logger.getLogger("server");
 
 function restInterfaces() {
         
@@ -20,7 +22,7 @@ function restInterfaces() {
             app.get(basePath + "/:id", this.findById);
             app.delete(basePath + '/:id', this.remove);
 
-            console.log("   Registering services at " + basePath);
+            logger.log(Logger.INFO, "   Registering services at " + basePath);
         },
         findById: function (req, res) {
             var that = this;
@@ -47,7 +49,7 @@ function restInterfaces() {
                 var data = field.externalize(obj);
                 res.send(JSON.stringify(data));
             }, function (err) {
-                logger.log(logger.ERROR, err);
+                logger.log(Logger.ERROR, err);
                 routeHelper.setErrorStatus(res, err);
             });
         },
@@ -59,7 +61,7 @@ function restInterfaces() {
                 var data = field.externalize(obj);
                 res.send(JSON.stringify(data));
             }, function (err) {
-                logger.log(logger.ERROR, err);
+                logger.log(Logger.ERROR, err);
                 routeHelper.setErrorStatus(res, err);
             });
     
@@ -93,7 +95,6 @@ function restInterfaces() {
                 _.each(rows, function (row) {
                     result[collection.collectionName].push(field.externalize(row));
                 });
-                //console.log(JSON.stringify(result, null, true));
                 res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                 res.status(routeHelper.StatusCode.OK);
                 res.json(result);

@@ -1,12 +1,14 @@
 ﻿var mysql = require('mysql');
 var q = require('q');
 var fs = require('fs');
-var logger = require('../util/logger');
+var Logger = require('../util/logger');
 var nconf = require('nconf');
 var path = require('path');
 var _ = require('../../lib/underscore/underscore');
 
 nconf.argv().env().file(__dirname + '/../../config/application.json');
+
+var logger = Logger.getLogger("server");
 
 module.exports = function () {
     var dbPool;
@@ -35,7 +37,7 @@ module.exports = function () {
                     msg = "The database on host \"" + host + "\" was not reachable";
                     break;
             }
-            logger.log(logger.ERROR, "A connection to the database could not be established.  The message was:\n\n   " + msg + "\n");
+            logger.log(Logger.ERROR, "A connection to the database could not be established.  The message was:\n\n   " + msg + "\n");
         }
     }
     
@@ -93,7 +95,7 @@ module.exports = function () {
                             password: config.password,
                             database: config.schema
                         });
-                        logger.log(logger.INFO, "MySQL database pool created");
+                        logger.log(Logger.INFO, "MySQL database pool created");
                         dbPool.getConnection(function (err, connection) {
                             if (!err) {
                                 connection.release();
@@ -106,7 +108,7 @@ module.exports = function () {
                 }
                 else {
                     var msg = "The database " + dbName + " was not found in the configuration.";
-                    logger.log(logger.ERROR, msg);
+                    logger.log(Logger.ERROR, msg);
                     startDefer.reject(msg);
                 }
             }
@@ -129,7 +131,7 @@ module.exports = function () {
                     connection.release();
                 }
             } else {
-                logger.log(logger.WARN, "Detected a connection without a threadId");
+                logger.log(Logger.WARN, "Detected a connection without a threadId");
                 connection.release();
             }
         },
@@ -141,12 +143,12 @@ module.exports = function () {
                 delete connectionMap[key];   
             }
             if (connectionMap[key] !== undefined) {
-                logger.log(logger.DEBUG, "Re-using current connection for " + key + ": " + curConnection.threadId);
+                logger.log(Logger.DEBUG, "Re-using current connection for " + key + ": " + curConnection.threadId);
                 defer.resolve(connectionMap[key]);
             } else {
                 dbPool.getConnection(function (err, connection) {
                     if (!err) {
-                        logger.log(logger.DEBUG, "Creating a new connection for " + key + ": " + connection.threadId);
+                        logger.log(Logger.DEBUG, "Creating a new connection for " + key + ": " + connection.threadId);
                         connectionMap[key] = connection;
                         defer.resolve(connection);
                     } else {

@@ -8,7 +8,10 @@ var ownership = require('../model/ownership');
 var catalogueNumber = require('../model/catalogue-number');
 var _ = require('../../lib/underscore/underscore');
 var q = require('q');
-var logger = require('../util/logger');
+var Logger = require('../util/logger');
+
+var sqlTrace = Logger.getLogger("sql");
+var logger = Logger.getLogger("server");
 
 var stamps = extend(true, {}, persistentCollection, function () {
     
@@ -62,13 +65,12 @@ var stamps = extend(true, {}, persistentCollection, function () {
         s['CATALOGUENUMBER'].push(populateChildren(stamp.getFieldDefinitions(), catalogueNumber.getFieldDefinitions(), row, 'cID'));
         var oid = row.oID;
         if (oid && !_.findWhere(s['OWNERSHIP'], { ID: oid })) {
-            console.log("getting owner");
             var ownerObj = populateChildren(stamp.getFieldDefinitions(), ownership.getFieldDefinitions(), row, 'oID');
             if (!_.isEmpty(ownerObj)) {
                 s['OWNERSHIP'].push(ownerObj);
             }
         } else {
-            console.log("skipped for " + s.ID);
+            logger.log(Logger.TRACE, "skipped for " + s.ID);
         }
     }
 
@@ -95,10 +97,9 @@ var stamps = extend(true, {}, persistentCollection, function () {
             select += ' FROM ' + stamp.getTableName() + ' AS s JOIN ' + catalogueNumber.getTableName() + ' AS c ON s.ID=c.STAMP_ID ';
             select += 'LEFT OUTER JOIN ' + ownership.getTableName() + ' AS o ON s.ID = o.STAMP_ID';
             
-            var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, stamp, ['s']) : '';
+            var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, [stamp, catalogueNumber, ownership], ['s', 'c', 'o']) : '';
             select += ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
-            logger.log(logger.DEBUG, select);
-            console.log(select);
+            sqlTrace.log(Logger.DEBUG, select);
             connectionManager.getConnection(this.collectionName).then(function (connection) {
                 var rows = [];
                 var query = connection.query(select);
@@ -107,12 +108,9 @@ var stamps = extend(true, {}, persistentCollection, function () {
                 }).on('end', function () {
                     defer.resolve(rows);
                 }).on('error', function (err) {
-                    console.log(err);
+                    logger.log(Logger.ERROR, err);
                     defer.reject(dataTranslator.getErrorMessage(err));
                 });
-   
-                    
-                
             }, function (err) {
                 defer.reject(dataTranslator.getErrorMessage(err));
             });
