@@ -7,10 +7,10 @@ var ownership = extend({}, fieldDefinition, function() {
             return [
                 { field: 'id', column: 'ID', type: 'long', required: true },
                 { field: 'pricePaid', column: 'PRICE', type: 'float' },
-                { field: 'purchased', column: 'PURCHASED', type: 'date', externalizeOnEmpty: false},
+                { field: 'purchased', column: 'PURCHASED', type: 'date', externalizeOnEmpty: false },
                 { field: 'grade', column: 'GRADE', type: 'int' },
                 { field: 'condition', column: 'THECONDITION', type: 'int' },
-                { field: 'img', column: 'IMAGE', type: 'string' },
+                { field: 'img', column: 'IMAGE', type: 'string', externalizeOnEmpty: false },
                 { field: 'notes', column: 'NOTES', type: 'string', externalizeOnEmpty: false },
                 { field: 'code', column: 'CURRENCY', type: 'string' },
                 { field: 'stampRef', column: 'STAMP_ID', type: 'long', required: true, joinWith: 'STAMPS', internal: true },
@@ -29,6 +29,9 @@ var ownership = extend({}, fieldDefinition, function() {
         },
         getTableName: function () {
             return "OWNERSHIP";
+        },
+        getAlias: function () {
+            return "o";
         }
 
     };

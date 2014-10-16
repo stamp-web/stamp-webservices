@@ -17,6 +17,9 @@ var seller = extend({}, fieldDefinition, function() {
         },
         getTableName: function () {
             return "SELLERS";
+        },
+        getAlias: function () {
+            return "sv";
         }
     };
 }());

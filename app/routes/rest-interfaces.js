@@ -88,16 +88,17 @@ function restInterfaces() {
             var offset = req.query.$offset;
             var that = this;
             collection.find(filter, limit, offset).then(function (rows) {
-                var result = {
-                    total: rows.length
-                };
+                var result = {};
                 result[collection.collectionName] = [];
                 _.each(rows, function (row) {
                     result[collection.collectionName].push(field.externalize(row));
                 });
-                res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
-                res.status(routeHelper.StatusCode.OK);
-                res.json(result);
+                collection.count(filter).then(function (count) {
+                    result.total = count;
+                    res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
+                    res.status(routeHelper.StatusCode.OK);
+                    res.json(result);
+                });
             }, function (err) {
                 res.status(routeHelper.StatusCode.INTERNAL_ERROR).send(routeHelper.ClientMessages.INTERNAL_ERROR).end();
             });

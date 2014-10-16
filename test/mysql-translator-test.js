@@ -1,10 +1,12 @@
 var expect = require('expect.js')
 var country = require("../app/model/country");
+var album = require("../app/model/album");
 var preference = require("../app/model/preference");
 var translator = require("../app/services/mysql-translator");
 var dateUtils = require("date-utils");
 
 describe('MySQL Translator tests', function (done) {
+
     describe('Generate Insert Statement tests', function () {
         it("Country with full parameters", function () {
             var c = {
@@ -44,5 +46,19 @@ describe('MySQL Translator tests', function (done) {
         });
 
         
+    });
+    describe("Generate In Clause Value Statements", function () {
+        it("Single value", function () {
+            var ids = [654];
+            expect(translator.generateInValueStatement(ids)).to.be.eql("(654)");
+        });
+        it("Multiple values", function () {
+            var ids = [4,5,7,12];
+            expect(translator.generateInValueStatement(ids)).to.be.eql("(4,5,7,12)");
+        });
+        it("No values", function () {
+            var ids = [];
+            expect(translator.generateInValueStatement(ids)).to.be.eql("");
+        });
     });
 });

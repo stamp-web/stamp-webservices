@@ -10,7 +10,7 @@ var connectionHelper = require('./util/connection-helper');
 var NamedCollectionVerifications = require('./util/named-collection-verifier');
 
 var nconf = require('nconf');
-nconf.argv().env();
+nconf.argv().env().file(__dirname + '/../config/application.json');
 
 var logger = Logger.getLogger("server");
 logger.setLevel(Logger.INFO);
@@ -26,30 +26,48 @@ if (nconf.get("hostname")) {
     hostname = nconf.get("hostname");
 }
 
+var database = (nconf.get("test_database") ? nconf.get("test_database") : "test");
+
+var sql_level = 'info';
+if (nconf.get("sql_level")) {
+    sql_level = nconf.get("sql_level");   
+}
+
 describe('REST Services tests', function (done) {
+    var connection;
+
+    after(function (done) {
+        connection.end();
+        done();
+    });
+
     before(function (done) {
         logger.log(Logger.INFO, "Reading SQL contents...");
         var pro = process.cwd();
         var file = ((process.cwd().indexOf('\\test') > 0 )? '../' : '') + 'test/dbscript/initial-data.sql';
         var contents = fs.readFileSync( file , { encoding: 'utf-8' }).toString();
         
-        var connection = mysql.createConnection({
-            host     : 'localhost',
-            user     : 'tester',
-            password : 'tester',
-            database : 'unittest'
+        var dbConfigs = nconf.get("databases");
+        var dbConfig = dbConfigs[database];
+
+        connection = mysql.createConnection({
+            host     : dbConfig.host,
+            user     : dbConfig.user,
+            password : dbConfig.password,
+            database : dbConfig.schema
         });
         
         var count = 0;
         var totalCount = connectionHelper.loadFromFile(connection, contents, function () {
             count++;
         });
-        connection.end();
+        
         var child = child_process.fork(__dirname + "/../app/server", [], {
             cwd: "..",
             env: {
-                database: "test",
+                database: database,
                 port: server_port,
+                sql_level: sql_level,
                 logger_target: "file",
                 logger_file: __dirname + "/../logs/output.log"
             }
@@ -192,7 +210,7 @@ describe('REST Services tests', function (done) {
             }, done);
         });
         
-        it('DELETE successful with no retained state', function (done) {
+        it('DELETE successful', function (done) {
             NamedCollectionVerifications.verifyDelete('sellers', {
                 name: 'Seaside Stamp and Coin'
             }, done);
@@ -200,6 +218,38 @@ describe('REST Services tests', function (done) {
         
         it('DELETE no existing ID', function (done) {
             NamedCollectionVerifications.verifyDeleteNotFound('sellers', done);
+        });
+
+        it('DELETE clears SELLER_ID of ownership and updates ModifyStamp of stamp and ownership', function (done) {
+            NamedCollectionVerifications.verifyPost('sellers', {
+                name: 'Test of Delete Seller_ID'
+            }, null, function (seller) {
+                // seller is now created and available for evaluation
+                connection.query('INSERT INTO STAMPS (ID,COUNTRY_ID,DENOMINATION) VALUES(80200,1,"1d")', function (err, data) {
+                    if (err) {
+                        expect().fail("could not save stamp", err);
+                    }
+                    connection.query('INSERT INTO OWNERSHIP (ID,SELLER_ID,STAMP_ID) VALUES(80200,' + seller.id + ',80200)', function (err, data) {
+                        if (err) {
+                            expect().fail("could not save ownership", err);
+                        }
+                        var time = new Date().getTime();
+                        superagent.del('http://' + hostname + ':' + server_port + '/rest/sellers/' + seller.id)
+                            .end(function (e, res) {
+                            expect(e).to.eql(null);
+                            expect(res.status).to.eql(204);
+                            connection.query('SELECT s.MODIFYSTAMP AS sMod, o.MODIFYSTAMP AS oMod, o.SELLER_ID AS seller_id FROM STAMPS AS s LEFT OUTER JOIN OWNERSHIP AS o ON s.ID=o.STAMP_ID WHERE s.ID=80200', function (err, data) {
+                                expect(err).to.be.eql(null);
+                                expect(new Date(data[0].sMod).getTime() - time).to.be.lessThan(500);
+                                expect(new Date(data[0].oMod).getTime() - time).to.be.lessThan(500);
+                                expect(data[0].seller_id).to.be(null);
+                                done();
+                            });
+                        });
+                    });
+                });
+            });
+            
         });
        
     });
@@ -298,20 +348,20 @@ describe('REST Services tests', function (done) {
             superagent.post('http://' + hostname + ':' + server_port + '/rest/countries')
             .send({ name: conflict_name })
             .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(201);
+                expect(e).to.be(null);
+                expect(res.status).to.be(201);
                 superagent.post('http://' + hostname + ':' + server_port + '/rest/countries')
                 .send({ name: 'PUT causing conflict' })
                   .end(function (e, res) {
-                    expect(e).to.eql(null);
-                    expect(res.status).to.eql(201);
+                    expect(e).to.be(null);
+                    expect(res.status).to.be(201);
                     var id = res.body.id;
                     // Now verify it is not found.
                     superagent.put('http://' + hostname + ':' + server_port + '/rest/countries/' + id)
                         .send({ name: conflict_name })
                         .end(function (e, res) {
-                        expect(e).to.eql(null);
-                        expect(res.status).to.eql(409);
+                        expect(e).to.be(null);
+                        expect(res.status).to.be(409);
                         done();
                     });
                 });
@@ -324,6 +374,52 @@ describe('REST Services tests', function (done) {
         
         it('DELETE successful with no retained state', function (done) {
             NamedCollectionVerifications.verifyDelete('countries', { name: 'Test Delete' }, done);
+        });
+        
+        it('DELETE cascade to ALBUMS_COUNTRIES', function (done) {
+            NamedCollectionVerifications.verifyPost('countries', {
+                name: 'Test of Country Delete Cascade'
+            }, null, function (country) {
+                NamedCollectionVerifications.verifyPost('albums', {
+                    name: 'Test of Country Delete Cascade', countries: [country.id], stampCollectionRef: 1
+                }, null, function (album) {
+                    superagent.del('http://' + hostname + ':' + server_port + '/rest/countries/' + country.id)
+                            .end(function (e, res) {
+                        expect(e).to.eql(null);
+                        expect(res.status).to.be(204);
+                        superagent.get('http://' + hostname + ':' + server_port + '/rest/albums/' + album.id)
+                            .end(function (e, res) {
+                            expect(e).to.eql(null);
+                            expect(res.status).to.be(200);
+                            expect(res.body.countries.length).to.be(0);
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+
+        it('DELETE successfully removes associated stamp(s).', function (done) {
+            NamedCollectionVerifications.verifyPost('countries', {
+                name: 'Test of Delete Country_ID'
+            }, null, function (country) {
+                // seller is now created and available for evaluation
+                connection.query('INSERT INTO STAMPS (ID,COUNTRY_ID,DENOMINATION) VALUES(80201,' + country.id +',"1d")', function (err, data) {
+                    if (err) {
+                        expect().fail("could not save stamp", err);
+                    }
+                    superagent.del('http://' + hostname + ':' + server_port + '/rest/countries/' + country.id)
+                            .end(function (e, res) {
+                        expect(e).to.eql(null);
+                        expect(res.status).to.be(204);
+                        connection.query('SELECT COUNT(DISTINCT ID) AS count FROM STAMPS WHERE COUNTRY_ID=' + country.id, function (err, data) {
+                            expect(err).to.be(null);
+                            expect(data[0].count).to.be(0);
+                            done();
+                        });
+                    });
+                });
+            });
         });
     });
     
@@ -420,7 +516,7 @@ describe('REST Services tests', function (done) {
                 .send({ name: 'PUT album', description: 'Description on update', countries: [2] })
                   .end(function (e, res) {
                     expect(e).to.eql(null);
-                    expect(res.status).to.eql(200);
+                    expect(res.status).to.be(200);
                     var body = res.body;
                     expect(body.name).to.eql('PUT album');
                     expect(body.description).to.eql('Description on update');
@@ -465,7 +561,7 @@ describe('REST Services tests', function (done) {
             NamedCollectionVerifications.verifyDeleteNotFound('albums', done);
         });
         
-        it('DELETE successful with no retained state', function (done) {
+        it('DELETE successful with cascade to ALBUMS_COUNTRIES', function (done) {
             NamedCollectionVerifications.verifyDelete('albums', {
                 name: 'TEST DELETE', stampCollectionRef: 1, countries: [1]
             }, done, function (done) {
@@ -476,8 +572,8 @@ describe('REST Services tests', function (done) {
                     done();
                 });
             });
-
         });
+
     });
     
     describe('Stamp Collection REST API tests', function (done) {

@@ -21,7 +21,7 @@
     <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{349c5851-65df-11da-9384-00065b846f21};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
     <ProjectView>ShowAllFiles</ProjectView>
     <NodejsPort>1337</NodejsPort>
-    <StartWebBrowser>true</StartWebBrowser>
+    <StartWebBrowser>False</StartWebBrowser>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -56,6 +56,8 @@
       <TestFramework>
       </TestFramework>
     </Compile>
+    <Compile Include="app\services\ownerships.js" />
+    <Compile Include="app\services\catalogue-numbers.js" />
     <Compile Include="app\services\reports.js" />
     <Compile Include="app\services\sellers.js" />
     <Compile Include="app\services\catalogues.js" />
@@ -81,13 +83,20 @@
     <Compile Include="test\resources-test.js">
       <TestFramework>Mocha</TestFramework>
     </Compile>
+    <Compile Include="test\transaction-example.js">
+      <SubType>Code</SubType>
+      <TestFramework>Mocha</TestFramework>
+    </Compile>
     <Compile Include="test\util\connection-helper.js" />
     <Compile Include="test\util\named-collection-verifier.js" />
+    <Content Include=".bowerrc" />
+    <Content Include="bower.json" />
     <Content Include="config\application-example.json" />
+    <Content Include="create-tables.sql" />
+    <Content Include="LICENSE" />
     <Content Include="package.json" />
     <Content Include="public\stylesheets\style.styl" />
     <Content Include="README.md" />
-    <Content Include="test\country.json" />
     <Content Include="test\dbscript\initial-data.sql" />
   </ItemGroup>
   <ItemGroup>

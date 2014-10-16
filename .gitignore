@@ -8,3 +8,4 @@ coverage
 logs/output.log
 /config/application.json
 /config/exchange-rates.json
+/test/transaction-example.js

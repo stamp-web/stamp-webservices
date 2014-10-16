@@ -14,7 +14,7 @@ function DataTranslator() {
     
     return {
         MYSQL_DATEFORMAT : "YYYY-MM-DD HH:MI:SS",
-    
+        
         getErrorMessage: function (err) {
             var msg;
             if (!err.processed) {
@@ -89,7 +89,7 @@ function DataTranslator() {
             _.each(obj, function (value, key) {
                 var definition = _.findWhere(fieldDefinition.getFieldDefinitions(), { field : key });
                 if (definition && definition.column) {
-                    if (definition.type === 'id_array') {
+                    if (definition.type === 'id_array' || definition.type === 'obj_array') {
                         return;
                     }
                     config.DB_COLS.push(definition.column);
@@ -116,7 +116,21 @@ function DataTranslator() {
             });
             return config;
         },
-       
+        
+        generateInValueStatement: function (ids) {
+            var id_vals = '';
+            var len = ids.length;
+            if (len > 0) {
+                for (var i = 0; i < len; i++) {
+                    id_vals += ids[i];
+                    if (i < len - 1) {
+                        id_vals += ',';
+                    }
+                }
+                id_vals = '(' + id_vals + ')';
+            }
+            return id_vals;
+        },
         
         toWhereClause: function ($filter, fieldDefinition, selectors) {
             var expression = '';

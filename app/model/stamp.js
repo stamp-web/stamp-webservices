@@ -21,6 +21,9 @@ var stamp = extend({}, fieldDefinition, function() {
         },
         getTableName: function () {
             return "STAMPS";
+        },
+        getAlias: function () {
+            return "s";
         }
 
     };

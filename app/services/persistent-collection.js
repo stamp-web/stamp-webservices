@@ -12,15 +12,17 @@ function persistentCollection() {
     
     var last_id = 0;
     
-
+    
     function updateSequence(collectionName, _id, fieldDefinition) {
         var defer = q.defer();
         var qs = "UPDATE SEQUENCE_GEN SET ID_VAL=? WHERE ID_NAME='" + fieldDefinition.getSequenceColumn() + "'";
+        sqlTrace.log(Logger.DEBUG, qs + " Bind params: [" + _id + "]");
         connectionManager.getConnection(collectionName).then(function (connection) {
             connection.beginTransaction(function (err) {
                 connection.query(qs, [_id], function (err, rows) {
                     if (err) {
                         connection.rollback(function () {
+                            connectionManager.release(connection);
                             defer.reject(dataTranslator.getErrorMessage(err));
                         });
                     } else {
@@ -39,6 +41,7 @@ function persistentCollection() {
     function rollbackOnError(connection, defer, err) {
         if (err) {
             connection.rollback(function () {
+                connectionManager.release(connection);
                 defer.reject(dataTranslator.getErrorMessage(err));
             });
             return true;
@@ -74,38 +77,47 @@ function persistentCollection() {
             var that = this;
             
             connectionManager.getConnection(this.collectionName).then(function (connection) {
-                connection.beginTransaction(function (err) {
-                    if (!rollbackOnError(connection, defer, err)) {
-                        var qs = dataTranslator.generateUpdateStatement(that.fieldDefinition, obj, id);
-                        sqlTrace.log(Logger.DEBUG, qs);
-                        connection.query(qs, function (err, rows) {
-                            if (!rollbackOnError(connection, defer, err)) {
-                                if (rows.changedRows === 0) {
-                                    connection.rollback(function () {
-                                        defer.reject({ message: "Not object found.", code: "NOT_FOUND" });
-                                    });
-                                } else {
-                                    connection.commit(function (err) {
-                                        if (err) {
-                                        } else {
-                                            that.findById(id).then(function (result) {
-                                                result = that.fieldDefinition.merge(result, _obj);
-                                                that.postUpdate(connection, result).then(function (newResult) {
-                                                    connectionManager.release(connection);
-                                                    defer.resolve(newResult);
-                                                }, function (err) {
-                                                    defer.reject(dataTranslator.getErrorMessage(err));
-                                                });
-                                            }, function (err) {
-                                                defer.reject({ message: "Not object found.", code: "NOT_FOUND" });
-                                            });
-                                        }
-                                    });
-                                } // end else
-                            }
+                var postProcess = function (id, _obj) {
+                    that.findById(id).then(function (result) {
+                        result = that.fieldDefinition.merge(result, _obj);
+                        that.postUpdate(connection, result).then(function (newResult) {
+                            connectionManager.release(connection);
+                            defer.resolve(newResult);
+                        }, function (err) {
+                            defer.reject(dataTranslator.getErrorMessage(err));
                         });
-                    }
-                });
+                    }, function (err) {
+                        defer.reject({ message: "Not object found.", code: "NOT_FOUND" });
+                    });
+                }
+                var qs = dataTranslator.generateUpdateStatement(that.fieldDefinition, obj, id);
+                sqlTrace.log(Logger.DEBUG, qs);
+                if (qs !== null) {
+                    connection.beginTransaction(function (err) {
+                        if (!rollbackOnError(connection, defer, err)) {
+                            connection.query(qs, function (err, rows) {
+                                if (!rollbackOnError(connection, defer, err)) {
+                                    if (rows.changedRows === 0 && rows.affectedRows === 0) {
+                                        connection.rollback(function () {
+                                            connectionManager.release(connection);
+                                            defer.reject({ message: "Not object found.", code: "NOT_FOUND" });
+                                        });
+                                    } else {
+                                        connection.commit(function (err) {
+                                            if (err) {
+                                            } else {
+                                                postProcess(id, _obj);
+                                            }
+                                        });
+                                    } // end else
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    postProcess(id, _obj);
+                }
+                
             });
             return defer.promise;
         },
@@ -171,21 +183,22 @@ function persistentCollection() {
             return defer.promise;
         },
         
-        remove: function (id) {
+        removeAll: function (ids) {
             var defer = q.defer();
             var that = this;
             connectionManager.getConnection(this.collectionName).then(function (connection) {
                 connection.beginTransaction(function (err) {
                     if (!rollbackOnError(connection, defer, err)) {
-                        that.preDelete(connection, id).then(function () {
-                            var qs = 'DELETE FROM ' + that.fieldDefinition.getTableName() + ' WHERE ID=?';
+                        that.preDeleteAll(connection, ids).then(function () {
+                            var qs = 'DELETE FROM ' + that.fieldDefinition.getTableName() + ' WHERE ID IN ' + dataTranslator.generateInValueStatement(ids);
                             sqlTrace.log(Logger.DEBUG, qs);
-                            connection.query(qs, [id], function (err, rows) {
+                            connection.query(qs, function (err, rows) {
                                 if (err || rows.affectedRows === 0) {
                                     if (err) {
                                         logger.log(Logger.ERROR, "Issue during deletion" + err);
                                     }
                                     connection.rollback(function () {
+                                        connectionManager.release(connection);
                                         defer.reject({ message: "No object found", code: "NOT_FOUND" });
                                     });
                                 } else {
@@ -203,13 +216,51 @@ function persistentCollection() {
             });
             return defer.promise;
         },
-
+        
+        remove: function (id) {
+            var defer = q.defer();
+            var that = this;
+            connectionManager.getConnection(this.collectionName).then(function (connection) {
+                connection.beginTransaction(function (err) {
+                    if (!rollbackOnError(connection, defer, err)) {
+                        that.preDelete(connection, id).then(function () {
+                            var qs = 'DELETE FROM ' + that.fieldDefinition.getTableName() + ' WHERE ID=?';
+                            sqlTrace.log(Logger.DEBUG, qs);
+                            connection.query(qs, [id], function (err, rows) {
+                                if (err || rows.affectedRows === 0) {
+                                    if (err) {
+                                        logger.log(Logger.ERROR, "Issue during deletion" + err);
+                                    }
+                                    connection.rollback(function () {
+                                        connectionManager.release(connection);
+                                        defer.reject({ message: "No object found", code: "NOT_FOUND" });
+                                    });
+                                } else {
+                                    connection.commit(function (c_err) {
+                                        connectionManager.release(connection);
+                                        defer.resolve(rows.affectedRows);
+                                    });
+                                }
+                            });
+                        }, function (err) {
+                            rollbackOnError(connection, defer, err);
+                        });
+                    }
+                });
+            });
+            return defer.promise;
+        },
+        
+        getFromTables: function ($filter) {
+            return this.fieldDefinition.getTableName() + " AS " + this.fieldDefinition.getAlias();
+        },
+        
         count: function ($filter) {
             var defer = q.defer();
             var that = this;
-            var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, that.fieldDefinition) : '';
-            var qs = 'SELECT COUNT(id) FROM ' + that.fieldDefinition.getTableName() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '');
-            
+            var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, [that.fieldDefinition]) : '';
+            var qs = 'SELECT COUNT(DISTINCT ' + that.fieldDefinition.getAlias() + '.ID) AS COUNT FROM ' + this.getFromTables() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '');
+            sqlTrace.log(Logger.DEBUG, qs);
             connectionManager.getConnection(this.collectionName).then(function (connection) {
                 connection.query(qs, function (err, result) {
                     if (err !== null) {
@@ -217,7 +268,7 @@ function persistentCollection() {
                     }
                     else if (result.length > 0) {
                         connectionManager.release(connection);
-                        defer.resolve(result[0]['COUNT(id)']);
+                        defer.resolve(result[0]['COUNT']);
                     } else {
                         defer.reject({ message: "No object found", code: "NOT_FOUND" });
                     }
@@ -227,7 +278,7 @@ function persistentCollection() {
             });
             return defer.promise;
         },
-
+        
         findById: function (id) {
             var filter = odata.toPredicates("id eq " + id);
             var defer = q.defer();
@@ -249,15 +300,14 @@ function persistentCollection() {
         find: function ($filter, $limit, $offset) {
             var defer = q.defer();
             var that = this;
-            var definitions = [ that.fieldDefinition ];
-            var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, definitions) : '';
+            var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, [ that.fieldDefinition ], [ that.fieldDefinition.getAlias()]) : '';
             if (!$limit) {
                 $limit = 1000;
             }
             if (!$offset) {
                 $offset = 0;
             }
-            var qs = 'SELECT * FROM ' + that.fieldDefinition.getTableName() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
+            var qs = 'SELECT * FROM ' + that.getFromTables() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
             sqlTrace.log(Logger.DEBUG, qs);
             connectionManager.getConnection(this.collectionName).then(function (connection) {
                 connection.query(qs, function (err, result) {
@@ -297,6 +347,11 @@ function persistentCollection() {
             return defer.promise;
         },
         preDelete: function (connection, id) {
+            var defer = q.defer();
+            defer.resolve();
+            return defer.promise;
+        },
+        preDeleteAll: function (connection, ids) {
             var defer = q.defer();
             defer.resolve();
             return defer.promise;

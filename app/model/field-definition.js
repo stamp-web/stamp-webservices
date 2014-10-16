@@ -94,6 +94,9 @@ var fieldDefinition = function () {
         },
         getTableName: function () {
             throw new Error("getTableName() needs to be implemented by provider.");
+        },
+        getAlias: function () {
+            throw new Error("getAlias() needs to be implemented by provider.");
         }
     };
 };

@@ -6,7 +6,7 @@ var catalogue = extend({}, fieldDefinition, function() {
         getFieldDefinitions: function () {
             return [
                 { field: 'name', column: 'NAME', type: 'string', required: true },
-                { field: 'description', column: 'DESCRIPTION', type: 'string' },
+                { field: 'description', column: 'DESCRIPTION', type: 'string', externalizeOnEmpty: false },
                 { field: 'id', column: 'ID', type: 'long', required: true },
                 { field: 'issue', column: 'ISSUE', type: 'int', required: true },
                 { field: 'type', column: 'TYPE', type: 'int', require: true },
@@ -21,6 +21,9 @@ var catalogue = extend({}, fieldDefinition, function() {
         },
         getTableName: function () {
             return "CATALOGUES";
+        },
+        getAlias: function () {
+            return "cv";
         }
     };
 }());

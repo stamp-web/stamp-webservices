@@ -23,6 +23,9 @@ var catalogueNumber = extend({}, fieldDefinition, function() {
         },
         getTableName: function () {
             return "CATALOGUENUMBERS";
+        },
+        getAlias: function () {
+            return "c";
         }
 
     };

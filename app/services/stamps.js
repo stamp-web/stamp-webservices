@@ -1,5 +1,7 @@
 var extend = require('node.extend');
 var persistentCollection = require('./persistent-collection');
+var catalogueNumberService = require('./catalogue-numbers');
+var ownershipService = require('./ownerships');
 var connectionManager = require('../pom/connection-mysql');
 var dataTranslator = require('./mysql-translator');
 var odata = require('../util/odata-parser');
@@ -44,7 +46,7 @@ var stamps = extend(true, {}, persistentCollection, function () {
                 delete object[field.column];
             }
         });
-
+        
         return child;
     }
     
@@ -73,9 +75,90 @@ var stamps = extend(true, {}, persistentCollection, function () {
             logger.log(Logger.TRACE, "skipped for " + s.ID);
         }
     }
-
+    
     return {
-       find: function ($filter, $limit, $offset) {
+        postCreate: function (connection, obj) {
+            var defer = q.defer();
+            var total = ((obj.catalogueNumbers) ? obj.catalogueNumbers.length : 0) + ((obj.stampOwnerships) ? obj.stampOwnerships.length : 0);
+            var created = 0;
+            if (obj.catalogueNumbers && _.isArray(obj.catalogueNumbers)) {
+                _.each(obj.catalogueNumbers, function (catNum) {
+                    catNum.stampRef = obj.id;
+                    catalogueNumberService.create(catNum).then(function (result) {
+                        created++;
+                        if (created === total) {
+                            defer.resolve(obj);
+                        }
+                    }, function (err) {
+                        defer.reject(dataTranslator.getErrorMessage(err));
+                    });
+                });
+            }
+            if (obj.stampOwnerships && _.isArray(obj.stampOwnerships)) {
+                _.each(obj.stampOwnerships, function (owner) {
+                    owner.stampRef = obj.id;
+                    ownershipService.create(owner).then(function (result) {
+                        created++;
+                        if (created === total) {
+                            defer.resolve(obj);
+                        }
+                    }, function (err) {
+                        defer.reject(dataTranslator.getErrorMessage(err));
+                    });
+                });
+            }
+            return defer.promise;
+        },
+        preDelete: function (connection, id) {
+            var defer = q.defer();
+            var qs = 'DELETE FROM ' + catalogueNumber.getTableName() + ' WHERE STAMP_ID=' + id;
+            sqlTrace.log(Logger.DEBUG, qs);
+            connection.query(qs, function (err, rows) {
+                if (err) {
+                    defer.reject(dataTranslator.getErrorMessage(err));
+                }
+                qs = 'DELETE FROM ' + ownership.getTableName() + ' WHERE STAMP_ID=' + id;
+                sqlTrace.log(Logger.DEBUG, qs);
+                connection.query(qs, function (err, rows) {
+                    if (err) {
+                        defer.reject(dataTranslator.getErrorMessage(err));
+                    } else {
+                        defer.resolve();
+                    }
+                });
+            });
+            return defer.promise;
+        },
+        preDeleteAll: function (connection, ids) {
+            var defer = q.defer();
+            var id_s = dataTranslator.generateInValueStatement(ids);
+            if (id_s !== '') {
+                var qs = 'DELETE FROM ' + catalogueNumber.getTableName() + ' WHERE STAMP_ID IN ' + id_s;
+                sqlTrace.log(Logger.DEBUG, qs);
+                connection.query(qs, function (err, rows) {
+                    if (err) {
+                        defer.reject(dataTranslator.getErrorMessage(err));
+                    }
+                    qs = 'DELETE FROM ' + ownership.getTableName() + ' WHERE STAMP_ID IN ' + id_s;
+                    sqlTrace.log(Logger.DEBUG, qs);
+                    connection.query(qs, function (err, rows) {
+                        if (err) {
+                            defer.reject(dataTranslator.getErrorMessage(err));
+                        } else {
+                            defer.resolve();
+                        }
+                    });
+                });
+            }
+            return defer.promise;
+        },
+        getFromTables: function ($filter) {
+            var tables = stamp.getTableName() + ' AS ' + stamp.getAlias() + ' JOIN ' + catalogueNumber.getTableName() + ' AS ' + catalogueNumber.getAlias();
+            tables += ' ON ' + stamp.getAlias() + '.ID=' + catalogueNumber.getAlias() + '.STAMP_ID ';
+            tables += 'LEFT OUTER JOIN ' + ownership.getTableName() + ' AS ' + ownership.getAlias() + ' ON ' + stamp.getAlias() + '.ID = ' + ownership.getAlias() + '.STAMP_ID'
+            return tables;
+        },
+        find: function ($filter, $limit, $offset) {
             var defer = q.defer();
             var that = this;
             
@@ -86,18 +169,18 @@ var stamps = extend(true, {}, persistentCollection, function () {
                 $offset = 0;
             }
             var rejectFn = function (field) {
-                return (field.internal && field.internal === true || field.model );
+                return (field.internal && field.internal === true || field.model);
             };
             var stampDef = _.reject(stamp.getFieldDefinitions(), rejectFn);
             var catDef = _.reject(catalogueNumber.getFieldDefinitions(), rejectFn);
             var ownerDef = _.reject(ownership.getFieldDefinitions(), rejectFn);
             
-            var select = 'SELECT ' + generateColumnExpression(stampDef, 's') + ',';
-            select += generateColumnExpression(catDef, 'c') + ',' + generateColumnExpression(ownerDef, 'o');
-            select += ' FROM ' + stamp.getTableName() + ' AS s JOIN ' + catalogueNumber.getTableName() + ' AS c ON s.ID=c.STAMP_ID ';
-            select += 'LEFT OUTER JOIN ' + ownership.getTableName() + ' AS o ON s.ID = o.STAMP_ID';
+            var select = 'SELECT ' + generateColumnExpression(stampDef, stamp.getAlias()) + ',';
+            select += generateColumnExpression(catDef, catalogueNumber.getAlias()) + ',' + generateColumnExpression(ownerDef, ownership.getAlias());
+            select += ' FROM ' + this.getFromTables();
             
-            var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, [stamp, catalogueNumber, ownership], ['s', 'c', 'o']) : '';
+            var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, [stamp, catalogueNumber, ownership], 
+                [stamp.getAlias(), catalogueNumber.getAlias(), ownership.getAlias()]) : '';
             select += ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
             sqlTrace.log(Logger.DEBUG, select);
             connectionManager.getConnection(this.collectionName).then(function (connection) {

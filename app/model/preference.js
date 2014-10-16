@@ -18,6 +18,9 @@ var preference = extend({}, fieldDefinition, function () {
         },
         getTableName: function () {
             return "PREFERENCES";
+        },
+        getAlias: function () {
+            return "p";
         }
     };
 }());

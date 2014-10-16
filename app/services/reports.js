@@ -92,15 +92,16 @@ var report = function () {
         getCatalogueTotal: function ($filter, currency) {
             var defer = q.defer();
             connectionManager.getConnection("reports").then(function (connection) {
-                var sql = "SELECT cv.CURRENCY, SUM(c.CATALOGUEVALUE) AS VALUE FROM " + stamp.getTableName() + ' AS s ';
-                sql += 'JOIN ' + catalogueNumber.getTableName() + ' AS c ON s.ID=c.STAMP_ID ';
-                sql += "LEFT JOIN " + catalogue.getTableName() + ' AS cv ON c.CATALOGUE_REF = cv.ID ';
-                sql += "WHERE c.active=1 AND ";
-                var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, [stamp, catalogueNumber, catalogue], ['s','c','cv']) : '';
+                var sql = "SELECT " + catalogue.getAlias() + ".CURRENCY, SUM(" + catalogueNumber.getAlias() + ".CATALOGUEVALUE) AS VALUE ";
+                sql += "FROM " + stamp.getTableName() + ' AS ' + stamp.getAlias() + ' ';
+                sql += 'JOIN ' + catalogueNumber.getTableName() + ' AS ' + catalogueNumber.getAlias() + ' ON ' + stamp.getAlias() + '.ID=' + catalogueNumber.getAlias() + '.STAMP_ID ';
+                sql += "LEFT JOIN " + catalogue.getTableName() + ' AS ' + catalogue.getAlias() + ' ON ' + catalogueNumber.getAlias() + '.CATALOGUE_REF = ' + catalogue.getAlias() + '.ID ';
+                sql += "WHERE " + catalogueNumber.getAlias() + ".active=1 ";
+                var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, [stamp, catalogueNumber, catalogue], [stamp.getAlias(),catalogueNumber.getAlias(),catalogue.getAlias()]) : '';
                 if (whereClause.length > 0) {
-                    sql += whereClause + " ";
+                    sql += "AND " + whereClause + " ";
                 }
-                sql += "GROUP BY c.CATALOGUE_REF";
+                sql += "GROUP BY " + catalogueNumber.getAlias() + ".CATALOGUE_REF";
                 sqlTrace.log(Logger.DEBUG, sql);
                 var query = connection.query(sql, function (err, results) {
                     if (err) {

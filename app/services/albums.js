@@ -6,6 +6,10 @@ var countries = require('./countries');
 var _ = require('../../lib/underscore/underscore');
 var q = require('q');
 
+var Logger = require('../util/logger');
+
+var sqlTrace = Logger.getLogger('sql');
+
 var albums = extend(true, {}, persistentCollection, function () {
 
     function mergeCountries(connection, obj) {
@@ -20,7 +24,7 @@ var albums = extend(true, {}, persistentCollection, function () {
                 }
             });
         } else {
-            var existing_links = "SELECT COUNTRY_ID FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=?";
+            var existing_links = "SELECT COUNTRY_ID AS id FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=?";
             connection.query(existing_links, [obj.ID], function (err, results) {
                 if (err) {
                     defer.reject(dataTranslator.getErrorMessage(err));
@@ -29,9 +33,9 @@ var albums = extend(true, {}, persistentCollection, function () {
                     var current = _.clone(obj.COUNTRIES);
                     for (var i = 0; i < results.length; i++) {
                         var result = results[i];
-                        var indx = _.indexOf(current, result);
+                        var indx = _.indexOf(current, result.id);
                         if (indx < 0) {
-                            remove_ids.push(result);
+                            remove_ids.push(result.id);
                         } else {
                             current.splice(indx, 1);
                         }  
@@ -52,7 +56,7 @@ var albums = extend(true, {}, persistentCollection, function () {
                             if (err) {
                                 defer.reject(dataTranslator.getErrorMessage(err));   
                             }
-                            updates++;
+                            updates += remove_ids.length;
                             if (totalUpdates === updates) {
                                 defer.resolve(obj);   
                             }
@@ -83,12 +87,13 @@ var albums = extend(true, {}, persistentCollection, function () {
         fieldDefinition: album,
         preDelete: function (connection, id) {
             var defer = q.defer();
+            // TODO: Should no longer be needed with CASCADE rule
             var delete_link = "DELETE FROM ALBUMS_COUNTRIES WHERE ALBUM_ID= ?";
             connection.query(delete_link, [id], function (err, results) {
                 if (err) {
                     defer.reject(dataTranslator.getErrorMessage(err));
                 }
-                // delete all stamp ownership records
+                // should we delete stamps?
                 defer.resolve();
             });
             return defer.promise;
@@ -96,6 +101,18 @@ var albums = extend(true, {}, persistentCollection, function () {
 
         postCreate: function (connection, obj) {
             var defer = q.defer();
+            if (obj.countries && obj.countries.length > 0) {
+                _.each(obj.countries, function (countryId) {
+                    var insert_link = "INSERT INTO ALBUMS_COUNTRIES (ALBUM_ID,COUNTRY_ID) VALUES(?,?)";
+                    sqlTrace.log(Logger.DEBUG, insert_link);
+                    connection.query(insert_link, [obj.id,countryId], function (err, results) {
+                        if (err) {
+                            defer.reject(dataTranslator.getErrorMessage(err));
+                        }
+                        defer.resolve();
+                    });
+                });
+            }
             defer.resolve(obj);
             return defer.promise;
         },

@@ -6,7 +6,7 @@ var album = extend({}, fieldDefinition, function() {
         getFieldDefinitions: function () {
             return [
                 { field: 'name', column: 'NAME', type: 'string', required: true },
-                { field: 'description', column: 'DESCRIPTION', type: 'string' },
+                { field: 'description', column: 'DESCRIPTION', type: 'string', externalizeOnEmpty: false },
                 { field: 'id', column: 'ID', type: 'long', required: true },
                 { field: 'stampCollectionRef', column: 'COLLECTION_ID', type: 'long', required: true, joinWith: 'STAMPCOLLECTIONS' },
                 { field: 'createTimestamp', column: 'CREATESTAMP', type: 'date', internal: true },
@@ -19,6 +19,9 @@ var album = extend({}, fieldDefinition, function() {
         },
         getTableName: function () {
             return "ALBUMS";
+        },
+        getAlias: function () {
+            return "a";
         }
     };
 }());

@@ -70,11 +70,31 @@ module.exports = function () {
                     config.password = value;
                     defer.resolve();
                 });
-            } 
+            }
         }
         return defer.promise;
     }
+    
+    function enableKeepAlive() {
+        var Pool = require('mysql/lib/Pool');
+        Pool.prototype.startKeepAlive = function () {
+            var pool = this;
+            this.config.keepalive = 300000;
+            this._keepalive = setInterval(function () {
+                logger.log(Logger.TRACE, "Keep alive fired for " + pool._freeConnections.length + " connections");
+                pool._freeConnections.forEach(function (connection) {
+                    connection.ping(function (err) {
+                        if (err) {
+                            connection.destroy();
+                            pool._removeConnection(connection);
+                        }
+                    });
+                });
+            }, this.config.keepalive);
+        };
 
+    }
+    
     return {
         
         startup: function () {
@@ -85,9 +105,10 @@ module.exports = function () {
                     startDefer.reject("No database was selected.");
                 }
                 var config = nconf.get("databases")[dbName];
-
+                
                 if (config) {
                     determineDBPassword(config).then(function () {
+                        enableKeepAlive();
                         dbPool = mysql.createPool({
                             connectionLimit: 20,
                             host: config.host,
@@ -95,6 +116,9 @@ module.exports = function () {
                             password: config.password,
                             database: config.schema
                         });
+                        dbPool.startKeepAlive();
+                        
+                        
                         logger.log(Logger.INFO, "MySQL database pool created");
                         dbPool.getConnection(function (err, connection) {
                             if (!err) {
@@ -140,7 +164,7 @@ module.exports = function () {
             var curConnection = connectionMap[key];
             var pending = findReaperThreads(key, (curConnection)? curConnection.threadId : -1);
             if (pending) {
-                delete connectionMap[key];   
+                delete connectionMap[key];
             }
             if (connectionMap[key] !== undefined) {
                 logger.log(Logger.DEBUG, "Re-using current connection for " + key + ": " + curConnection.threadId);
@@ -150,6 +174,16 @@ module.exports = function () {
                     if (!err) {
                         logger.log(Logger.DEBUG, "Creating a new connection for " + key + ": " + connection.threadId);
                         connectionMap[key] = connection;
+                        
+                        var del = connection._protocol._delegateError;
+                        connection._protocol._delegateError = function (err, sequence) {
+                            if (err.fatal) {
+                                console.trace('fatal error: ' + err.message);
+                            }
+                            return del.call(this, err, sequence);
+                        };
+                        
+                        
                         defer.resolve(connection);
                     } else {
                         handleConnectionError(err);
