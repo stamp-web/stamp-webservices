@@ -102,7 +102,8 @@ function DataTranslator() {
                             if (_.isDate(value)) {
                                 val = "\'" + value.toFormat(that.MYSQL_DATEFORMAT) + "\'";
                             } else if (_.isString(value)) {
-                                val = "\'" + value + "\'";
+                                value = new Date(value);
+                                val = "\'" + value.toFormat(that.MYSQL_DATEFORMAT) + "\'";
                             }
                             break;
                         case 'boolean':

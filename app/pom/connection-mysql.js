@@ -8,11 +8,14 @@ var _ = require('../../lib/underscore/underscore');
 
 nconf.argv().env().file(__dirname + '/../../config/application.json');
 
-var logger = Logger.getLogger("server");
+var logger = Logger.getLogger("connection");
 
 module.exports = function () {
     var dbPool;
+    var config;
     var connectionMap = {};
+    
+    
     var ConnectionCodes = {
         ACCESS_DENIED: 'ER_ACCESS_DENIED_ERROR',
         DBACCESS_DENIED_ERROR: 'ER_DBACCESS_DENIED_ERROR',
@@ -41,19 +44,6 @@ module.exports = function () {
         }
     }
     
-    function findReaperThreads(key, id) {
-        var pending = false;
-        if (id > 0) {
-            for (var i = 0; i < dbPool._freeConnections.length; i++) {
-                if (dbPool._freeConnections[i].threadId === id) {
-                    pending = true;
-                    break;
-                }
-            }
-        }
-        return pending;
-    }
-    
     function determineDBPassword(config) {
         var defer = q.defer();
         if (config.password && config.password.length > 0) {
@@ -79,9 +69,9 @@ module.exports = function () {
         var Pool = require('mysql/lib/Pool');
         Pool.prototype.startKeepAlive = function () {
             var pool = this;
-            this.config.keepalive = 300000;
+            this.config.keepalive = 30000;
             this._keepalive = setInterval(function () {
-                logger.log(Logger.TRACE, "Keep alive fired for " + pool._freeConnections.length + " connections");
+                logger.log(Logger.DEBUG, "Keep alive fired for " + pool._freeConnections.length + " connections");
                 pool._freeConnections.forEach(function (connection) {
                     connection.ping(function (err) {
                         if (err) {
@@ -95,6 +85,51 @@ module.exports = function () {
 
     }
     
+    function createPool() {
+        var defer = q.defer();
+        if (config) {
+            determineDBPassword(config).then(function () {
+                enableKeepAlive();
+                dbPool = mysql.createPool({
+                    connectionLimit: 20,
+                    host: config.host,
+                    user: config.user,
+                    password: config.password,
+                    database: config.schema
+                });
+                dbPool.startKeepAlive();
+                logger.log(Logger.INFO, "MySQL database pool created");
+                dbPool.getConnection(function (err, connection) {
+                    if (!err) {
+                        connection.release();
+                        defer.resolve(dbPool);
+                    } else {
+                        defer.reject(err);
+                    }
+                });
+            });
+        } else {
+            var msg = "The database " + dbName + " was not found in the configuration.";
+            logger.log(Logger.ERROR, msg);
+            defer.reject(msg);
+        }
+        return defer.promise;
+    }
+    
+    function getPool() {
+        var defer = q.defer();
+        if (dbPool) {
+            defer.resolve(dbPool);
+        } else {
+            createPool().then(function (pool) {
+                defer.resolve(pool);
+            }, function (err) {
+                defer.reject(err);
+            });
+        }
+        return defer.promise;
+    }
+    
     return {
         
         startup: function () {
@@ -104,77 +139,30 @@ module.exports = function () {
                 if (!dbName) {
                     startDefer.reject("No database was selected.");
                 }
-                var config = nconf.get("databases")[dbName];
-                
-                if (config) {
-                    determineDBPassword(config).then(function () {
-                        enableKeepAlive();
-                        dbPool = mysql.createPool({
-                            connectionLimit: 20,
-                            host: config.host,
-                            user: config.user,
-                            password: config.password,
-                            database: config.schema
-                        });
-                        dbPool.startKeepAlive();
-                        
-                        
-                        logger.log(Logger.INFO, "MySQL database pool created");
-                        dbPool.getConnection(function (err, connection) {
-                            if (!err) {
-                                connection.release();
-                                startDefer.resolve();
-                            } else {
-                                startDefer.reject(err);
-                            }
-                        });
-                    });
-                }
-                else {
-                    var msg = "The database " + dbName + " was not found in the configuration.";
-                    logger.log(Logger.ERROR, msg);
-                    startDefer.reject(msg);
-                }
+                config = nconf.get("databases")[dbName];
+                getPool().then(function () {
+                    startDefer.resolve();
+                }, function (err) {
+                    startDefer.reject(err);
+                });
             }
             return startDefer.promise;
         },
         shutdown: function () {
-            dbPool.end();
+            if (dbPool !== null) {
+                dbPool.end();
+            }
+            dbPool = null;
         },
         release: function (connection) {
-            var id = (connection)? connection.threadId : -1;
-            if (id > 0) {
-                var released = false;
-                for (var i = 0; i < dbPool._freeConnections.length; i++) {
-                    if (dbPool._freeConnections[i].threadId === id) {
-                        released = true;
-                        break;
-                    }
-                }
-                if (!released) {
-                    connection.release();
-                }
-            } else {
-                logger.log(Logger.WARN, "Detected a connection without a threadId");
-                connection.release();
-            }
+            connection.release();
         },
-        getConnection: function (key) {
+        getConnection: function () {
             var defer = q.defer();
-            var curConnection = connectionMap[key];
-            var pending = findReaperThreads(key, (curConnection)? curConnection.threadId : -1);
-            if (pending) {
-                delete connectionMap[key];
-            }
-            if (connectionMap[key] !== undefined) {
-                logger.log(Logger.DEBUG, "Re-using current connection for " + key + ": " + curConnection.threadId);
-                defer.resolve(connectionMap[key]);
-            } else {
-                dbPool.getConnection(function (err, connection) {
+            var that = this;
+            getPool().then(function (pool) {
+                pool.getConnection(function (err, connection) {
                     if (!err) {
-                        logger.log(Logger.DEBUG, "Creating a new connection for " + key + ": " + connection.threadId);
-                        connectionMap[key] = connection;
-                        
                         var del = connection._protocol._delegateError;
                         connection._protocol._delegateError = function (err, sequence) {
                             if (err.fatal) {
@@ -182,15 +170,14 @@ module.exports = function () {
                             }
                             return del.call(this, err, sequence);
                         };
-                        
-                        
                         defer.resolve(connection);
                     } else {
                         handleConnectionError(err);
                         defer.reject(err);
                     }
                 });
-            }
+            }, function (err) {
+            });
             return defer.promise;
         }
     };

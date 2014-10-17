@@ -77,34 +77,55 @@ var stamps = extend(true, {}, persistentCollection, function () {
     }
     
     return {
+        preCreate: function(obj) {
+            obj.catalogueCount = (obj.catalogueNumbers) ? obj.catalogueNumbers.length : 0;
+        },
         postCreate: function (connection, obj) {
             var defer = q.defer();
             var total = ((obj.catalogueNumbers) ? obj.catalogueNumbers.length : 0) + ((obj.stampOwnerships) ? obj.stampOwnerships.length : 0);
             var created = 0;
+            var that = this;
             if (obj.catalogueNumbers && _.isArray(obj.catalogueNumbers)) {
                 _.each(obj.catalogueNumbers, function (catNum) {
                     catNum.stampRef = obj.id;
-                    catalogueNumberService.create(catNum).then(function (result) {
-                        created++;
-                        if (created === total) {
-                            defer.resolve(obj);
-                        }
+                    that.generateId(catalogueNumber, catNum).then(function (id) {
+                        catNum.id = id;
+                        var sql = dataTranslator.generateInsertStatement(catalogueNumber, catNum);
+                        sqlTrace.log(Logger.DEBUG, sql);
+                        connection.query(sql, function (err, result) {
+                            if (err) {
+                                defer.reject(dataTranslator.getErrorMessage(err));
+                            }
+                            created++;
+                            if (created === total) {
+                                defer.resolve(obj);
+                            }
+                        });
                     }, function (err) {
                         defer.reject(dataTranslator.getErrorMessage(err));
                     });
+                    
                 });
             }
             if (obj.stampOwnerships && _.isArray(obj.stampOwnerships)) {
                 _.each(obj.stampOwnerships, function (owner) {
                     owner.stampRef = obj.id;
-                    ownershipService.create(owner).then(function (result) {
-                        created++;
-                        if (created === total) {
-                            defer.resolve(obj);
-                        }
-                    }, function (err) {
-                        defer.reject(dataTranslator.getErrorMessage(err));
+                    that.generateId(ownership, owner).then(function (id) {
+                        owner.id = id;
+                        var sql = dataTranslator.generateInsertStatement(ownership, owner);
+                        sqlTrace.log(Logger.DEBUG, sql);
+                        connection.query(sql, function (err, result) {
+                            if (err) {
+                                defer.reject(dataTranslator.getErrorMessage(err));
+                            }
+                            created++;
+                            if (created === total) {
+                                defer.resolve(obj);
+                            }
+                        });
                     });
+                }, function (err) {
+                    defer.reject(dataTranslator.getErrorMessage(err));
                 });
             }
             return defer.promise;
@@ -129,29 +150,7 @@ var stamps = extend(true, {}, persistentCollection, function () {
             });
             return defer.promise;
         },
-        preDeleteAll: function (connection, ids) {
-            var defer = q.defer();
-            var id_s = dataTranslator.generateInValueStatement(ids);
-            if (id_s !== '') {
-                var qs = 'DELETE FROM ' + catalogueNumber.getTableName() + ' WHERE STAMP_ID IN ' + id_s;
-                sqlTrace.log(Logger.DEBUG, qs);
-                connection.query(qs, function (err, rows) {
-                    if (err) {
-                        defer.reject(dataTranslator.getErrorMessage(err));
-                    }
-                    qs = 'DELETE FROM ' + ownership.getTableName() + ' WHERE STAMP_ID IN ' + id_s;
-                    sqlTrace.log(Logger.DEBUG, qs);
-                    connection.query(qs, function (err, rows) {
-                        if (err) {
-                            defer.reject(dataTranslator.getErrorMessage(err));
-                        } else {
-                            defer.resolve();
-                        }
-                    });
-                });
-            }
-            return defer.promise;
-        },
+        
         getFromTables: function ($filter) {
             var tables = stamp.getTableName() + ' AS ' + stamp.getAlias() + ' JOIN ' + catalogueNumber.getTableName() + ' AS ' + catalogueNumber.getAlias();
             tables += ' ON ' + stamp.getAlias() + '.ID=' + catalogueNumber.getAlias() + '.STAMP_ID ';
@@ -183,7 +182,7 @@ var stamps = extend(true, {}, persistentCollection, function () {
                 [stamp.getAlias(), catalogueNumber.getAlias(), ownership.getAlias()]) : '';
             select += ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
             sqlTrace.log(Logger.DEBUG, select);
-            connectionManager.getConnection(this.collectionName).then(function (connection) {
+            connectionManager.getConnection().then(function (connection) {
                 var rows = [];
                 var query = connection.query(select);
                 query.on('result', function (row) {

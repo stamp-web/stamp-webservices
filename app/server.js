@@ -45,9 +45,13 @@ function configureLoggerRemotely(req, resp) {
     var log = Logger.getLogger(loggerName);
     if (level) {
         log.setLevel(level);
-        resp.status(200).send("Logger \"" + loggerName + "\" successful set to " + level);
+        var msg = "Logger \"" + loggerName + "\" successful set to " + level;
+        console.log(msg);
+        resp.status(200).send(msg);
     } else {
-        resp.status(200).send("Logger \"" + loggerName + "\" is set to " + log.getLevel());
+        var msg = "Logger \"" + loggerName + "\" is set to " + log.getLevel();
+        console.log(msg);
+        resp.status(200).send(msg);
     }
 }
 

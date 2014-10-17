@@ -30,26 +30,26 @@ var database = (nconf.get("test_database") ? nconf.get("test_database") : "test"
 
 var sql_level = 'info';
 if (nconf.get("sql_level")) {
-    sql_level = nconf.get("sql_level");   
+    sql_level = nconf.get("sql_level");
 }
 
 describe('REST Services tests', function (done) {
     var connection;
-
+    
     after(function (done) {
         connection.end();
         done();
     });
-
+    
     before(function (done) {
         logger.log(Logger.INFO, "Reading SQL contents...");
         var pro = process.cwd();
-        var file = ((process.cwd().indexOf('\\test') > 0 )? '../' : '') + 'test/dbscript/initial-data.sql';
-        var contents = fs.readFileSync( file , { encoding: 'utf-8' }).toString();
+        var file = ((process.cwd().indexOf('\\test') > 0)? '../' : '') + 'test/dbscript/initial-data.sql';
+        var contents = fs.readFileSync(file , { encoding: 'utf-8' }).toString();
         
         var dbConfigs = nconf.get("databases");
         var dbConfig = dbConfigs[database];
-
+        
         connection = mysql.createConnection({
             host     : dbConfig.host,
             user     : dbConfig.user,
@@ -130,7 +130,7 @@ describe('REST Services tests', function (done) {
                 name: 'prefName', category: 'stamps', value: 'a value'
             }, done);
         });
-
+        
         it('DELETE no existing ID', function (done) {
             NamedCollectionVerifications.verifyDeleteNotFound('preferences', done);
         });
@@ -219,7 +219,7 @@ describe('REST Services tests', function (done) {
         it('DELETE no existing ID', function (done) {
             NamedCollectionVerifications.verifyDeleteNotFound('sellers', done);
         });
-
+        
         it('DELETE clears SELLER_ID of ownership and updates ModifyStamp of stamp and ownership', function (done) {
             NamedCollectionVerifications.verifyPost('sellers', {
                 name: 'Test of Delete Seller_ID'
@@ -253,7 +253,7 @@ describe('REST Services tests', function (done) {
         });
        
     });
-
+    
     describe('Country REST API tests', function (done) {
         
         it('GET Collection with 200 status', function (done) {
@@ -398,13 +398,13 @@ describe('REST Services tests', function (done) {
                 });
             });
         });
-
+        
         it('DELETE successfully removes associated stamp(s).', function (done) {
             NamedCollectionVerifications.verifyPost('countries', {
                 name: 'Test of Delete Country_ID'
             }, null, function (country) {
                 // seller is now created and available for evaluation
-                connection.query('INSERT INTO STAMPS (ID,COUNTRY_ID,DENOMINATION) VALUES(80201,' + country.id +',"1d")', function (err, data) {
+                connection.query('INSERT INTO STAMPS (ID,COUNTRY_ID,DENOMINATION) VALUES(80201,' + country.id + ',"1d")', function (err, data) {
                     if (err) {
                         expect().fail("could not save stamp", err);
                     }
@@ -574,6 +574,63 @@ describe('REST Services tests', function (done) {
             });
         });
 
+    });
+    
+    
+    describe('Stamp REST API tests', function (done) {
+        it('POST valid creation with 201 status', function (done) {
+            var stamp = {
+                countryRef: 1,
+                rate: "1d",
+                description: "red",
+                wantList: false,
+                catalogueNumbers: [{
+                    catalogueRef: 1,
+                    number: "23a",
+                    value: 0.65,
+                    condition: 1,
+                    active: true
+                }],
+                stampOwnerships: [{
+                    albumRef: 2,
+                    condition: 2,
+                    grade: 1,
+                    notes: "this is a note",
+                    pricePaid: 0.25,
+                    code: "USD",
+                    sellerRef: 1,
+                    purchased: "2007-05-15T00:00:00-05:00"
+                }]
+            };
+            superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
+            .send(stamp)
+            .end(function (e, res) {
+                expect(e).to.eql(null);
+                expect(res.status).to.eql(201);
+                var result = res.body;
+                expect(result.id).to.be.greaterThan(1000);
+                expect(result.rate).to.be.eql("1d");
+                expect(result.description).to.be.eql("red");
+                expect(result.countryRef).to.be(1);
+                var catalogueNumbers = res.body.catalogueNumbers;
+                expect(catalogueNumbers.length).to.be(1);
+                expect(catalogueNumbers[0].id).to.be.greaterThan(1000);
+                expect(catalogueNumbers[0].value).to.be.within(0.64999, 0.65001);
+                expect(catalogueNumbers[0].number).to.be.eql("23a");
+                expect(catalogueNumbers[0].condition).to.be(1);
+                expect(catalogueNumbers[0].active).to.be(true);
+                var ownership = res.body.stampOwnerships[0];
+                expect(ownership.grade).to.be(1);
+                expect(ownership.condition).to.be(2);
+                expect(ownership.albumRef).to.be(2);
+                expect(ownership.notes).to.be.eql("this is a note");
+                expect(ownership.pricePaid).to.be.within(0.24999, 0.25001);
+                expect(ownership.code).to.be.eql("USD");
+                expect(ownership.sellerRef).to.be(1);
+                expect(ownership.purchased.indexOf("2007-05-15")).to.be(0);
+                done();
+            })
+        });
     });
     
     describe('Stamp Collection REST API tests', function (done) {

@@ -3,10 +3,6 @@ var _ = require('../../lib/underscore/underscore');
 var fieldDefinition = function () {
     
     return {
-        toExternal: function (c) {
-            var val = _.findWhere(this.getFieldDefinitions(), { column: c });
-            return (val) ? val.field: undefined;
-        },
         toInternal: function (f) {
             var val = _.findWhere(this.getFieldDefinitions(), { field: f });
             return (val) ? val.column: undefined;
@@ -34,7 +30,7 @@ var fieldDefinition = function () {
             var that = this;
             _.each(_.keys(o), function (key) {
                 var field = _.findWhere(that.getFieldDefinitions(), { field: key });
-                if (field) {
+                if (field && !field.nonPersistent) {
                     obj[field.column] = o[key];
                 }
             });

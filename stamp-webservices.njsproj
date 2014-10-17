@@ -83,10 +83,6 @@
     <Compile Include="test\resources-test.js">
       <TestFramework>Mocha</TestFramework>
     </Compile>
-    <Compile Include="test\transaction-example.js">
-      <SubType>Code</SubType>
-      <TestFramework>Mocha</TestFramework>
-    </Compile>
     <Compile Include="test\util\connection-helper.js" />
     <Compile Include="test\util\named-collection-verifier.js" />
     <Content Include=".bowerrc" />

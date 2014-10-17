@@ -10,6 +10,8 @@ var stamp = extend({}, fieldDefinition, function() {
                 { field: 'description', column: 'DESCRIPTION', type: 'string' },
                 { field: 'catalogueCount', column: 'CATALOGUE_COUNT', type: 'int', internal: true },
                 { field: 'countryRef', column: 'COUNTRY_ID', type: 'long', required: true, joinWith: 'COUNTRIES' },
+                { field: 'wantList', type: 'boolean', column: 'WANTLIST' },
+                { field: 'catalogueCount', column: 'CATALOGUE_COUNT', type: 'int', internal: true },
                 { field: 'createTimestamp', column: 'CREATESTAMP', type: 'date', internal: true },
                 { field: 'modifyTimestamp', column: 'MODIFYSTAMP', type: 'date', internal: true },
                 { field: 'catalogueNumbers', column: 'CATALOGUENUMBER', type: 'obj_array', model: 'catalogue-number' },
