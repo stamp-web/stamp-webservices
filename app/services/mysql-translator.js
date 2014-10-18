@@ -96,7 +96,13 @@ function DataTranslator() {
                     var val = null;
                     switch (definition.type) {
                         case 'long':
-                            val = +value;
+                        case 'float':
+                        case 'int':
+                            if (definition.joinWith) {
+                                val = (value === null || +value === -1) ? null : +value;
+                            } else {
+                                val = +value;
+                            }
                             break;
                         case 'date':
                             if (_.isDate(value)) {

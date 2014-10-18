@@ -9,7 +9,7 @@ function reports() {
 
     return {
         executeReport: function (req, res) {
-            var rType = req.query.reportType;
+            var rType = req.query.$reportType;
             if (!rType) {
                 res.status(routeHelper.StatusCode.BAD_REQUEST).send("A reportType query argument is required.").end();
                 return;

@@ -4,11 +4,17 @@ var favicon = require('serve-favicon');
 var bodyParser = require('body-parser');
 var nconf = require('nconf');
 var Logger = require('./util/logger');
+var path = require('path');
 
-var BASEPATH = "";
 
-var SERVICES_PATH = "/rest";
+
 nconf.argv().env();
+
+var SERVICES_PATH = "rest";
+var BASEPATH = "/stamp-webservices/";
+if (nconf.get("basePath")) {
+    BASEPATH = nconf.get("basePath");
+}
 
 var app = express();
 
@@ -61,9 +67,13 @@ var sqlTrace = Logger.getLogger("sql");
 configureLogger(logger, "logger");
 configureLogger(sqlTrace, "sql");
 
-app.get(BASEPATH + "/config/logger/:logger", configureLoggerRemotely);
+app.get(BASEPATH + "config/logger/:logger", configureLoggerRemotely);
 
+app.get('/stamp-web/*', function (req, res) {
+    res.sendfile('./www/' + req.params['0']);
+});
 app.listen(port);
+
 logger.log(Logger.INFO, "HTTPServer listening on port " + port);
 connectionMgr.startup().then(function () {
     process.on('exit', function () {

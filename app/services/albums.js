@@ -116,13 +116,25 @@ var albums = extend(true, {}, persistentCollection, function () {
             defer.resolve(obj);
             return defer.promise;
         },
-        postUpdate: function (connection, obj) {
+        /**
+         * @param connection
+         * @param id    The album ID
+         * @param orig  The original obj that was provided (in field scope)
+         */
+        updatePreCommit: function (connection, id, orig) {
             var defer = q.defer();
-            mergeCountries(connection, obj).then(function (result) {
-                defer.resolve(result);
+            this.findById(id).then(function (current) {
+                var _orig = album.internalize(orig);
+                var obj = album.merge(current, _orig);
+                mergeCountries(connection, obj).then(function (result) {
+                    defer.resolve(result);
+                }, function (err) {
+                    defer.reject(dataTranslator.getErrorMessage(err));
+                });
             }, function (err) {
                 defer.reject(dataTranslator.getErrorMessage(err));
             });
+            
             return defer.promise;
         },
         postFind: function (connection, rows) {

@@ -97,26 +97,33 @@ function persistentCollection() {
             var that = this;
             
             connectionManager.getConnection().then(function (connection) {
-                var postProcess = function (id, _obj) {
-                    that.findById(id).then(function (result) {
-                        result = that.fieldDefinition.merge(result, _obj);
-                        that.postUpdate(connection, result).then(function (newResult) {
+                var postProcess = function (id) {
+                    that.updatePreCommit(connection, id, obj).then(function (current) {
+                        connection.commit(function (err) {
+                            if (err) {
+                                connection.release();
+                                defer.reject(dataTranslator.getErrorMessage(err));
+                            }
                             connection.release();
-                            defer.resolve(newResult);
-                        }, function (err) {
+                            that.findById(id).then(function (result) {
+                                defer.resolve(result);
+                            }, function (err) {
+                                defer.reject(dataTranslator.getErrorMessage(err));
+                            });
+                        });
+                    }, function (err) {
+                        console.log(err);
+                        connection.rollback(function () {
                             connection.release();
                             defer.reject(dataTranslator.getErrorMessage(err));
                         });
-                    }, function (err) {
-                        connection.release();
-                        defer.reject({ message: "Not object found.", code: "NOT_FOUND" });
                     });
-                }
+                };
                 var qs = dataTranslator.generateUpdateStatement(that.fieldDefinition, obj, id);
                 sqlTrace.log(Logger.DEBUG, qs);
-                if (qs !== null) {
-                    connection.beginTransaction(function (err) {
-                        if (!rollbackOnError(connection, defer, err)) {
+                connection.beginTransaction(function (err) {
+                    if (!rollbackOnError(connection, defer, err)) {
+                        if (qs !== null) {
                             connection.query(qs, function (err, rows) {
                                 if (!rollbackOnError(connection, defer, err)) {
                                     if (rows.changedRows === 0 && rows.affectedRows === 0) {
@@ -125,21 +132,15 @@ function persistentCollection() {
                                             defer.reject({ message: "Not object found.", code: "NOT_FOUND" });
                                         });
                                     } else {
-                                        connection.commit(function (err) {
-                                            if (err) {
-                                            } else {
-                                                postProcess(id, _obj);
-                                            }
-                                        });
+                                        postProcess(id);
                                     } // end else
                                 }
                             });
+                        } else {
+                            postProcess(id);
                         }
-                    });
-                } else {
-                    postProcess(id, _obj);
-                }
-    
+                    }
+                });
             });
             return defer.promise;
         },
@@ -313,9 +314,9 @@ function persistentCollection() {
             defer.resolve(obj);
             return defer.promise;
         },
-        postUpdate: function (connection, obj) {
+        updatePreCommit: function (connection, id, orig) {
             var defer = q.defer();
-            defer.resolve(obj);
+            defer.resolve(orig);
             return defer.promise;
         },
         preDelete: function (connection, id) {

@@ -31,18 +31,51 @@ var fieldDefinition = function () {
             _.each(_.keys(o), function (key) {
                 var field = _.findWhere(that.getFieldDefinitions(), { field: key });
                 if (field && !field.nonPersistent) {
-                    obj[field.column] = o[key];
+                    if (field.type === 'obj_array' && field.model) {
+                        var m = require('./' + field.model);
+                        obj[field.column] = [];
+                        _.each(o[key], function (cObj) {
+                            var converted = m.internalize(cObj);
+                            obj[field.column].push(converted);
+                        });
+                    }
+                    else {
+                        obj[field.column] = o[key];
+                    }
                 }
             });
             return obj;
         },
+        getField: function (o, column) {
+            if( column ) {
+                return _.findWhere(this.getFieldDefinitions(), { column: o });
+            } else {
+                return _.findWhere(this.getFieldDefinitions(), { field: o });
+            }
+        },
         merge: function (cur, orig) {
+            var that = this;
             _.each(_.keys(orig), function (o) {
                 if (cur[o] === undefined && orig[o] !== undefined) {
                     cur[o] = orig[o];
                 } else if (_.isArray(cur[o])) {
-                    cur[o] = orig[o];
-                }
+                    var field = that.getField(o, true);
+                    if (field.type === "obj_array" && field.model) {
+                        for (var i = 0; i < cur[o].length; i++) {
+                            var mergeChild = cur[o][i];
+                            if (mergeChild.ID) {
+                                var mergeSource = _.findWhere(orig[o], { ID: mergeChild.ID });
+                                if (mergeSource) {
+                                    var merged = require('./' + field.model).merge(mergeChild, mergeSource);
+                                }
+                            } else {
+                                cur[o].push(mergeChild);
+                            }
+                        }
+                    } else {
+                        cur[o] = orig[o];
+                    }
+                } 
             });
             return cur;
         },
