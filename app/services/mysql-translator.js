@@ -6,14 +6,16 @@ require("../util/string-utilities");
 var logger = Logger.getLogger("server");
 
 function DataTranslator() {
+    "use strict";
     function validateBinaryOperation(el) {
-        if (!el['left'] || !el['right']) {
+        if (!el.left || !el.right) {
             throw new Error("left and right sides of expression are required.");
         }
     }
     
     return {
-        MYSQL_DATEFORMAT : "YYYY-MM-DD HH:MI:SS",
+        MYSQL_DATEFORMAT : "YYYY-MM-DD 00:MI:SS",
+        DATEOFFSET_STARTING : 'datetimeoffset\'',
         
         getErrorMessage: function (err) {
             var msg;
@@ -113,7 +115,7 @@ function DataTranslator() {
                             }
                             break;
                         case 'boolean':
-                            val = (value === true) ? true : false;
+                            val = (value === true);
                             break;
                         default:
                             val = "\'" + value + "\'";
@@ -139,19 +141,19 @@ function DataTranslator() {
             return id_vals;
         },
         
-        toWhereClause: function ($filter, fieldDefinition, selectors) {
+        toWhereClause: function ($filter, fieldDefinitions) {
             var expression = '';
             var that = this;
-            if (!fieldDefinition) {
+            if (!fieldDefinitions) {
                 logger.log(Logger.WARN, "The fieldDefinition parameter was not defined.");
             }
             var processExpression = function (el) {
                 if (typeof el === 'string') {
                     return;
-                } else if (typeof el === 'object' && el['type']) {
+                } else if (typeof el === 'object' && el.type) {
                     var op = '=';
                     var binaryOp = true;
-                    switch (el['type']) {
+                    switch (el.type) {
                         case 'eq':
                             break;
                         case 'lt':
@@ -169,30 +171,33 @@ function DataTranslator() {
                         case 'and':
                         case 'or':
                             binaryOp = false;
-                            var left = that.toWhereClause(el['left'], fieldDefinition, selectors);
-                            var right = that.toWhereClause(el['right'], fieldDefinition, selectors);
-                            expression += left + ' ' + el['type'].toUpperCase() + ' ' + right;
+                            var left = that.toWhereClause(el.left, fieldDefinitions);
+                            var right = that.toWhereClause(el.right, fieldDefinitions);
+                            expression += left + ' ' + el.type.toUpperCase() + ' ' + right;
                             break;
                         default:
                             throw new Error("Unrecognized operator type");
                     }
                     if (binaryOp) {
                         validateBinaryOperation(el);
-                        var subject = el['left'];
+                        var subject = el.left;
                         var value;
-                        if (el['right']) {
-                            var val = el['right'];
+                        if (el.right) {
+                            var val = el.right;
                             value = (_.isNumber(val)) ? +val : '' + val;
                         }
                         var predicate = subject;
-                        if (fieldDefinition) {
-                            for (var i = 0; i < fieldDefinition.length; i++) {
-                                var definition = fieldDefinition[i];
-                                var internal = definition.toInternal(subject);
-                                if (internal) {
-                                    predicate = ((selectors && selectors.length > 0) ? selectors[i] + '.' : '') + internal;
-                                    break;
+                        for (var i = 0; i < fieldDefinitions.length; i++) {
+                            var definition = fieldDefinitions[i];
+                            var field = _.findWhere(definition.getFieldDefinitions(), { field: subject });
+                            if (field && field.column && !field.nonPersistent) {
+                                predicate = ((definition.getAlias()) ? definition.getAlias() + '.' : '') + field.column;
+                                if (field.type === 'date' && value.startsWith(that.DATEOFFSET_STARTING)) {
+                                    value = value.substring(that.DATEOFFSET_STARTING.length, value.length - 1);
+                                    var d = new Date(value);
+                                    value = "\'" + d.toFormat(that.MYSQL_DATEFORMAT) + "\'";
                                 }
+                                break;
                             }
                         }
                         expression += predicate + op + value;

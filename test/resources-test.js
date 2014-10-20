@@ -33,6 +33,10 @@ if (nconf.get("sql_level")) {
     sql_level = nconf.get("sql_level");
 }
 
+
+(function(describe,it,after,before) {
+"use strict";
+
 describe('REST Services tests', function (done) {
     var connection;
     
@@ -86,7 +90,7 @@ describe('REST Services tests', function (done) {
                             f();
                         }
                     }, 150);
-                }
+                };
                 f();
             }
         });
@@ -264,7 +268,7 @@ describe('REST Services tests', function (done) {
         it('GET by ID with 200 status', function (done) {
             NamedCollectionVerifications.verifySingleItem('countries', {
                 id: 2,
-                name: 'Canada',
+                name: 'Canada'
             }, done);
         });
         
@@ -279,7 +283,7 @@ describe('REST Services tests', function (done) {
                 expect(country.name).to.be.eql("Canada");
                 expect(country.id).to.be.eql(2);
                 done();
-            })
+            });
         });
         
         it('GET by invalid ID with 404 status', function (done) {
@@ -306,8 +310,7 @@ describe('REST Services tests', function (done) {
                     expect(res.status).to.eql(409);
                     done();
                 });
-                
-            })
+            });
         });
         
         it('POST missing name field with 400 status', function (done) {
@@ -317,7 +320,7 @@ describe('REST Services tests', function (done) {
                 expect(e).to.eql(null);
                 expect(res.status).to.eql(400);
                 done();
-            })
+            });
         });
         
         it('PUT successfully with 200 status', function (done) {
@@ -435,7 +438,7 @@ describe('REST Services tests', function (done) {
         it('GET by ID with 200 status', function (done) {
             NamedCollectionVerifications.verifySingleItem('albums', {
                 id: 1,
-                name: 'Australia',
+                name: 'Australia'
             }, done, function (obj) {
                 expect(obj.stampCollectionRef).to.be.eql(1);
             });
@@ -452,7 +455,7 @@ describe('REST Services tests', function (done) {
                 expect(album.name).to.be.eql("Australian States");
                 expect(album.id).to.be.eql(2);
                 done();
-            })
+            });
         });
         
         it('GET by invalid ID with 404 status', function (done) {
@@ -481,8 +484,7 @@ describe('REST Services tests', function (done) {
                     expect(res.status).to.eql(409);
                     done();
                 });
-                
-            })
+            });
         });
         
         it('POST missing name field with 400 status', function (done) {
@@ -492,7 +494,7 @@ describe('REST Services tests', function (done) {
                 expect(e).to.eql(null);
                 expect(res.status).to.eql(400);
                 done();
-            })
+            });
         });
         
         it('POST missing stamp collection ref field with 400 status', function (done) {
@@ -502,7 +504,7 @@ describe('REST Services tests', function (done) {
                 expect(e).to.eql(null);
                 expect(res.status).to.eql(400);
                 done();
-            })
+            });
         });
         
         it('PUT successfully with 200 status', function (done) {
@@ -889,3 +891,6 @@ describe('REST Services tests', function (done) {
         });
 
     });
+
+})(describe,it,after,before);
+

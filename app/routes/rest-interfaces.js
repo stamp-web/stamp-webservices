@@ -6,7 +6,8 @@ var routeHelper = require('./route-helper');
 var logger = Logger.getLogger("server");
 
 function restInterfaces() {
-        
+    "use strict";
+
     var collection;
     var field;
 
@@ -79,6 +80,7 @@ function restInterfaces() {
                     }
                 });
             }, function (err) {
+                logger.log(Logger.DEBUG, err);
                 res.status(routeHelper.StatusCode.INTERNAL_ERROR).send(routeHelper.ClientMessages.INTERNAL_ERROR).end();
             });
         },
@@ -98,8 +100,12 @@ function restInterfaces() {
                     res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                     res.status(routeHelper.StatusCode.OK);
                     res.json(result);
+                }, function (err) {
+                    logger.log(Logger.ERROR, err);
+                    res.status(routeHelper.StatusCode.INTERNAL_ERROR).send(routeHelper.ClientMessages.INTERNAL_ERROR).end();
                 });
             }, function (err) {
+                logger.log(Logger.ERROR, err);
                 res.status(routeHelper.StatusCode.INTERNAL_ERROR).send(routeHelper.ClientMessages.INTERNAL_ERROR).end();
             });
         },

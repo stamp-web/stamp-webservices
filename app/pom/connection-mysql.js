@@ -11,10 +11,11 @@ nconf.argv().env().file(__dirname + '/../../config/application.json');
 var logger = Logger.getLogger("connection");
 
 module.exports = function () {
+    "use strict";
+
     var dbPool;
     var config;
-    var connectionMap = {};
-    
+    var dbName;
     
     var ConnectionCodes = {
         ACCESS_DENIED: 'ER_ACCESS_DENIED_ERROR',
@@ -70,7 +71,7 @@ module.exports = function () {
         Pool.prototype.startKeepAlive = function () {
             var pool = this;
             this.config.keepalive = 30000;
-            this._keepalive = setInterval(function () {
+            setInterval(function () {
                 logger.log(Logger.DEBUG, "Keep alive fired for " + pool._freeConnections.length + " connections");
                 pool._freeConnections.forEach(function (connection) {
                     connection.ping(function (err) {
@@ -98,7 +99,7 @@ module.exports = function () {
                     database: config.schema
                 });
                 dbPool.startKeepAlive();
-                logger.log(Logger.INFO, "MySQL database pool created");
+                logger.log(Logger.INFO, "MySQL database pool created for database named \'" + dbName + "\'");
                 dbPool.getConnection(function (err, connection) {
                     if (!err) {
                         connection.release();
@@ -135,7 +136,7 @@ module.exports = function () {
         startup: function () {
             var startDefer = q.defer();
             if (!dbPool) {
-                var dbName = nconf.get("database");
+                dbName = nconf.get("database");
                 if (!dbName) {
                     startDefer.reject("No database was selected.");
                 }

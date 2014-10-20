@@ -2,92 +2,20 @@
 var q = require('q');
 var connectionManager = require('../pom/connection-mysql');
 var dataTranslator = require('./mysql-translator');
-var odata = require('../util/odata-parser');
 var stamp = require('../model/stamp');
 var catalogue = require('../model/catalogue');
 var ownership = require('../model/ownership');
 var catalogueNumber = require('../model/catalogue-number');
 var Logger = require('../util/logger');
+var ExchangeRates = require('../util/exchange-rates');
 var fx = require('money');
 var accounting = require('accounting');
-var http = require('http');
-var fs = require('fs');
-var nconf = require('nconf');
 
 var sqlTrace = Logger.getLogger("sql");
 var logger = Logger.getLogger("server");
 
-nconf.argv().env().file(__dirname + '/../../config/application.json');
-
 var report = function () {
-    var TIME_INTERVAL = 60 * 60 * 6 * 1000; // 6 hours
-    var initialized = false;
-    var initialize = function (callback) {
-        
-        var filename = __dirname + '/../../config/exchange-rates.json';
-        
-        var configureFx = function (data) {
-            if (data) {
-                if (typeof fx !== "undefined" && fx.rates) {
-                    fx.rates = data.rates;
-                    fx.base = data.base;
-                } else {
-                    // If not, apply to fxSetup global:
-                    window.fxSetup = {
-                        rates : data.rates,
-                        base : data.base
-                    }
-                }
-                initialized = true;
-                callback();
-            }
-        };
-    
-        
-
-        fs.exists(filename, function (exists) {
-            var getNew = !exists;
-            var exchangeData = {};
-            if (exists) {
-                getNew = false;
-                var data = fs.readFileSync(filename, { encoding: 'UTF-8' });
-                exchangeData = JSON.parse(data);
-                if (!exchangeData.lastUpdated || new Date().getTime() - exchangeData.lastUpdated > TIME_INTERVAL) {
-                    getNew = true;
-                }
-            }
-            if (getNew) {
-                var chunks = "";
-                var appId = nconf.get("openexchangerates.org")["app_id"];
-                if (!appId) {
-                    logger.log(Logger.WARN, "No app_id found for openexchangerates.org so no new rates can be obtained.");
-                } else {
-                    logger.log(Logger.INFO, "Fetching rates from openexchangerates.org");
-                    http.get('http://openexchangerates.org/api/latest.json?app_id=' + appId, function (res) {
-                        if (res.statusCode === 200) {
-                            res.on('data', function (chunk) {
-                                chunks += chunk;
-                            });
-                            res.on('end', function () {
-                                exchangeData = JSON.parse(chunks);
-                                exchangeData.lastUpdated = new Date().getTime();
-                                fs.writeFile(filename, JSON.stringify(exchangeData), function (err) {
-                                    configureFx(exchangeData);
-                                });
-                            });
-                        } else {
-                            logger.log(Logger.ERROR, "Open Exchange responded with status code " + res.statusCode);
-                        }
-                    });
-                }
-            } else {
-                configureFx(exchangeData);
-            }
-        }); // end exists
-        
-    };
-    
-    
+    "use strict";
     return {
         getCatalogueTotal: function ($filter, currency) {
             var defer = q.defer();
@@ -95,9 +23,10 @@ var report = function () {
                 var sql = "SELECT " + catalogue.getAlias() + ".CURRENCY, SUM(" + catalogueNumber.getAlias() + ".CATALOGUEVALUE) AS VALUE ";
                 sql += "FROM " + stamp.getTableName() + ' AS ' + stamp.getAlias() + ' ';
                 sql += 'JOIN ' + catalogueNumber.getTableName() + ' AS ' + catalogueNumber.getAlias() + ' ON ' + stamp.getAlias() + '.ID=' + catalogueNumber.getAlias() + '.STAMP_ID ';
+                sql += "LEFT JOIN " + ownership.getTableName() + ' AS ' + ownership.getAlias() + ' ON ' + stamp.getAlias() + '.ID=' + ownership.getAlias() + '.STAMP_ID ';                
                 sql += "LEFT JOIN " + catalogue.getTableName() + ' AS ' + catalogue.getAlias() + ' ON ' + catalogueNumber.getAlias() + '.CATALOGUE_REF = ' + catalogue.getAlias() + '.ID ';
                 sql += "WHERE " + catalogueNumber.getAlias() + ".active=1 ";
-                var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, [stamp, catalogueNumber, catalogue], [stamp.getAlias(),catalogueNumber.getAlias(),catalogue.getAlias()]) : '';
+                var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, [stamp, catalogueNumber, catalogue, ownership]) : '';
                 if (whereClause.length > 0) {
                     sql += "AND " + whereClause + " ";
                 }
@@ -114,12 +43,8 @@ var report = function () {
                         });
                         var value = accounting.toFixed(sum, 2);
                         defer.resolve(value);
-                    }
-                    if (!initialized) {
-                        initialize(processResults);
-                    } else {
-                        processResults;
-                    }
+                    };
+                    ExchangeRates.checkRates(processResults);
                 });
             });
             return defer.promise;

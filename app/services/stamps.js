@@ -1,7 +1,5 @@
 var extend = require('node.extend');
 var persistentCollection = require('./persistent-collection');
-var catalogueNumberService = require('./catalogue-numbers');
-var ownershipService = require('./ownerships');
 var connectionManager = require('../pom/connection-mysql');
 var dataTranslator = require('./mysql-translator');
 var odata = require('../util/odata-parser');
@@ -16,8 +14,11 @@ var sqlTrace = Logger.getLogger("sql");
 var logger = Logger.getLogger("server");
 
 var stamps = extend(true, {}, persistentCollection, function () {
-    
+
+    "use strict";
+
     function generateColumnExpression(fields, tableRef) {
+
         var s = "";
         _.each(fields, function (field, indx) {
             var prefix = false;
@@ -58,18 +59,18 @@ var stamps = extend(true, {}, persistentCollection, function () {
             delete row.sID;
             rows.push(row);
         }
-        if (!s['CATALOGUENUMBER'] || s['CATALOGUENUMBER'].length === 0) {
-            s['CATALOGUENUMBER'] = [];
+        if (!s.CATALOGUENUMBER || s.CATALOGUENUMBER.length === 0) {
+        s.CATALOGUENUMBER = [];
         }
-        if (!s['OWNERSHIP'] || s['OWNERSHIP'].length === 0) {
-            s['OWNERSHIP'] = [];
+        if (!s.OWNERSHIP || s.OWNERSHIP.length === 0) {
+            s.OWNERSHIP = [];
         }
-        s['CATALOGUENUMBER'].push(populateChildren(stamp.getFieldDefinitions(), catalogueNumber.getFieldDefinitions(), row, 'cID'));
+        s.CATALOGUENUMBER.push(populateChildren(stamp.getFieldDefinitions(), catalogueNumber.getFieldDefinitions(), row, 'cID'));
         var oid = row.oID;
-        if (oid && !_.findWhere(s['OWNERSHIP'], { ID: oid })) {
+        if (oid && !_.findWhere(s.OWNERSHIP, { ID: oid })) {
             var ownerObj = populateChildren(stamp.getFieldDefinitions(), ownership.getFieldDefinitions(), row, 'oID');
             if (!_.isEmpty(ownerObj)) {
-                s['OWNERSHIP'].push(ownerObj);
+                s.OWNERSHIP.push(ownerObj);
             }
         } else {
             logger.log(Logger.TRACE, "skipped for " + s.ID);
@@ -197,9 +198,14 @@ var stamps = extend(true, {}, persistentCollection, function () {
         getFromTables: function ($filter) {
             var tables = stamp.getTableName() + ' AS ' + stamp.getAlias() + ' JOIN ' + catalogueNumber.getTableName() + ' AS ' + catalogueNumber.getAlias();
             tables += ' ON ' + stamp.getAlias() + '.ID=' + catalogueNumber.getAlias() + '.STAMP_ID ';
-            tables += 'LEFT OUTER JOIN ' + ownership.getTableName() + ' AS ' + ownership.getAlias() + ' ON ' + stamp.getAlias() + '.ID = ' + ownership.getAlias() + '.STAMP_ID'
+            tables += 'LEFT OUTER JOIN ' + ownership.getTableName() + ' AS ' + ownership.getAlias() + ' ON ' + stamp.getAlias() + '.ID = ' + ownership.getAlias() + '.STAMP_ID';
             return tables;
         },
+        
+        getWhereClause: function ($filter) {
+            return ($filter) ? dataTranslator.toWhereClause($filter, [stamp,catalogueNumber,ownership]) : '';
+        },
+
         find: function ($filter, $limit, $offset) {
             var defer = q.defer();
             var that = this;
@@ -221,8 +227,7 @@ var stamps = extend(true, {}, persistentCollection, function () {
             select += generateColumnExpression(catDef, catalogueNumber.getAlias()) + ',' + generateColumnExpression(ownerDef, ownership.getAlias());
             select += ' FROM ' + this.getFromTables();
             
-            var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, [stamp, catalogueNumber, ownership], 
-                [stamp.getAlias(), catalogueNumber.getAlias(), ownership.getAlias()]) : '';
+            var whereClause = this.getWhereClause($filter);
             select += ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
             sqlTrace.log(Logger.DEBUG, select);
             connectionManager.getConnection().then(function (connection) {
@@ -242,7 +247,7 @@ var stamps = extend(true, {}, persistentCollection, function () {
             return defer.promise;
         },
         collectionName: 'stamps',
-        fieldDefinition: stamp,
+        fieldDefinition: stamp
     };
 }());
 

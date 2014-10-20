@@ -10,3 +10,4 @@ logs/output.log
 /config/exchange-rates.json
 /test/transaction-example.js
 www
+.idea

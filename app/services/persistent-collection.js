@@ -8,8 +8,8 @@ var Logger = require('../util/logger');
 var sqlTrace = Logger.getLogger("sql");
 var logger = Logger.getLogger("server");
 
-function persistentCollection() {
-    
+function PersistentCollection() {
+    "use strict";
     var last_id = 0;
     
     
@@ -30,10 +30,9 @@ function persistentCollection() {
                             connection.release();
                             defer.resolve();
                         });
-                        
                     }
-                });
-            })
+                }); // end query
+            }); // end transaction begin
         });
         return defer.promise;
     }
@@ -151,9 +150,7 @@ function persistentCollection() {
             var generateId = false;
             connectionManager.getConnection().then(function (connection) {
                 connection.beginTransaction(function (err) {
-                    if (err) {
-                        rollback(err);
-                    } else {
+                    if (!rollbackOnError(connection, defer, err)) {
                         that.generateId(that.fieldDefinition, obj).then(function (id) {
                             obj.id = id;
                             that.preCreate(obj); // opportunity for services to manipulate the object
@@ -162,7 +159,7 @@ function persistentCollection() {
                             connection.query(insertStatement, function (err, rows) {
                                 if (!rollbackOnError(connection, defer, err)) {
                                     that.postCreate(connection, obj).then(function (_obj) {
-                                        connection.commit(function (err) {
+                                        connection.commit(function () {
                                             connection.release();
                                             that.findById(id).then(function (result) {
                                                 defer.resolve(result);
@@ -207,7 +204,7 @@ function persistentCollection() {
                                         defer.reject({ message: "No object found", code: "NOT_FOUND" });
                                     });
                                 } else {
-                                    connection.commit(function (c_err) {
+                                    connection.commit(function () {
                                         connection.release();
                                         defer.resolve(rows.affectedRows);
                                     });
@@ -226,10 +223,13 @@ function persistentCollection() {
             return this.fieldDefinition.getTableName() + " AS " + this.fieldDefinition.getAlias();
         },
         
+        getWhereClause: function ($filter) {
+            return ($filter) ? dataTranslator.toWhereClause($filter, [this.fieldDefinition]) : '';
+        },
         count: function ($filter) {
             var defer = q.defer();
             var that = this;
-            var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, [that.fieldDefinition]) : '';
+            var whereClause = this.getWhereClause($filter);
             var qs = 'SELECT COUNT(DISTINCT ' + that.fieldDefinition.getAlias() + '.ID) AS COUNT FROM ' + this.getFromTables() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '');
             sqlTrace.log(Logger.DEBUG, qs);
             connectionManager.getConnection().then(function (connection) {
@@ -239,7 +239,7 @@ function persistentCollection() {
                     }
                     else if (result.length > 0) {
                         connection.release();
-                        defer.resolve(result[0]['COUNT']);
+                        defer.resolve(result[0].COUNT);
                     } else {
                         defer.reject({ message: "No object found", code: "NOT_FOUND" });
                     }
@@ -265,20 +265,20 @@ function persistentCollection() {
             });
             return defer.promise;
         },
-        findAll: function ($limi, $offset) {
+        findAll: function ($limit, $offset) {
             return this.find(null, $limit, $offset);
         },
         find: function ($filter, $limit, $offset) {
             var defer = q.defer();
             var that = this;
-            var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, [ that.fieldDefinition ], [ that.fieldDefinition.getAlias()]) : '';
+            var whereClause = this.getWhereClause($filter);
             if (!$limit) {
                 $limit = 1000;
             }
             if (!$offset) {
                 $offset = 0;
             }
-            var qs = 'SELECT * FROM ' + that.getFromTables() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
+            var qs = 'SELECT ' + that.fieldDefinition.getAlias() + '.* FROM ' + that.getFromTables() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
             sqlTrace.log(Logger.DEBUG, qs);
             connectionManager.getConnection().then(function (connection) {
                 connection.query(qs, function (err, result) {
@@ -331,4 +331,4 @@ function persistentCollection() {
     };
 }
 
-module.exports = new persistentCollection();
+module.exports = new PersistentCollection();
