@@ -11,17 +11,6 @@ var logger = Logger.getLogger("server");
 function PersistentCollection() {
     "use strict";
 
-    function rollbackOnError(connection, defer, err) {
-        if (err) {
-            connection.rollback(function () {
-                connection.release();
-                defer.reject(dataTranslator.getErrorMessage(err));
-            });
-            return true;
-        }
-        return false;
-    }
-
     return {
         generateId : function (fieldDefinition, obj) {
             var defer = q.defer();
@@ -57,7 +46,7 @@ function PersistentCollection() {
                         sqlTrace.log(Logger.DEBUG, qs);
                         connection.beginTransaction(function (err) {
                             connection.query(qs, function (err, rows) {
-                                if (!rollbackOnError(connection, defer, err)) {
+                                if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
                                     if (rows.changedRows === 0 && rows.affectedRows === 0) {
                                         connection.rollback(function () {
                                             connection.release();
@@ -108,14 +97,14 @@ function PersistentCollection() {
             var generateId = false;
             connectionManager.getConnection().then(function (connection) {
                 connection.beginTransaction(function (err) {
-                    if (!rollbackOnError(connection, defer, err)) {
+                    if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
                         that.generateId(that.fieldDefinition, obj).then(function (id) {
                             obj.id = id;
                             that.preCreate(obj); // opportunity for services to manipulate the object
                             var insertStatement = dataTranslator.generateInsertStatement(that.fieldDefinition, obj);
                             sqlTrace.log(Logger.DEBUG, insertStatement);
                             connection.query(insertStatement, function (err, rows) {
-                                if (!rollbackOnError(connection, defer, err)) {
+                                if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
                                     that.postCreate(connection, obj).then(function (_obj) {
                                         connection.commit(function () {
                                             connection.release();
@@ -126,13 +115,13 @@ function PersistentCollection() {
                                             });
                                         });
                                     }, function (err) {
-                                        rollbackOnError(connection, defer, err);
+                                        PersistentCollection.rollbackOnError(connection, defer, err);
                                     });
                                 }
                             });
                         }, function (err) {
                             // error from generate id
-                            rollbackOnError(connection, defer, err);
+                            PersistentCollection.rollbackOnError(connection, defer, err);
                         });
                     }
                 }); // end transaction
@@ -148,7 +137,7 @@ function PersistentCollection() {
             var that = this;
             connectionManager.getConnection().then(function (connection) {
                 connection.beginTransaction(function (err) {
-                    if (!rollbackOnError(connection, defer, err)) {
+                    if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
                         that.preDelete(connection, id).then(function () {
                             var qs = 'DELETE FROM ' + that.fieldDefinition.getTableName() + ' WHERE ID=?';
                             sqlTrace.log(Logger.DEBUG, qs);
@@ -169,7 +158,7 @@ function PersistentCollection() {
                                 }
                             });
                         }, function (err) {
-                            rollbackOnError(connection, defer, err);
+                            PersistentCollection.rollbackOnError(connection, defer, err);
                         });
                     }
                 });
@@ -292,6 +281,18 @@ function PersistentCollection() {
 }
 
 PersistentCollection.last_id = {};
+
+PersistentCollection.rollbackOnError = function(connection, defer, err) {
+    "use strict";
+    if (err) {
+        connection.rollback(function () {
+            connection.release();
+            defer.reject(dataTranslator.getErrorMessage(err));
+        });
+        return true;
+    }
+    return false;
+};
 
 PersistentCollection.getNextSequence = function(fieldDefinition, callback) {
     "use strict";

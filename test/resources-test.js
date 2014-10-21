@@ -1,10 +1,11 @@
-var superagent = require('superagent')
+var superagent = require('superagent');
 var child_process = require('child_process');
 var path = require('path');
-var expect = require('expect.js')
+var expect = require('expect.js');
 var Logger = require('../app/util/logger');
 var mysql = require('mysql');
 var fs = require('fs');
+var _ = require('../lib/underscore');
 
 var connectionHelper = require('./util/connection-helper');
 var NamedCollectionVerifications = require('./util/named-collection-verifier');
@@ -108,7 +109,7 @@ describe('REST Services tests', function (done) {
         it('GET by ID with 200 status', function (done) {
             NamedCollectionVerifications.verifySingleItem('preferences', {
                 id: 1,
-                name: 'imagePath',
+                name: 'imagePath'
             }, done, function (obj) {
                 expect(obj.category).to.be.eql('stamps');
                 expect(obj.value).to.be.eql('http://drake-server.dnsdynamic.com');
@@ -632,7 +633,7 @@ describe('REST Services tests', function (done) {
                 expect(ownership.sellerRef).to.be(1);
                 expect(ownership.purchased.indexOf("2007-05-15")).to.be(0);
                 done();
-            })
+            });
         });
         
         it('POST Create a wantlist stamp with 201 status', function (done) {
@@ -657,7 +658,7 @@ describe('REST Services tests', function (done) {
                 expect(res.body.stampOwnerships).to.not.be(undefined);
                 expect(res.body.stampOwnerships.length).to.be(0);
                 done();
-            })
+            });
         });
         
         it('PUT Convert a wantlist to a stamp with 200 status', function (done) {
@@ -718,6 +719,87 @@ describe('REST Services tests', function (done) {
             });
         });
     });
+
+    describe('CatalogueNumber REST API tests', function (done) {
+        it('Make active changes successfully', function (done) {
+            var stamp = {
+                countryRef: 1,
+                rate: "1d",
+                description: "red",
+                wantList: true,
+                catalogueNumbers: [
+                    {
+                        catalogueRef: 1,
+                        number: "23a",
+                        value: 0.65,
+                        condition: 1,
+                        active: true
+                    },
+                    {
+                        catalogueRef: 2,
+                        number: "14",
+                        value: 1.25,
+                        condition: 0,
+                        active: false
+                    }
+                ]
+            };
+            superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
+                .send(stamp)
+                .end(function (e, res) {
+                    expect(e).to.eql(null);
+                    expect(res.status).to.eql(201);
+                    var catalogueNumbers = res.body.catalogueNumbers;
+                    var activate = _.findWhere(catalogueNumbers, {active: false});
+                    expect(activate).to.not.be(undefined);
+                    superagent.post('http://' + hostname + ':' + server_port + '/rest/catalogueNumbers/' + activate.id + '/makeActive')
+                        .end(function(e,res) {
+                            catalogueNumbers = res.body.catalogueNumbers;
+                            expect(_.findWhere(catalogueNumbers, {active:true}).id).to.be.eql(activate.id);
+                            expect(_.where(catalogueNumbers, {active:true}).length).to.be(1);
+                            done();
+                        });
+
+
+                });
+        });
+
+        it('Make active already active', function (done) {
+            var stamp = {
+                countryRef: 1,
+                rate: "1d",
+                description: "red",
+                wantList: true,
+                catalogueNumbers: [
+                    {
+                        catalogueRef: 1,
+                        number: "23a",
+                        value: 0.65,
+                        condition: 1,
+                        active: true
+                    }
+                ]
+            };
+            superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
+                .send(stamp)
+                .end(function (e, res) {
+                    expect(e).to.eql(null);
+                    expect(res.status).to.eql(201);
+                    var catalogueNumbers = res.body.catalogueNumbers;
+                    var activate = _.findWhere(catalogueNumbers, {active: true});
+                    expect(activate).to.not.be(undefined);
+                    superagent.post('http://' + hostname + ':' + server_port + '/rest/catalogueNumbers/' + activate.id + '/makeActive')
+                        .end(function(e,res) {
+                            catalogueNumbers = res.body.catalogueNumbers;
+                            expect(_.findWhere(catalogueNumbers, {active:true}).id).to.be.eql(activate.id);
+                            expect(_.where(catalogueNumbers, {active:true}).length).to.be(1);
+                            done();
+                        });
+
+
+                });
+        });
+    });
         
         describe('Stamp Collection REST API tests', function (done) {
             
@@ -728,7 +810,7 @@ describe('REST Services tests', function (done) {
             it('GET by ID with 200 status', function (done) {
                 NamedCollectionVerifications.verifySingleItem('stampCollections', {
                     id: 1,
-                    name: 'British Commonwealth',
+                    name: 'British Commonwealth'
                 }, done);
             });
             
@@ -743,7 +825,7 @@ describe('REST Services tests', function (done) {
                     expect(collection.name).to.be.eql("British Commonwealth");
                     expect(collection.id).to.be.eql(1);
                     done();
-                })
+                });
             });
             
             it('GET by invalid ID with 404 status', function (done) {
@@ -771,8 +853,7 @@ describe('REST Services tests', function (done) {
                         expect(res.status).to.eql(409);
                         done();
                     });
-                
-                })
+                });
             });
             
             it('POST missing name field with 400 status', function (done) {
@@ -782,7 +863,7 @@ describe('REST Services tests', function (done) {
                     expect(e).to.eql(null);
                     expect(res.status).to.eql(400);
                     done();
-                })
+                });
             });
             
             it('PUT successfully with 200 status', function (done) {
@@ -859,7 +940,7 @@ describe('REST Services tests', function (done) {
                             if (count !== total) {
                                 post("Album-" + count, postCallback);
                             }
-                        }
+                        };
                         post("Album-" + count, postCallback);
                         var theInterval;
                         var f = function () {
@@ -877,7 +958,7 @@ describe('REST Services tests', function (done) {
                                     });
                                 });
                             }
-                        }
+                        };
                         theInterval = setInterval(f, 50);
                     } else {
                         expect().fail("No id is available.");

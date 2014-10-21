@@ -27,6 +27,7 @@ require("./routes/rest-countries").configure(app, BASEPATH + SERVICES_PATH);
 require("./routes/rest-albums").configure(app, BASEPATH + SERVICES_PATH);
 require("./routes/rest-stampCollections").configure(app, BASEPATH + SERVICES_PATH);
 require("./routes/rest-catalogues").configure(app, BASEPATH + SERVICES_PATH);
+require("./routes/catalogue-numbers").configure(app, BASEPATH + SERVICES_PATH);
 require("./routes/rest-sellers").configure(app, BASEPATH + SERVICES_PATH);
 require("./routes/rest-stamps").configure(app, BASEPATH + SERVICES_PATH);
 require("./routes/reports").configure(app, BASEPATH + SERVICES_PATH);

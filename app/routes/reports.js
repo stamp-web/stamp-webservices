@@ -6,7 +6,7 @@ var routeHelper = require('./route-helper');
 var logger = Logger.getLogger("server");
 
 function reports() {
-
+    "use strict";
     return {
         executeReport: function (req, res) {
             var rType = req.query.$reportType;
@@ -46,8 +46,8 @@ function reports() {
         configure: function (app, basePath) {
             app.get(basePath + "/reports", this.executeReport);
             logger.log(Logger.INFO, "   Registering services at " + basePath + "/reports");
-        },
-    }
+        }
+    };
 }
 
 var r = 
