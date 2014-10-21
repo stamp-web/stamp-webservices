@@ -95,8 +95,7 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                         }
                     } else {
                         catNum.STAMP_ID = merged.ID;
-                        var c_sql = dataTranslator.generateInsertByFields(catalogueNumber,catNum);
-                        updateList.push(c_sql);
+                        createList.push({ fieldDefinition: catalogueNumber, object: catNum});
                     }
                 });
             }
