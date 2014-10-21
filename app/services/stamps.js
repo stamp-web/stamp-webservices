@@ -1,5 +1,5 @@
 var extend = require('node.extend');
-var persistentCollection = require('./persistent-collection');
+var PersistentCollection = require('./persistent-collection');
 var connectionManager = require('../pom/connection-mysql');
 var dataTranslator = require('./mysql-translator');
 var odata = require('../util/odata-parser');
@@ -13,7 +13,7 @@ var Logger = require('../util/logger');
 var sqlTrace = Logger.getLogger("sql");
 var logger = Logger.getLogger("server");
 
-var stamps = extend(true, {}, persistentCollection, function () {
+var stamps = extend(true, {}, new PersistentCollection(), function () {
 
     "use strict";
 
@@ -81,69 +81,84 @@ var stamps = extend(true, {}, persistentCollection, function () {
         preCreate: function(obj) {
             obj.catalogueCount = (obj.catalogueNumbers) ? obj.catalogueNumbers.length : 0;
         },
-        updatePreCommit: function (connection, id, obj) {
+        updateAdditions: function(connection,merged,storedObj) {
             var defer = q.defer();
             var that = this;
-            var total = ((obj.catalogueNumbers) ? obj.catalogueNumbers.length : 0) + ((obj.stampOwnerships) ? obj.stampOwnerships.length : 0);
-            var updated = 0;
-            if (obj.catalogueNumbers && _.isArray(obj.catalogueNumbers)) {
-                _.each(obj.catalogueNumbers, function (catNum) {
-                    if (catNum.id) {
-                        var sql = dataTranslator.generateUpdateStatement(catalogueNumber, catNum, catNum.id);
-                        sqlTrace.log(Logger.DEBUG, sql);
-                        connection.query(sql, function (err, result) {
-                            if (err) {
-                                defer.reject(dataTranslator.getErrorMessage(err));
-                            }
-                            updated++;
-                            if (updated === total) {
-                                defer.resolve(obj);
-                            }
-                        });
-                    }
-                });
-            }
-            if (obj.stampOwnerships && _.isArray(obj.stampOwnerships)) {
-                _.each(obj.stampOwnerships, function (owner) {
-                    if (owner.id) {
-                        var sql = dataTranslator.generateUpdateStatement(ownership, owner, owner.id);
-                        sqlTrace.log(Logger.DEBUG, sql);
-                        connection.query(sql, function (err, result) {
-                            if (err) {
-                                defer.reject(dataTranslator.getErrorMessage(err));
-                            }
-                            updated++;
-                            if (updated === total) {
-                                defer.resolve(obj);
-                            }
-                        });
+            var updateList = [], createList = [];
+            if( merged.CATALOGUENUMBER && _.isArray(merged.CATALOGUENUMBER)) {
+                _.each(merged.CATALOGUENUMBER, function(catNum) {
+                    if( catNum.ID) {
+                        var current = _.findWhere(storedObj.CATALOGUENUMBER,{ ID: catNum.ID});
+                        var sql = dataTranslator.generateUpdateByFields(catalogueNumber, catNum, current,true);
+                        if( sql !== null ) {
+                            updateList.push(sql);
+                        }
                     } else {
-                        that.findById(id).then(function (result) {
-                            if (!result.stampOwnerships || result.stampOwnerships.length === 0) {
-                                owner.stampRef = id;
-                                that.generateId(ownership, owner).then(function (_id) {
-                                    owner.id = _id;
-                                    var sql = dataTranslator.generateInsertStatement(ownership, owner);
-                                    sqlTrace.log(Logger.DEBUG, sql);
-                                    connection.query(sql, function (err, result) {
-                                        if (err) {
-                                            defer.reject(dataTranslator.getErrorMessage(err));
-                                        }
-                                        updated++;
-                                        if (updated === total) {
-                                            defer.resolve(obj);
-                                        }
-                                    });
-                                });
-                            } else {
-                                defer.reject({ message: "Only a single ownership record is currently supported", code: "INVALID" });
-                            }
-                        });
+                        catNum.STAMP_ID = merged.ID;
+                        var c_sql = dataTranslator.generateInsertByFields(catalogueNumber,catNum);
+                        updateList.push(c_sql);
                     }
                 });
             }
+            if( merged.OWNERSHIP && _.isArray(merged.OWNERSHIP)) {
+                _.each(merged.OWNERSHIP, function(owner) {
+                    if( owner.ID) {
+                        var current = _.findWhere(storedObj.OWNERSHIP,{ ID: owner.ID});
+                        var sql = dataTranslator.generateUpdateByFields(ownership, owner, current, true);
+                        if( sql !== null ) {
+                            updateList.push( sql );
+                        }
+                    } else {
+                        owner.STAMP_ID = merged.ID;
+                        createList.push({ fieldDefinition: ownership, object: owner});
+                    }
+                });
+            }
+            var total = updateList.length + createList.length;
+            var count = 0;
+            var resolveWhenFinished = function() {
+                if( count === total ) {
+                    defer.resolve({
+                        modified: total > 0
+                    });
+                }
+            };
+            resolveWhenFinished();
+            _.each(updateList, function (sql) {
+                sqlTrace.log(Logger.DEBUG, sql);
+                connection.query(sql, function (err, data) {
+                    if (err !== null) {
+                        defer.reject(dataTranslator.getErrorMessage(err));
+                    }
+                    count++;
+                    resolveWhenFinished();
+                });
+            });
+            _.each(createList, function(obj) {
+                var creating = obj;
+                PersistentCollection.getNextSequence(creating.fieldDefinition, function(err,id) {
+                    if( err !== null ) {
+                        defer.reject(dataTranslator.getErrorMessage(err));
+                    }
+                    creating.object.ID = id;
+                    var c_sql = dataTranslator.generateInsertByFields(creating.fieldDefinition,creating.object);
+                    sqlTrace.log(Logger.DEBUG, c_sql);
+                    connection.query(c_sql, function (err, data) {
+                        if (err !== null) {
+                            defer.reject(dataTranslator.getErrorMessage(err));
+                        }
+                        count++;
+
+                        resolveWhenFinished();
+                    });
+                    PersistentCollection.updateSequence(id, creating.fieldDefinition);
+                });
+            });
+
+
             return defer.promise;
         },
+
         postCreate: function (connection, obj) {
             var defer = q.defer();
             var total = ((obj.catalogueNumbers) ? obj.catalogueNumbers.length : 0) + ((obj.stampOwnerships) ? obj.stampOwnerships.length : 0);

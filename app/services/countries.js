@@ -1,5 +1,5 @@
 var extend = require('node.extend');
-var persistentCollection = require('./persistent-collection');
+var PersistentCollection = require('./persistent-collection');
 var country = require('../model/country');
 var stamp = require('../model/stamp');
 var stampService = require('./stamps');
@@ -10,7 +10,7 @@ var Logger = require('../util/logger');
 
 var sqlTrace = Logger.getLogger("sql");
 
-var countries = extend(true, {}, persistentCollection, function() {
+var countries = extend(true, {}, new PersistentCollection(), function() {
     return {
         collectionName: 'countries',
         fieldDefinition: country,

@@ -34,6 +34,7 @@ var routeHelper = function () {
                     code = this.StatusCode.CONFLICT;
                     break;
                 case "REQUIRED_FIELD":
+                case "INVALID_OBJECT":
                     code = this.StatusCode.BAD_REQUEST;
                     break;
                 case "NOT_FOUND":

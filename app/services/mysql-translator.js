@@ -2,6 +2,7 @@ var _ = require('../../lib/underscore/underscore');
 var Logger = require('../util/logger');
 require("date-utils");
 require("../util/string-utilities");
+var Constants = require("../util/constants");
 
 var logger = Logger.getLogger("server");
 
@@ -14,9 +15,6 @@ function DataTranslator() {
     }
     
     return {
-        MYSQL_DATEFORMAT : "YYYY-MM-DD 00:MI:SS",
-        DATEOFFSET_STARTING : 'datetimeoffset\'',
-        
         getErrorMessage: function (err) {
             var msg;
             if (!err.processed) {
@@ -41,23 +39,58 @@ function DataTranslator() {
             msg.processed = true;
             return msg;
         },
-        generateUpdateStatement: function (fieldDefinition, obj, id) {
-            var config = this.processFields(fieldDefinition, obj);
-            var modifyField = _.findWhere(fieldDefinition.getFieldDefinitions(), { field: 'modifyTimestamp' });
-            if (modifyField && _.indexOf(config.DB_COLS, "MODIFYSTAMP") < 0) {
-                config.DB_COLS.push(modifyField.column);
-                config.VALUES.push("CURDATE()");
-            }
-            var expr = "UPDATE " + fieldDefinition.getTableName() + " SET ";
-            for (var i = 0; i < config.DB_COLS.length; i++) {
-                expr += config.DB_COLS[i] + "=" + config.VALUES[i];
-                if (i < config.DB_COLS.length - 1) {
-                    expr += ", ";
+
+        generateUpdateByFields: function(fieldDefinition, proposed, current, onlyWithFields) {
+            var expr = "";
+            _.each(Object.keys(proposed), function(key) {
+               var definition = _.findWhere(fieldDefinition.getFieldDefinitions(), { column: key});
+               if( proposed[key] !== current[key]) {
+                   var val = fieldDefinition.formatValue(definition,proposed[key]);
+                   if( val !== undefined ) {
+                       expr += ((expr.length > 0 ) ? ", " : "") + key + "=" + val;
+                   }
+               }
+            });
+            if( !onlyWithFields || (onlyWithFields && expr.length > 0) ) {
+                var modifyField = _.findWhere(fieldDefinition.getFieldDefinitions(), { field: 'modifyTimestamp' });
+                if( modifyField && !proposed[modifyField.column] ) {
+                    expr += ((expr.length > 0) ? ", " : "") + modifyField.column + "=CURDATE()";
                 }
+                expr = "UPDATE " + fieldDefinition.getTableName() + " SET " + expr + " WHERE ID=" + current.ID;
+            } else {
+                expr = null;
             }
-            expr += " WHERE ID=" + id;
             return expr;
         },
+        generateInsertByFields: function (fieldDefinition, obj) {
+            var config = { DB_COLS: [], VALUES: [] };
+            _.each(Object.keys(obj), function(col) {
+                var definition = _.findWhere(fieldDefinition.getFieldDefinitions(), { column: col });
+                config.DB_COLS.push(col);
+                config.VALUES.push(fieldDefinition.formatValue(definition, obj[col]));
+            });
+            if ( _.indexOf(config.DB_COLS, "CREATESTAMP") < 0) {
+                config.DB_COLS.push("CREATESTAMP");
+                config.VALUES.push("CURDATE()");
+            }
+            var expr = "INSERT INTO " + fieldDefinition.getTableName() + " (";
+            for (var i = 0; i < config.DB_COLS.length; i++) {
+                expr += config.DB_COLS[i];
+                if (i < config.DB_COLS.length - 1) {
+                    expr += ",";
+                }
+            }
+            expr += ") VALUES(";
+            for (var j = 0; j < config.VALUES.length; j++) {
+                expr += "" + config.VALUES[j];
+                if (j < config.VALUES.length - 1) {
+                    expr += ",";
+                }
+            }
+            expr += ")";
+            return expr;
+        },
+
         generateInsertStatement: function (fieldDefinition, obj) {
             var config = this.processFields(fieldDefinition, obj);
             var creationField = _.findWhere(fieldDefinition.getFieldDefinitions(), { field: 'createTimestamp' });
@@ -91,35 +124,11 @@ function DataTranslator() {
             _.each(obj, function (value, key) {
                 var definition = _.findWhere(fieldDefinition.getFieldDefinitions(), { field : key });
                 if (definition && definition.column) {
-                    if (definition.type === 'id_array' || definition.type === 'obj_array') {
+                    var val = fieldDefinition.formatValue(definition,value);
+                    if( val === undefined ) {
                         return;
                     }
                     config.DB_COLS.push(definition.column);
-                    var val = null;
-                    switch (definition.type) {
-                        case 'long':
-                        case 'float':
-                        case 'int':
-                            if (definition.joinWith) {
-                                val = (value === null || +value === -1) ? null : +value;
-                            } else {
-                                val = +value;
-                            }
-                            break;
-                        case 'date':
-                            if (_.isDate(value)) {
-                                val = "\'" + value.toFormat(that.MYSQL_DATEFORMAT) + "\'";
-                            } else if (_.isString(value)) {
-                                value = new Date(value);
-                                val = "\'" + value.toFormat(that.MYSQL_DATEFORMAT) + "\'";
-                            }
-                            break;
-                        case 'boolean':
-                            val = (value === true);
-                            break;
-                        default:
-                            val = "\'" + value + "\'";
-                    }
                     config.VALUES.push(val);
                 }
             });
@@ -192,10 +201,10 @@ function DataTranslator() {
                             var field = _.findWhere(definition.getFieldDefinitions(), { field: subject });
                             if (field && field.column && !field.nonPersistent) {
                                 predicate = ((definition.getAlias()) ? definition.getAlias() + '.' : '') + field.column;
-                                if (field.type === 'date' && value.startsWith(that.DATEOFFSET_STARTING)) {
-                                    value = value.substring(that.DATEOFFSET_STARTING.length, value.length - 1);
+                                if (field.type === 'date' && value.startsWith(Constants.DATEOFFSET_STARTING)) {
+                                    value = value.substring(Constants.DATEOFFSET_STARTING.length, value.length - 1);
                                     var d = new Date(value);
-                                    value = "\'" + d.toFormat(that.MYSQL_DATEFORMAT) + "\'";
+                                    value = "\'" + d.toFormat(Constants.MYSQL_DATEFORMAT) + "\'";
                                 }
                                 break;
                             }

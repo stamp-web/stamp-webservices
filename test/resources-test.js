@@ -698,7 +698,7 @@ describe('REST Services tests', function (done) {
                     grade: 1,
                     notes: "this is a note",
                     pricePaid: 0.25,
-                    code: "USD",
+                    code: "USD"
                 });
                 superagent.put('http://' + hostname + ':' + server_port + '/rest/stamps/' + stamp.id)
                 .send(stamp)

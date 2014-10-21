@@ -1,5 +1,5 @@
 var extend = require('node.extend');
-var persistentCollection = require('./persistent-collection');
+var PersistentCollection = require('./persistent-collection');
 var stampCollection = require('../model/stamp-collection');
 var odata = require('../util/odata-parser');
 var album = require('../model/album');
@@ -7,7 +7,7 @@ var albums = require('./albums');
 var q = require('q');
 var _ = require('../../lib/underscore/underscore');
 
-var collections = extend(true, {}, persistentCollection, function() {
+var collections = extend(true, {}, new PersistentCollection(), function() {
     return {
         collectionName: 'stampCollections',
         fieldDefinition: stampCollection,

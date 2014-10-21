@@ -4,8 +4,51 @@ var album = require("../app/model/album");
 var preference = require("../app/model/preference");
 var translator = require("../app/services/mysql-translator");
 var dateUtils = require("date-utils");
+var Constants = require("../app/util/constants");
 
 describe('MySQL Translator tests', function (done) {
+
+    describe('Generate Update by Key test', function() {
+        it("Generate same keys, new values", function() {
+           var c = {
+               NAME: "Australia-typo",
+               ID: 600
+           };
+           var c_update = {
+               NAME: "Australia",
+               DESCRIPTION: "This is a description",
+               ID: 600
+           };
+           expect(translator.generateUpdateByFields(country,c_update,c)).to.be.eql(
+               "UPDATE COUNTRIES SET NAME='Australia', DESCRIPTION='This is a description', MODIFYSTAMP=CURDATE() WHERE ID=600"
+           );
+        });
+
+        it("Nothing different generates update timestamp", function() {
+            var c = {
+                NAME: "Australia",
+                ID: 600
+            };
+            expect(translator.generateUpdateByFields(country,c,c)).to.be.eql(
+                "UPDATE COUNTRIES SET MODIFYSTAMP=CURDATE() WHERE ID=600"
+            );
+        });
+
+        it("obj_array does not generate update", function() {
+            var a = {
+                NAME: "British Europe",
+                COUNTRIES: [4,3],
+                ID: 25
+            };
+            var b = {
+                NAME: "British Europe",
+                COUNTRIES: [2,5,7],
+                ID: 25
+            };
+            var update = translator.generateUpdateByFields(album,b,a);
+            expect(update.indexOf("COUNTRIES")).to.be(-1);
+        });
+    });
 
     describe('Generate Insert Statement tests', function () {
         it("Country with full parameters", function () {
@@ -21,7 +64,7 @@ describe('MySQL Translator tests', function (done) {
         
         it("Country with create timestamp pre-set", function () {
             var date = Date.yesterday();
-            var date_s = date.toFormat(translator.MYSQL_DATEFORMAT);
+            var date_s = date.toFormat(Constants.MYSQL_DATEFORMAT);
             var c = {
                 name: "Australian States - Queensland",
                 id: 150,

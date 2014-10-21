@@ -1,5 +1,5 @@
 var extend = require('node.extend');
-var persistentCollection = require('./persistent-collection');
+var PersistentCollection = require('./persistent-collection');
 var dataTranslator = require('./mysql-translator');
 var album = require('../model/album');
 var countries = require('./countries');
@@ -10,7 +10,7 @@ var Logger = require('../util/logger');
 
 var sqlTrace = Logger.getLogger('sql');
 
-var albums = extend(true, {}, persistentCollection, function () {
+var albums = extend(true, {}, new PersistentCollection(), function () {
 
     function mergeCountries(connection, obj) {
         var defer = q.defer();
@@ -116,27 +116,19 @@ var albums = extend(true, {}, persistentCollection, function () {
             defer.resolve(obj);
             return defer.promise;
         },
-        /**
-         * @param connection
-         * @param id    The album ID
-         * @param orig  The original obj that was provided (in field scope)
-         */
-        updatePreCommit: function (connection, id, orig) {
+
+        updateAdditions: function(connection,merged,storedObj) {
             var defer = q.defer();
-            this.findById(id).then(function (current) {
-                var _orig = album.internalize(orig);
-                var obj = album.merge(current, _orig);
-                mergeCountries(connection, obj).then(function (result) {
-                    defer.resolve(result);
-                }, function (err) {
-                    defer.reject(dataTranslator.getErrorMessage(err));
+            mergeCountries(connection,merged).then(function(result) {
+                defer.resolve({
+                    modified: true
                 });
-            }, function (err) {
+            }).catch(function(err) {
                 defer.reject(dataTranslator.getErrorMessage(err));
             });
-            
             return defer.promise;
         },
+
         postFind: function (connection, rows) {
             var that = this;
             var defer = q.defer();

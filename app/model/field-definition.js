@@ -1,7 +1,8 @@
 var _ = require('../../lib/underscore/underscore');
+var Constants = require('../util/constants');
 
 var fieldDefinition = function () {
-    
+    "use strict";
     return {
         toInternal: function (f) {
             var val = _.findWhere(this.getFieldDefinitions(), { field: f });
@@ -24,6 +25,37 @@ var fieldDefinition = function () {
                 }
             });
             return valid;
+        },
+        formatValue: function(definition, value) {
+            if (definition.type === 'id_array' || definition.type === 'obj_array') {
+                return undefined;
+            }
+            var val = null;
+            switch (definition.type) {
+                case 'long':
+                case 'float':
+                case 'int':
+                    if (definition.joinWith) {
+                        val = (value === null || +value === -1) ? null : +value;
+                    } else {
+                        val = +value;
+                    }
+                    break;
+                case 'date':
+                    if (_.isDate(value)) {
+                        val = "\'" + value.toFormat(Constants.MYSQL_DATEFORMAT) + "\'";
+                    } else if (_.isString(value)) {
+                        value = new Date(value);
+                        val = "\'" + value.toFormat(Constants.MYSQL_DATEFORMAT) + "\'";
+                    }
+                    break;
+                case 'boolean':
+                    val = (value === true);
+                    break;
+                default:
+                    val = (value === null) ? null : "\'" + value + "\'";
+            }
+            return val;
         },
         internalize: function (o) {
             var obj = {};
@@ -55,25 +87,21 @@ var fieldDefinition = function () {
         },
         merge: function (cur, orig) {
             var that = this;
-            _.each(_.keys(orig), function (o) {
-                if (cur[o] === undefined && orig[o] !== undefined) {
-                    cur[o] = orig[o];
-                } else if (_.isArray(cur[o])) {
-                    var field = that.getField(o, true);
+            _.each(_.keys(orig), function (key) {
+                if (cur[key] === undefined && orig[key] !== undefined) {
+                    cur[key] = orig[key];
+                } else if (_.isArray(cur[key])) {
+                    var field = that.getField(key, true);
                     if (field.type === "obj_array" && field.model) {
-                        for (var i = 0; i < cur[o].length; i++) {
-                            var mergeChild = cur[o][i];
-                            if (mergeChild.ID) {
-                                var mergeSource = _.findWhere(orig[o], { ID: mergeChild.ID });
-                                if (mergeSource) {
-                                    var merged = require('./' + field.model).merge(mergeChild, mergeSource);
-                                }
+                        for (var i = 0; i < orig[key].length; i++) {
+                            var mergeSource = orig[key][i];
+                            var mergeChild = _.findWhere(cur[key], { ID: mergeSource.ID });
+                            if( mergeChild ) {
+                                require('./' + field.model).merge(mergeChild, mergeSource);
                             } else {
-                                cur[o].push(mergeChild);
+                                cur[key].push(mergeSource);
                             }
                         }
-                    } else {
-                        cur[o] = orig[o];
                     }
                 } 
             });
