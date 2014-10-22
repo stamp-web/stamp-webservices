@@ -6,6 +6,7 @@ var extend = require('node.extend');
 var RESOURCE_PATH = "/albums";
 
 exports.configure = function (app, basePath) {
+    "use strict";
     var albumsRest = extend(true, {}, restInterfaces);
     albumsRest.initialize(app, basePath + RESOURCE_PATH, albums, album);
-}
+};

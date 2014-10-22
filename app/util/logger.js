@@ -1,4 +1,4 @@
-
+"use strict";
 var fs = require('fs');
 
 function Logger(loggerName) {
@@ -19,26 +19,26 @@ function Logger(loggerName) {
                 console.log(msg);
             }
         }
-    }
+    };
     
     this.setLevel = function (level) {
         debugLevel = level; 
-    }
+    };
     
     this.getLevel = function () {
         return debugLevel;   
-    }
+    };
     
     this.setTarget = function (type, item) {
         target = type;
         targetPath = item;
-    }
+    };
 
     this.isEnabled = function (level) {
         return (Logger.levels.indexOf(level) <= Logger.levels.indexOf(debugLevel));
-    }
+    };
 
-};
+}
 
 Logger.levels = ['error', 'warn', 'info', 'debug', 'trace', 'all'];
 Logger.ERROR = Logger.levels[0];
@@ -55,11 +55,11 @@ Logger.getLogger = function(loggerName) {
         Logger.loggers[loggerName] = new Logger(loggerName);
     }
     return Logger.loggers[loggerName];
-}
+};
 
 Logger.getRegisteredLoggerNames = function () {
-    return Object.keys(Logger.loggers);   
-}
+    return Object.keys(Logger.loggers);
+};
 
 
 module.exports = Logger;

@@ -2,7 +2,8 @@ var extend = require('node.extend');
 var fieldDefinition = require('./field-definition');
 
 var country = extend({}, fieldDefinition, function() {
-        return {
+    "use strict";
+    return {
         getFieldDefinitions: function () {
             return [
                 { field: 'name', column: 'NAME', type: 'string', required: true },

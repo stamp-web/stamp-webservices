@@ -4,7 +4,7 @@ var logger = require('../util/logger');
 
 
 function ODataParser() {
-
+    "use strict";
     return {
         indexOfMatchingParenthesis : function (s, startIndx) {
             var indx = -1;
@@ -71,7 +71,7 @@ function ODataParser() {
             }
             return obj;
         }
-    }
+    };
 }
 
 module.exports = new ODataParser();

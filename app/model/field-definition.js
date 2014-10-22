@@ -131,7 +131,7 @@ var fieldDefinition = function () {
                     delete obj[key];
                     switch (field.type) {
                         case 'boolean':
-                            val = (!_.isBoolean(val)) ? ((val === 1) ? true : false) : val;
+                            val = (!_.isBoolean(val)) ? (val === 1) : val;
                             break;
                         case 'date':
                             val = val.toFormat("YYYY-MM-DDTHH:MI:SS") + "-05:00";

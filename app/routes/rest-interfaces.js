@@ -86,8 +86,8 @@ function restInterfaces() {
         },
         find: function (req, res) {
             var filter = (req.query && req.query.$filter) ? odata.toPredicates(req.query.$filter) : null;
-            var limit = req.query.$limit;
-            var offset = req.query.$offset;
+            var limit = req.query.$top;
+            var offset = req.query.$skip;
             var that = this;
             collection.find(filter, limit, offset).then(function (rows) {
                 var result = {};

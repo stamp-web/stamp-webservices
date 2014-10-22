@@ -1,6 +1,8 @@
 ﻿var url = require('url');
 
 var routeHelper = function () {
+    "use strict";
+
     return {
         StatusCode : {
             OK: 200,
@@ -24,9 +26,8 @@ var routeHelper = function () {
         findIdFromPath : function (urlPath) {
             var path = url.parse(urlPath).pathname;
             var last = path.lastIndexOf("/");
-            var id = +path.substring(path.lastIndexOf('/') + 1);
-            return id;
-        }, 
+            return +path.substring(path.lastIndexOf('/') + 1);
+        },
         setErrorStatus : function (res, err) {
             var code = this.StatusCode.INTERNAL_ERROR;
             switch (err.code) {
@@ -46,7 +47,7 @@ var routeHelper = function () {
             }
             res.status(code).send(err.message);
         }
-    }
+    };
 };
 
 

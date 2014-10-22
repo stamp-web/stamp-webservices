@@ -1,3 +1,5 @@
+"use strict";
+
 var express = require("express");
 var connectionMgr = require('./pom/connection-mysql');
 var favicon = require('serve-favicon');
@@ -5,8 +7,6 @@ var bodyParser = require('body-parser');
 var nconf = require('nconf');
 var Logger = require('./util/logger');
 var path = require('path');
-
-
 
 nconf.argv().env();
 
@@ -50,13 +50,14 @@ function configureLoggerRemotely(req, resp) {
     var loggerName = req.params.logger;
     var level = req.query.level;
     var log = Logger.getLogger(loggerName);
+    var msg = "";
     if (level) {
         log.setLevel(level);
-        var msg = "Logger \"" + loggerName + "\" successful set to " + level;
+        msg = "Logger \"" + loggerName + "\" successful set to " + level;
         console.log(msg);
         resp.status(200).send(msg);
     } else {
-        var msg = "Logger \"" + loggerName + "\" is set to " + log.getLevel();
+        msg = "Logger \"" + loggerName + "\" is set to " + log.getLevel();
         console.log(msg);
         resp.status(200).send(msg);
     }

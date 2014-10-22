@@ -4,8 +4,9 @@ var country = require('../model/country');
 var extend = require('node.extend');
 
 var RESOURCE_PATH = "/countries";
-    
+
 exports.configure = function (app, basePath) {
+    "use strict";
     var countriesRest = extend(true, {},  restInterfaces);
     countriesRest.initialize(app, basePath + RESOURCE_PATH, countries, country);
-}
+};

@@ -2,6 +2,7 @@ var extend = require('node.extend');
 var fieldDefinition = require('./field-definition');
 
 var stamp = extend({}, fieldDefinition, function() {
+        "use strict";
         return {
         getFieldDefinitions: function () {
             return [

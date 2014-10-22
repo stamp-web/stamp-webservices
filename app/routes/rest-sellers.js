@@ -6,6 +6,7 @@ var extend = require('node.extend');
 var RESOURCE_PATH = "/sellers";
 
 exports.configure = function (app, basePath) {
+    "use strict";
     var sellersRest = extend(true, {}, restInterfaces);
     sellersRest.initialize(app, basePath + RESOURCE_PATH, sellers, seller);
-}
+};

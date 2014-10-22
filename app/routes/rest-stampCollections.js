@@ -7,6 +7,7 @@ var extend = require('node.extend');
 var RESOURCE_PATH = "/stampCollections";
 
 exports.configure = function (app, basePath) {
+    "use strict";
     var scRest = extend(true, {}, restInterfaces);
     scRest.initialize(app, basePath + RESOURCE_PATH, stampCollections, stampCollection);
-}
+};

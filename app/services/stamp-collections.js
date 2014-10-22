@@ -9,6 +9,7 @@ var q = require('q');
 var _ = require('../../lib/underscore/underscore');
 
 var collections = extend(true, {}, new PersistentCollection(), function() {
+    "use strict";
     return {
         collectionName: 'stampCollections',
         fieldDefinition: stampCollection,

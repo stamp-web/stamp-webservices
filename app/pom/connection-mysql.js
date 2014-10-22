@@ -19,6 +19,7 @@ var releaseCount = 0;
  * @returns {*}
  */
 PoolConnection.prototype.release = function release() {
+    "use strict";
     var pool = this._pool;
 
     if (!pool || pool._closed) {

@@ -2,7 +2,8 @@ var extend = require('node.extend');
 var fieldDefinition = require('./field-definition');
 
 var ownership = extend({}, fieldDefinition, function() {
-        return {
+    "use strict";
+    return {
         getFieldDefinitions: function () {
             return [
                 { field: 'id', column: 'ID', type: 'long', required: true },
