@@ -6,7 +6,7 @@ var _ = require('../../lib/underscore/underscore');
 var q = require('q');
 
 var ownershipService = extend(true, {}, new PersistentCollection(), function () {
-
+    "use strict";
     return {
         collectionName: 'stampOwnerships',
         fieldDefinition: ownership

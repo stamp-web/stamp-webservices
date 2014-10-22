@@ -40,6 +40,9 @@ var routeHelper = function () {
                 case "NOT_FOUND":
                     code = this.StatusCode.NOT_FOUND;
                     break;
+                case "CONFLICT":
+                    code = this.StatusCode.CONFLICT;
+                    break;
             }
             res.status(code).send(err.message);
         }

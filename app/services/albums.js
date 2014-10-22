@@ -12,7 +12,10 @@ var sqlTrace = Logger.getLogger('sql');
 
 var albums = extend(true, {}, new PersistentCollection(), function () {
 
+    "use strict";
+
     function mergeCountries(connection, obj) {
+
         var defer = q.defer();
         if (obj.COUNTRIES && obj.COUNTRIES.length === 0) {
             var clear_link = "DELETE FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=?";
@@ -55,11 +58,13 @@ var albums = extend(true, {}, new PersistentCollection(), function () {
                         connection.query(qs, [obj.ID], function (err, results) {
                             if (err) {
                                 defer.reject(dataTranslator.getErrorMessage(err));   
+                            } else {
+                                updates += remove_ids.length;
+                                if (totalUpdates === updates) {
+                                    defer.resolve(obj);
+                                }
                             }
-                            updates += remove_ids.length;
-                            if (totalUpdates === updates) {
-                                defer.resolve(obj);   
-                            }
+
                         });
                     }
                     if (current.length > 0) {
@@ -68,11 +73,13 @@ var albums = extend(true, {}, new PersistentCollection(), function () {
                             connection.query(qs, [obj.ID, current[i]], function (err, results) {
                                 if (err) {
                                     defer.reject(dataTranslator.getErrorMessage(err));
+                                } else {
+                                    updates++;
+                                    if (totalUpdates === updates) {
+                                        defer.resolve(obj);
+                                    }
                                 }
-                                updates++;
-                                if (totalUpdates === updates) {
-                                    defer.resolve(obj);
-                                }
+
                             });
                         }   
                     }
@@ -80,8 +87,8 @@ var albums = extend(true, {}, new PersistentCollection(), function () {
             });
         }
         return defer.promise;
+    }
 
-    };
     return {
         collectionName: 'albums',
         fieldDefinition: album,
@@ -92,9 +99,10 @@ var albums = extend(true, {}, new PersistentCollection(), function () {
             connection.query(delete_link, [id], function (err, results) {
                 if (err) {
                     defer.reject(dataTranslator.getErrorMessage(err));
+                } else {
+                    // should we delete stamps?
+                    defer.resolve();
                 }
-                // should we delete stamps?
-                defer.resolve();
             });
             return defer.promise;
         },
@@ -108,12 +116,14 @@ var albums = extend(true, {}, new PersistentCollection(), function () {
                     connection.query(insert_link, [obj.id,countryId], function (err, results) {
                         if (err) {
                             defer.reject(dataTranslator.getErrorMessage(err));
+                        } else {
+                            defer.resolve();
                         }
-                        defer.resolve();
                     });
                 });
+            } else {
+                defer.resolve(obj);
             }
-            defer.resolve(obj);
             return defer.promise;
         },
 
@@ -154,7 +164,7 @@ var albums = extend(true, {}, new PersistentCollection(), function () {
                 }
             });
             return defer.promise;
-        },
+        }
     };
 }());
 

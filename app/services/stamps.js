@@ -128,9 +128,11 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                 connection.query(sql, function (err, data) {
                     if (err !== null) {
                         defer.reject(dataTranslator.getErrorMessage(err));
+                    } else {
+                        count++;
+                        resolveWhenFinished();
                     }
-                    count++;
-                    resolveWhenFinished();
+
                 });
             });
             _.each(createList, function(obj) {
@@ -138,23 +140,22 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                 PersistentCollection.getNextSequence(creating.fieldDefinition, function(err,id) {
                     if( err !== null ) {
                         defer.reject(dataTranslator.getErrorMessage(err));
+                    } else {
+                        creating.object.ID = id;
+                        var c_sql = dataTranslator.generateInsertByFields(creating.fieldDefinition,creating.object);
+                        sqlTrace.log(Logger.DEBUG, c_sql);
+                        connection.query(c_sql, function (err, data) {
+                            if (err !== null) {
+                                defer.reject(dataTranslator.getErrorMessage(err));
+                            } else {
+                                count++;
+                                resolveWhenFinished();
+                            }
+                        });
+                        PersistentCollection.updateSequence(id, creating.fieldDefinition);
                     }
-                    creating.object.ID = id;
-                    var c_sql = dataTranslator.generateInsertByFields(creating.fieldDefinition,creating.object);
-                    sqlTrace.log(Logger.DEBUG, c_sql);
-                    connection.query(c_sql, function (err, data) {
-                        if (err !== null) {
-                            defer.reject(dataTranslator.getErrorMessage(err));
-                        }
-                        count++;
-
-                        resolveWhenFinished();
-                    });
-                    PersistentCollection.updateSequence(id, creating.fieldDefinition);
                 });
             });
-
-
             return defer.promise;
         },
 
@@ -173,16 +174,16 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                         connection.query(sql, function (err, result) {
                             if (err) {
                                 defer.reject(dataTranslator.getErrorMessage(err));
-                            }
-                            created++;
-                            if (created === total) {
-                                defer.resolve(obj);
+                            } else {
+                                created++;
+                                if (created === total) {
+                                    defer.resolve(obj);
+                                }
                             }
                         });
                     }, function (err) {
                         defer.reject(dataTranslator.getErrorMessage(err));
                     });
-                    
                 });
             }
             if (obj.stampOwnerships && _.isArray(obj.stampOwnerships)) {
@@ -195,11 +196,13 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                         connection.query(sql, function (err, result) {
                             if (err) {
                                 defer.reject(dataTranslator.getErrorMessage(err));
+                            } else {
+                                created++;
+                                if (created === total) {
+                                    defer.resolve(obj);
+                                }
                             }
-                            created++;
-                            if (created === total) {
-                                defer.resolve(obj);
-                            }
+
                         });
                     });
                 }, function (err) {
@@ -250,8 +253,10 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                 query.on('result', function (row) {
                     processRow(rows, row);
                 }).on('end', function () {
+                    connection.release();
                     defer.resolve(rows);
                 }).on('error', function (err) {
+                    connection.release();
                     logger.log(Logger.ERROR, err);
                     defer.reject(dataTranslator.getErrorMessage(err));
                 });

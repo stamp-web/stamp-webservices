@@ -1,6 +1,7 @@
 var extend = require('node.extend');
 var PersistentCollection = require('./persistent-collection');
 var stampCollection = require('../model/stamp-collection');
+var dataTranslator = require('./mysql-translator');
 var odata = require('../util/odata-parser');
 var album = require('../model/album');
 var albums = require('./albums');
@@ -27,19 +28,21 @@ var collections = extend(true, {}, new PersistentCollection(), function() {
                 var len = results.length;
                 if (len === 0) {
                     defer.resolve();   
-                }
-                for (var i = 0; i < len; i++) {
-                    var row = results[i];
-                    albums.remove(row.ID).then(function (affected) {
+                } else {
+                    var processRemoved = function(affected) {
                         if (affected > 0) {
                             deleteCount++;
                             if (deleteCount === len) {
                                 defer.resolve();
                             }
                         }
-                    }, function (err) {
-                        defer.reject(dataTranslator.getErrorMessage(err));
-                    });
+                    };
+                    for (var i = 0; i < len; i++) {
+                        var row = results[i];
+                        albums.remove(row.ID).then(processRemoved, function (err) {
+                            defer.reject(dataTranslator.getErrorMessage(err));
+                        });
+                    }
                 }
             }, function (err) {
                 defer.reject(dataTranslator.getErrorMessage(err));

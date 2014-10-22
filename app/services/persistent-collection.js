@@ -20,12 +20,13 @@ function PersistentCollection() {
                 PersistentCollection.getNextSequence(fieldDefinition, function (err, new_id) {
                     if (err) {
                         defer.reject(dataTranslator.getErrorMessage(err));
+                    } else {
+                        PersistentCollection.updateSequence(new_id, fieldDefinition).then(function () {
+                            defer.resolve(new_id);
+                        }, function (s_err) {
+                            defer.reject(dataTranslator.getErrorMessage(s_err));
+                        });
                     }
-                    PersistentCollection.updateSequence(new_id, fieldDefinition).then(function () {
-                        defer.resolve(new_id);
-                    }, function (s_err) {
-                        defer.reject(dataTranslator.getErrorMessage(s_err));
-                    });
                 });
             }
             return defer.promise;
@@ -38,53 +39,56 @@ function PersistentCollection() {
 
             this.findById(id).then(function (storedObj) {
                 if(storedObj === null ) {
-                    defer.reject({ message: "The object was not found", code: "NOT_FOUND" });
+                    defer.reject({ message: "The object was not found", code: "NOT_FOUND", processed: true });
                 }
-                connectionManager.getConnection().then(function (connection) {
-                    var qs = dataTranslator.generateUpdateByFields(that.fieldDefinition, provided, storedObj);
-                    if( qs !== null ) {
-                        sqlTrace.log(Logger.DEBUG, qs);
-                        connection.beginTransaction(function (err) {
-                            connection.query(qs, function (err, rows) {
-                                if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
-                                    if (rows.changedRows === 0 && rows.affectedRows === 0) {
-                                        connection.rollback(function () {
-                                            connection.release();
-                                            defer.reject({ message: "No changes made during update.", code: "NO_CHANGES" });
-                                        });
-                                    } else {
-                                        var merged = that.fieldDefinition.merge(provided, storedObj);
-                                        that.updateAdditions(connection, merged, storedObj).then(function (output) {
-                                            connection.commit(function (err) {
-                                                connection.release();
-                                                if (err) {
-                                                    defer.reject(dataTranslator.getErrorMessage(err));
-                                                }
-                                                if (output.modified) {
-                                                    that.findById(id).then(function (findResult) {
-                                                        defer.resolve(findResult);
-                                                    }, function (err) {
-                                                        defer.reject(dataTranslator.getErrorMessage(err));
-                                                    });
-                                                } else {
-                                                    defer.resolve(merged);
-                                                }
-                                            });
-                                        }, function (err) {
+                else {
+                    connectionManager.getConnection().then(function (connection) {
+                        var qs = dataTranslator.generateUpdateByFields(that.fieldDefinition, provided, storedObj);
+                        if( qs !== null ) {
+                            sqlTrace.log(Logger.DEBUG, qs);
+                            connection.beginTransaction(function (err) {
+                                connection.query(qs, function (err, rows) {
+                                    if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
+                                        if (rows.changedRows === 0 && rows.affectedRows === 0) {
                                             connection.rollback(function () {
                                                 connection.release();
-                                                defer.reject(err);
+                                                defer.reject({ message: "No changes made during update.", code: "NO_CHANGES", processed: true });
                                             });
-                                        });
+                                        } else {
+                                            var merged = that.fieldDefinition.merge(provided, storedObj);
+                                            that.updateAdditions(connection, merged, storedObj).then(function (output) {
+                                                connection.commit(function (err) {
+                                                    connection.release();
+                                                    if (err) {
+                                                        defer.reject(dataTranslator.getErrorMessage(err));
+                                                    }
+                                                    else if (output.modified) {
+                                                        that.findById(id).then(function (findResult) {
+                                                            defer.resolve(findResult);
+                                                        }, function (err) {
+                                                            defer.reject(dataTranslator.getErrorMessage(err));
+                                                        });
+                                                    } else {
+                                                        defer.resolve(merged);
+                                                    }
+                                                });
+                                            }, function (err) {
+                                                connection.rollback(function () {
+                                                    connection.release();
+                                                    defer.reject(err);
+                                                });
+                                            });
+                                        }
                                     }
-                                }
+                                });
                             });
-                        });
-                    }
+                        }
 
-                }, function (err) {
-                    defer.reject(dataTranslator.getErrorMessage(err));
-                });
+                    }, function (err) {
+                        defer.reject(dataTranslator.getErrorMessage(err));
+                    });
+                }
+
             }, function (err) {
                 defer.reject(dataTranslator.getErrorMessage(err));
             });
@@ -148,7 +152,7 @@ function PersistentCollection() {
                                     }
                                     connection.rollback(function () {
                                         connection.release();
-                                        defer.reject({ message: "No object found", code: "NOT_FOUND" });
+                                        defer.reject({ message: "No object found", code: "NOT_FOUND", processed: true });
                                     });
                                 } else {
                                     connection.commit(function () {
@@ -181,14 +185,13 @@ function PersistentCollection() {
             sqlTrace.log(Logger.DEBUG, qs);
             connectionManager.getConnection().then(function (connection) {
                 connection.query(qs, function (err, result) {
+                    connection.release();
                     if (err !== null) {
                         defer.reject(dataTranslator.getErrorMessage(err));
-                    }
-                    else if (result.length > 0) {
-                        connection.release();
+                    } else if (result.length > 0) {
                         defer.resolve(result[0].COUNT);
                     } else {
-                        defer.reject({ message: "No object found", code: "NOT_FOUND" });
+                        defer.reject({ message: "No object found", code: "NOT_FOUND", processed: true });
                     }
                 });
             }, function (err) {
@@ -237,6 +240,9 @@ function PersistentCollection() {
                         that.postFind(connection, result).then(function (rows) {
                             connection.release();
                             defer.resolve(rows);
+                        }, function(err) {
+                            connection.release();
+                            defer.reject(dataTranslator.getErrorMessage(err));
                         });
                     } else {
                         connection.release();
@@ -298,6 +304,7 @@ PersistentCollection.getNextSequence = function(fieldDefinition, callback) {
     "use strict";
     connectionManager.getConnection().then(function (connection) {
         connection.query("SELECT ID_VAL FROM SEQUENCE_GEN WHERE ID_NAME='" + fieldDefinition.getSequenceColumn() + "'", function (err, result) {
+            connection.release();
             if (err) {
                 callback(err, null);
             } else if (result.length > 0) {
@@ -314,7 +321,6 @@ PersistentCollection.getNextSequence = function(fieldDefinition, callback) {
                 PersistentCollection.last_id[fieldDefinition.getTableName()] = l_id++;
                 callback(null, l_id);
             }
-            connection.release();
         });
     });
 };

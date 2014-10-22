@@ -65,7 +65,7 @@ var NamedCollectionVerifications = {
             expect(e).to.be(null);
             expect(res.status).to.be(404);
             done();
-        })
+        });
     },
     verifyPutNotFound: function (collectionName, props, done) {
         superagent.put('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + RANDOM_ID)
@@ -74,7 +74,7 @@ var NamedCollectionVerifications = {
             expect(e).to.be(null);
             expect(res.status).to.be(404);
             done();
-        })
+        });
     },
     verifyPost: function (collectionName, props, done, fn) {
         superagent.post('http://' + hostname + ':' + server_port + '/rest/' + collectionName)
@@ -107,13 +107,14 @@ var NamedCollectionVerifications = {
     },
     
     verifyDelete: function (collectionName, props, done, fn) {
+        "use strict";
         superagent.post('http://' + hostname + ':' + server_port + '/rest/' + collectionName)
             .send(props)
             .end(function (e, res) {
             expect(e).to.eql(null);
             expect(res.status).to.eql(201);
             var id = res.body.id;
-            superagent.del('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + id)
+                superagent.del('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + id)
                   .end(function (e, res) {
                 expect(e).to.eql(null);
                 expect(res.status).to.eql(204);

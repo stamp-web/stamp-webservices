@@ -1,4 +1,5 @@
 ﻿var mysql = require('mysql');
+var PoolConnection = require('mysql/lib/PoolConnection');
 var q = require('q');
 var fs = require('fs');
 var Logger = require('../util/logger');
@@ -9,6 +10,24 @@ var _ = require('../../lib/underscore/underscore');
 nconf.argv().env().file(__dirname + '/../../config/application.json');
 
 var logger = Logger.getLogger("connection");
+logger.setLevel(Logger.INFO);
+
+var releaseCount = 0;
+/**
+ * OVERRIDDEN FROM node-mysql to allow the release count to be incremented.
+ *
+ * @returns {*}
+ */
+PoolConnection.prototype.release = function release() {
+    var pool = this._pool;
+
+    if (!pool || pool._closed) {
+        return;
+    }
+    releaseCount++;
+    logger.log(Logger.DEBUG, "release connection: < " + releaseCount );
+    return pool.releaseConnection(this);
+};
 
 module.exports = function () {
     "use strict";
@@ -16,7 +35,7 @@ module.exports = function () {
     var dbPool;
     var config;
     var dbName;
-    
+
     var ConnectionCodes = {
         ACCESS_DENIED: 'ER_ACCESS_DENIED_ERROR',
         DBACCESS_DENIED_ERROR: 'ER_DBACCESS_DENIED_ERROR',
@@ -72,7 +91,7 @@ module.exports = function () {
             var pool = this;
             this.config.keepalive = 30000;
             setInterval(function () {
-                logger.log(Logger.DEBUG, "Keep alive fired for " + pool._freeConnections.length + " connections");
+                logger.log(Logger.INFO, "Keep alive fired for " + pool._freeConnections.length + " connections");
                 pool._freeConnections.forEach(function (connection) {
                     connection.ping(function (err) {
                         if (err) {
@@ -101,8 +120,9 @@ module.exports = function () {
                 dbPool.startKeepAlive();
                 logger.log(Logger.INFO, "MySQL database pool created for database named \'" + dbName + "\'");
                 dbPool.getConnection(function (err, connection) {
+                    connectionCount++;
+                    connection.release();
                     if (!err) {
-                        connection.release();
                         defer.resolve(dbPool);
                     } else {
                         defer.reject(err);
@@ -130,7 +150,9 @@ module.exports = function () {
         }
         return defer.promise;
     }
-    
+
+    var connectionCount = 0;
+
     return {
         
         startup: function () {
@@ -155,9 +177,6 @@ module.exports = function () {
             }
             dbPool = null;
         },
-        release: function (connection) {
-            connection.release();
-        },
         getConnection: function () {
             var defer = q.defer();
             var that = this;
@@ -171,6 +190,13 @@ module.exports = function () {
                             }
                             return del.call(this, err, sequence);
                         };
+                        if( connectionCount > 1000000) {
+                            releaseCount = 0;
+                            connectionCount = 0;
+                            logger.log(Logger.DEBUG, "resetting connection counts to guard against buffer overrun...");
+                        }
+                        connectionCount++;
+                        logger.log(Logger.DEBUG, "new connection:     > " + connectionCount + " (" + (connectionCount - releaseCount) + " unreleased)" );
                         defer.resolve(connection);
                     } else {
                         handleConnectionError(err);

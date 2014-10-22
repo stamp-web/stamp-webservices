@@ -11,6 +11,7 @@ var Logger = require('../util/logger');
 var sqlTrace = Logger.getLogger("sql");
 
 var countries = extend(true, {}, new PersistentCollection(), function() {
+    "use strict";
     return {
         collectionName: 'countries',
         fieldDefinition: country,
@@ -21,11 +22,12 @@ var countries = extend(true, {}, new PersistentCollection(), function() {
             connection.query(delete_link, [id], function (err, results) {
                 if (err) {
                     defer.reject(dataTranslator.getErrorMessage(err));
+                } else {
+                    defer.resolve();
                 }
-                defer.resolve();
             });
             return defer.promise;
-        },
+        }
     };
 }());
 
