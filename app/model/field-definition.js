@@ -16,11 +16,12 @@ var fieldDefinition = function () {
          * @param obj (JsObject) 
          */
         validate: function (obj) {
-            var valid = true;
+            var valid = null;
             _.each(this.getFieldDefinitions(), function (definition) {
                 if (definition.required === true) {
                     if (!obj[definition.field]) {
-                        valid = false;
+                        valid = { code: 'REQUIRED_FIELD', message: 'A value for field \'' + definition.field + '\' is required.', processed: true};
+                        return false;
                     }
                 }
             });

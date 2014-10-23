@@ -651,6 +651,53 @@ if (nconf.get("sql_level")) {
                 });
             });
 
+            it('DELETE removes Ownership but retains Stamp with updated ModifyStamp', function(done) {
+                NamedCollectionVerifications.verifyPost('albums', {
+                    name: 'An Album to behold', stampCollectionRef: 1, description: 'European countries'
+                }, null, function (obj) {
+                    var albumID = obj.id;
+                    var stamp = {
+                        countryRef: 1,
+                        rate: "1d",
+                        description: "reddish brown",
+                        wantList: false,
+                        catalogueNumbers: [
+                            {
+                                catalogueRef: 1,
+                                number: "23a",
+                                value: 0.65,
+                                condition: 1,
+                                active: true
+                            }
+                        ],
+                        stampOwnerships: [
+                            {
+                                albumRef: albumID
+                            }
+                        ]
+                    };
+                    superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
+                        .send(stamp)
+                        .end(function (e, res) {
+                            expect(e).to.eql(null);
+                            expect(res.status).to.eql(201);
+                            var stampId = res.body.id;
+                            superagent.del('http://' + hostname + ':' + server_port + '/rest/albums/' + albumID)
+                                .end(function(e,res) {
+                                    expect(e).to.eql(null);
+                                    expect(res.status).to.eql(204);
+                                    superagent.get('http://' + hostname + ':' + server_port + '/rest/stamps/' + stampId)
+                                        .end(function(e,res) {
+                                        expect(e).to.eql(null);
+                                        expect(res.body.stampOwnerships.length).to.be(0);
+                                        done();
+                                    });
+                                });
+                        });
+                });
+
+            });
+
         });
 
 

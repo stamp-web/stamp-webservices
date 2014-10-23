@@ -234,10 +234,11 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                                     connection.release();
                                     defer.resolve(result);
                                 } else {
-                                    var ids = _.pluck(result.rows, 'ID');
+                                    var ids = [];
                                     _.each(result.rows, function(row) {
                                         populateKey(row,'CATALOGUENUMBER');
                                         populateKey(row,'OWNERSHIP');
+                                        ids.push(row.ID);
                                     });
                                     var inValues = dataTranslator.generateInValueStatement(ids);
                                     var queries = [

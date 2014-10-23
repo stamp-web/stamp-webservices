@@ -25,7 +25,7 @@ function DataTranslator() {
                     case 'ER_NO_DEFAULT_FOR_FIELD':
                         var m = err.message.substring(err.message.indexOf("'") + 1);
                         m = m.substring(0, m.indexOf("'"));
-                        msg = { message: "No value provided for required field '" + m + "'", code: "REQUIRED_FIELD" };
+                        msg = { message: "A value for field '" + m + "' is required", code: "REQUIRED_FIELD" };
                         break;
                     case 'ER_DUP_ENTRY':
                         msg = { message: "The object already exists", code: "UNIQUENESS_EXCEPTION" };

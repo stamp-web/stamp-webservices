@@ -10,7 +10,7 @@ describe('Field definition tests', function (done) {
                 name: "Australia",
                 id: 500
             };
-            expect(country.validate(c)).to.be(true);
+            expect(country.validate(c)).to.be(null);
         });
 
         it("Validate missing required parameters", function () {
@@ -18,10 +18,14 @@ describe('Field definition tests', function (done) {
                 name: "Australia",
                 desc: "other stuff"
             };
-            expect(country.validate(c)).to.be(false);
+            var validate = country.validate(c);
+            expect(validate).to.not.be(null);
+            expect(validate.code).to.be.eql('REQUIRED_FIELD');
             delete c.name;
             c.id = 250;
-            expect(country.validate(c)).to.be(false);
+            validate = country.validate(c);
+            expect(validate).to.not.be(null);
+            expect(validate.code).to.be.eql('REQUIRED_FIELD');
         });
 
     });
@@ -45,7 +49,7 @@ describe('Field definition tests', function (done) {
                 category: "stamps",
                 value: "some path"
             };
-            expect(preference.validate(c)).to.be(true);
+            expect(preference.validate(c)).to.be(null);
         });
     });
 });

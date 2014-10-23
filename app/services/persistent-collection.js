@@ -105,24 +105,29 @@ function PersistentCollection() {
                         that.generateId(that.fieldDefinition, obj).then(function (id) {
                             obj.id = id;
                             that.preCreate(obj); // opportunity for services to manipulate the object
-                            var insertStatement = dataTranslator.generateInsertStatement(that.fieldDefinition, obj);
-                            sqlTrace.log(Logger.DEBUG, insertStatement);
-                            connection.query(insertStatement, function (err, rows) {
-                                if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
-                                    that.postCreate(connection, obj).then(function (_obj) {
-                                        connection.commit(function () {
-                                            connection.release();
-                                            that.findById(id).then(function (result) {
-                                                defer.resolve(result);
-                                            }, function (err) {
-                                                defer.reject(dataTranslator.getErrorMessage(err));
+                            var validation = that.fieldDefinition.validate(obj);
+                            if( validation === null ) {
+                                var insertStatement = dataTranslator.generateInsertStatement(that.fieldDefinition, obj);
+                                sqlTrace.log(Logger.DEBUG, insertStatement);
+                                connection.query(insertStatement, function (err, rows) {
+                                    if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
+                                        that.postCreate(connection, obj).then(function (_obj) {
+                                            connection.commit(function () {
+                                                connection.release();
+                                                that.findById(id).then(function (result) {
+                                                    defer.resolve(result);
+                                                }, function (err) {
+                                                    defer.reject(dataTranslator.getErrorMessage(err));
+                                                });
                                             });
+                                        }, function (err) {
+                                            PersistentCollection.rollbackOnError(connection, defer, err);
                                         });
-                                    }, function (err) {
-                                        PersistentCollection.rollbackOnError(connection, defer, err);
-                                    });
-                                }
-                            });
+                                    }
+                                });
+                            } else {
+                                PersistentCollection.rollbackOnError(connection, defer, validation);
+                            }
                         }, function (err) {
                             // error from generate id
                             PersistentCollection.rollbackOnError(connection, defer, err);
