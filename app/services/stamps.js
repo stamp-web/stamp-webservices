@@ -62,9 +62,6 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
             sqlTrace.log(Logger.TRACE, "No stamp found for " + row.STAMP_ID);
             return;
         }
-        populateKey(s,'CATALOGUENUMBER');
-        populateKey(s,'OWNERSHIP');
-
         s[key].push(populateChildren(stamp.getFieldDefinitions(), fieldDef.getFieldDefinitions(), row, fieldDef.getAlias() + 'ID'));
     }
 
@@ -254,6 +251,10 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                                     defer.resolve(result);
                                 } else {
                                     var ids = _.pluck(result.rows, 'ID');
+                                    _.each(result.rows, function(row) {
+                                        populateKey(row,'CATALOGUENUMBER');
+                                        populateKey(row,'OWNERSHIP');
+                                    });
                                     var inValues = dataTranslator.generateInValueStatement(ids);
                                     var queries = [
                                         {
