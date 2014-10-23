@@ -26,7 +26,7 @@ var collections = extend(true, {}, new PersistentCollection(), function() {
             var $filter = odata.toPredicates("(" + _.findWhere(album.getFieldDefinitions(), { column: "COLLECTION_ID" }).field + " eq " + id + ")");
             var albumCollection = albums.find($filter).then(function (results) {
                 var deleteCount = 0;
-                var len = results.length;
+                var len = results.rows.length;
                 if (len === 0) {
                     defer.resolve();   
                 } else {
@@ -38,11 +38,12 @@ var collections = extend(true, {}, new PersistentCollection(), function() {
                             }
                         }
                     };
+                    var processError = function(err) {
+                        defer.reject(dataTranslator.getErrorMessage(err));
+                    };
                     for (var i = 0; i < len; i++) {
-                        var row = results[i];
-                        albums.remove(row.ID).then(processRemoved, function (err) {
-                            defer.reject(dataTranslator.getErrorMessage(err));
-                        });
+                        var row = results.rows[i];
+                        albums.remove(row.ID).then(processRemoved, processError);
                     }
                 }
             }, function (err) {

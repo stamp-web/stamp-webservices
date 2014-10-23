@@ -800,6 +800,17 @@ if (nconf.get("sql_level")) {
                             });
                     });
             });
+
+            it('GET Collection with 200 status', function(done) {
+                superagent.get('http://' + hostname + ':' + server_port + '/rest/stamps')
+                    .end(function (e, res) {
+                        expect(e).to.eql(null);
+                        expect(res.status).to.eql(200);
+                        expect(res.body.stamps).to.not.be(undefined);
+                        expect(res.body.total).to.be.greaterThan(0);
+                        done();
+                    });
+            });
         });
 
         describe('CatalogueNumber REST API tests', function (done) {

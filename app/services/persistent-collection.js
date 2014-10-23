@@ -56,7 +56,7 @@ function PersistentCollection() {
                                             });
                                         } else {
                                             var merged = that.fieldDefinition.merge(provided, storedObj);
-                                            that.updateAdditions(connection, merged, storedObj).then(function (output) {
+                                            that.preCommitUpdate(connection, merged, storedObj).then(function (output) {
                                                 connection.commit(function (err) {
                                                     connection.release();
                                                     if (err) {
@@ -204,9 +204,9 @@ function PersistentCollection() {
             var filter = odata.toPredicates("id eq " + id);
             var defer = q.defer();
             var that = this;
-            that.find(filter).then(function (rows) {
-                if (rows && rows.length > 0) {
-                    defer.resolve(rows[0]);
+            that.find(filter).then(function (result) { // we can limit to 1,1 once the stamps find is fixed
+                if (result.rows && result.rows.length > 0) {
+                    defer.resolve(result.rows[0]);
                 } else {
                     defer.resolve(null);
                 }
@@ -214,9 +214,6 @@ function PersistentCollection() {
                 defer.reject(err);
             });
             return defer.promise;
-        },
-        findAll: function ($limit, $offset) {
-            return this.find(null, $limit, $offset);
         },
         find: function ($filter, $limit, $offset) {
             var defer = q.defer();
@@ -228,25 +225,36 @@ function PersistentCollection() {
             if (!$offset) {
                 $offset = 0;
             }
-            var qs = 'SELECT ' + that.fieldDefinition.getAlias() + '.* FROM ' + that.getFromTables() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
+            var qs = 'SELECT SQL_CALC_FOUND_ROWS ' + that.fieldDefinition.getAlias() + '.* FROM ' + that.getFromTables() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
             sqlTrace.log(Logger.DEBUG, qs);
             connectionManager.getConnection().then(function (connection) {
-                connection.query(qs, function (err, result) {
+                connection.query(qs, function (err, dataRows) {
                     if (err !== null) {
                         connection.release();
                         defer.reject(dataTranslator.getErrorMessage(err));
                     }
-                    else if (result.length > 0) {
-                        that.postFind(connection, result).then(function (rows) {
-                            connection.release();
-                            defer.resolve(rows);
-                        }, function(err) {
-                            connection.release();
-                            defer.reject(dataTranslator.getErrorMessage(err));
+                    else if (dataRows.length > 0) {
+                        connection.query("SELECT FOUND_ROWS() AS ROWCOUNT", function(err,rowCount) {
+                            if( err ) {
+                                connection.release();
+                                defer.reject(dataTranslator.getErrorMessage(err));
+                            }
+                            var result = {
+                                total: rowCount[0].ROWCOUNT,
+                                rows: dataRows
+                            };
+                            that.postFind(connection, result).then(function () {
+                                connection.release();
+                                defer.resolve(result);
+                            }, function(err) {
+                                connection.release();
+                                defer.reject(dataTranslator.getErrorMessage(err));
+                            });
                         });
+
                     } else {
                         connection.release();
-                        defer.resolve(result);
+                        defer.resolve({ rows: [], total: 0});
                     }
                 });
             }, function (err) {
@@ -267,7 +275,7 @@ function PersistentCollection() {
             defer.resolve(obj);
             return defer.promise;
         },
-        updateAdditions: function(connection,merged,storedObj) {
+        preCommitUpdate: function(connection,merged,storedObj) {
             var defer = q.defer();
             defer.resolve({
                 modified: false

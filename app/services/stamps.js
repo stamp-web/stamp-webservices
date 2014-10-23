@@ -81,38 +81,29 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
         preCreate: function(obj) {
             obj.catalogueCount = (obj.catalogueNumbers) ? obj.catalogueNumbers.length : 0;
         },
-        updateAdditions: function(connection,merged,storedObj) {
+        preCommitUpdate: function(connection,merged,storedObj) {
             var defer = q.defer();
             var that = this;
             var updateList = [], createList = [];
-            if( merged.CATALOGUENUMBER && _.isArray(merged.CATALOGUENUMBER)) {
-                _.each(merged.CATALOGUENUMBER, function(catNum) {
-                    if( catNum.ID) {
-                        var current = _.findWhere(storedObj.CATALOGUENUMBER,{ ID: catNum.ID});
-                        var sql = dataTranslator.generateUpdateByFields(catalogueNumber, catNum, current,true);
-                        if( sql !== null ) {
-                            updateList.push(sql);
+            var parseChildren = function(childName, fieldDef) {
+                if( merged[childName] && _.isArray(merged[childName])) {
+                    _.each(merged[childName], function(obj) {
+                        if( obj.ID) {
+                            var current = _.findWhere(storedObj[childName],{ ID: obj.ID});
+                            var sql = dataTranslator.generateUpdateByFields(fieldDef, obj, current,true);
+                            if( sql !== null ) {
+                                updateList.push(sql);
+                            }
+                        } else {
+                            obj.STAMP_ID = merged.ID;
+                            createList.push({ fieldDefinition: fieldDef, object: obj});
                         }
-                    } else {
-                        catNum.STAMP_ID = merged.ID;
-                        createList.push({ fieldDefinition: catalogueNumber, object: catNum});
-                    }
-                });
-            }
-            if( merged.OWNERSHIP && _.isArray(merged.OWNERSHIP)) {
-                _.each(merged.OWNERSHIP, function(owner) {
-                    if( owner.ID) {
-                        var current = _.findWhere(storedObj.OWNERSHIP,{ ID: owner.ID});
-                        var sql = dataTranslator.generateUpdateByFields(ownership, owner, current, true);
-                        if( sql !== null ) {
-                            updateList.push( sql );
-                        }
-                    } else {
-                        owner.STAMP_ID = merged.ID;
-                        createList.push({ fieldDefinition: ownership, object: owner});
-                    }
-                });
-            }
+                    });
+                }
+            };
+            parseChildren("CATALOGUENUMBER", catalogueNumber );
+            parseChildren("OWNERSHIP", ownership );
+
             var total = updateList.length + createList.length;
             var count = 0;
             var resolveWhenFinished = function() {
@@ -240,7 +231,7 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
             var catDef = _.reject(catalogueNumber.getFieldDefinitions(), rejectFn);
             var ownerDef = _.reject(ownership.getFieldDefinitions(), rejectFn);
             
-            var select = 'SELECT ' + generateColumnExpression(stampDef, stamp.getAlias()) + ',';
+            var select = 'SELECT SQL_CALC_FOUND_ROWS ' + generateColumnExpression(stampDef, stamp.getAlias()) + ',';
             select += generateColumnExpression(catDef, catalogueNumber.getAlias()) + ',' + generateColumnExpression(ownerDef, ownership.getAlias());
             select += ' FROM ' + this.getFromTables();
             
@@ -248,16 +239,25 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
             select += ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
             sqlTrace.log(Logger.DEBUG, select);
             connectionManager.getConnection().then(function (connection) {
-                var rows = [];
+                var result = {
+                    rows: [],
+                    total: 0
+                };
                 var query = connection.query(select);
                 query.on('result', function (row) {
-                    processRow(rows, row);
+                    processRow(result.rows, row);
                 }).on('end', function () {
-                    connection.release();
-                    defer.resolve(rows);
+                    connection.query("SELECT FOUND_ROWS() AS ROWCOUNT", function(err,data) {
+                        connection.release();
+                        if( err ) {
+                            defer.reject(dataTranslator.getErrorMessage(err));
+                        } else {
+                            result.total = data[0].ROWCOUNT;
+                            defer.resolve(result);
+                        }
+                    });
                 }).on('error', function (err) {
                     connection.release();
-                    logger.log(Logger.ERROR, err);
                     defer.reject(dataTranslator.getErrorMessage(err));
                 });
             }, function (err) {

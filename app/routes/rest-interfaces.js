@@ -89,21 +89,17 @@ function restInterfaces() {
             var limit = req.query.$top;
             var offset = req.query.$skip;
             var that = this;
-            collection.find(filter, limit, offset).then(function (rows) {
-                var result = {};
+            collection.find(filter, limit, offset).then(function (data) {
+                var result = {
+                    total: data.total
+                };
                 result[collection.collectionName] = [];
-                _.each(rows, function (row) {
+                _.each(data.rows, function (row) {
                     result[collection.collectionName].push(field.externalize(row));
                 });
-                collection.count(filter).then(function (count) {
-                    result.total = count;
-                    res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
-                    res.status(routeHelper.StatusCode.OK);
-                    res.json(result);
-                }, function (err) {
-                    logger.log(Logger.ERROR, err);
-                    res.status(routeHelper.StatusCode.INTERNAL_ERROR).send(routeHelper.ClientMessages.INTERNAL_ERROR).end();
-                });
+                res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
+                res.status(routeHelper.StatusCode.OK);
+                res.json(result);
             }, function (err) {
                 logger.log(Logger.ERROR, err);
                 res.status(routeHelper.StatusCode.INTERNAL_ERROR).send(routeHelper.ClientMessages.INTERNAL_ERROR).end();

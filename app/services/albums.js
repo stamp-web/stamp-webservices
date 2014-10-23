@@ -127,7 +127,7 @@ var albums = extend(true, {}, new PersistentCollection(), function () {
             return defer.promise;
         },
 
-        updateAdditions: function(connection,merged,storedObj) {
+        preCommitUpdate: function(connection,merged,storedObj) {
             var defer = q.defer();
             mergeCountries(connection,merged).then(function(result) {
                 defer.resolve({
@@ -139,15 +139,15 @@ var albums = extend(true, {}, new PersistentCollection(), function () {
             return defer.promise;
         },
 
-        postFind: function (connection, rows) {
+        postFind: function (connection, result) {
             var that = this;
             var defer = q.defer();
 
             var qs = "SELECT ALBUM_ID, COUNTRY_ID FROM ALBUMS_COUNTRIES WHERE ALBUM_ID IN (";
-            for (var i = 0; i < rows.length; i++) {
-                rows[i].COUNTRIES = [];
-                qs += rows[i].ID;
-                if (i < rows.length - 1) {
+            for (var i = 0; i < result.rows.length; i++) {
+                result.rows[i].COUNTRIES = [];
+                qs += result.rows[i].ID;
+                if (i < result.rows.length - 1) {
                     qs += ",";
                 }
             }
@@ -157,10 +157,10 @@ var albums = extend(true, {}, new PersistentCollection(), function () {
                     defer.reject(dataTranslator.getErrorMessage(err));
                 } else {
                     for (var j = 0; j < r.length; j++) {
-                        var a = _.findWhere(rows, { ID: r[j].ALBUM_ID });
+                        var a = _.findWhere(result.rows, { ID: r[j].ALBUM_ID });
                         a.COUNTRIES.push(r[j].COUNTRY_ID);
                     }
-                    defer.resolve(rows);
+                    defer.resolve();
                 }
             });
             return defer.promise;
