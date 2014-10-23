@@ -165,13 +165,13 @@ if (nconf.get("sql_level")) {
                         .end(function (e, res) {
                             expect(res.status).to.be(201);
                             superagent.del('http://' + hostname + ':' + server_port + '/rest/catalogues/' + id)
-                                .end(function(e,res) {
+                                .end(function (e, res) {
                                     expect(res.status).to.be(409);
                                     done();
                                 });
                         });
                 });
-             });
+            });
 
             it('DELETE ok for secondary catalogue numbers', function (done) {
                 NamedCollectionVerifications.verifyPost('catalogues', {
@@ -205,7 +205,7 @@ if (nconf.get("sql_level")) {
                         .end(function (e, res) {
                             expect(res.status).to.be(201);
                             superagent.del('http://' + hostname + ':' + server_port + '/rest/catalogues/' + id)
-                                .end(function(e,res) {
+                                .end(function (e, res) {
                                     expect(res.status).to.be(204);
                                     done();
                                 });
@@ -262,7 +262,6 @@ if (nconf.get("sql_level")) {
             });
 
         });
-
 
 
         describe('Seller REST API tests', function (done) {
@@ -741,6 +740,73 @@ if (nconf.get("sql_level")) {
                     });
             });
 
+            it('Verify trigger behavior on INSERT/DELETE catalogue numbers', function (done) {
+                var stamp = {
+                    countryRef: 1,
+                    rate: "6d",
+                    description: "yellow",
+                    wantList: false,
+                    catalogueNumbers: [
+                        {
+                            catalogueRef: 1,
+                            number: "45",
+                            value: 5.65,
+                            condition: 1,
+                            active: true
+                        },
+                        {
+                            catalogueRef: 1,
+                            number: "45a",
+                            value: 56.23,
+                            condition: 0,
+                            active: false
+                        }
+                    ],
+                    stampOwnerships: [ ]
+                };
+                superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
+                    .send(stamp)
+                    .end(function (e, res) {
+                        expect(e).to.eql(null);
+                        expect(res.status).to.eql(201);
+                        var id = res.body.id;
+                        var query = function (count, callback) {
+                            connection.query('SELECT CATALOGUE_COUNT FROM STAMPS WHERE ID=' + id, function (err, data) {
+                                if (err) {
+                                    expect().fail("could not get catalogue_count", err);
+                                }
+                                expect(data[0].CATALOGUE_COUNT).to.be(count);
+                                callback();
+                            });
+                        };
+                        query(2, function () {
+                            superagent.post('http://' + hostname + ':' + server_port + '/rest/catalogueNumbers')
+                                .send({
+                                    catalogueRef: 1,
+                                    number: 67,
+                                    value: 677,
+                                    active: false,
+                                    stampRef: id
+                                }
+                            ).end(function (e, res) {
+                                    expect(e).to.eql(null);
+                                    expect(res.status).to.eql(201);
+                                    var catID = res.body.id;
+                                    query(3, function() {
+                                        superagent.del('http://' + hostname + ':' + server_port + '/rest/catalogueNumbers/' + catID)
+                                            .end(function(e,res)
+                                        {
+                                            expect(e).to.eql(null);
+                                            expect(res.status).to.eql(204);
+                                            query(2,done);
+                                        });
+                                    });
+                                });
+                        });
+
+                    });
+            });
+
             it('PUT Convert a wantlist to a stamp with 200 status', function (done) {
                 var stamp = {
                     countryRef: 1,
@@ -801,7 +867,7 @@ if (nconf.get("sql_level")) {
                     });
             });
 
-            it('GET Collection with 200 status', function(done) {
+            it('GET Collection with 200 status', function (done) {
                 superagent.get('http://' + hostname + ':' + server_port + '/rest/stamps')
                     .end(function (e, res) {
                         expect(e).to.eql(null);

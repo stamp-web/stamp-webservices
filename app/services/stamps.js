@@ -60,9 +60,6 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
     }
 
     return {
-        preCreate: function (obj) {
-            obj.catalogueCount = (obj.catalogueNumbers) ? obj.catalogueNumbers.length : 0;
-        },
         preCommitUpdate: function (connection, merged, storedObj) {
             var defer = q.defer();
             var that = this;
