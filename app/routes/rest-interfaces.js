@@ -88,8 +88,9 @@ function restInterfaces() {
             var filter = (req.query && req.query.$filter) ? odata.toPredicates(req.query.$filter) : null;
             var limit = req.query.$top;
             var offset = req.query.$skip;
+            var orderby = req.query.$orderby;
             var that = this;
-            collection.find(filter, limit, offset).then(function (data) {
+            collection.find(filter, limit, offset, orderby).then(function (data) {
                 var result = {
                     total: data.total
                 };

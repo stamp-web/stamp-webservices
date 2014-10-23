@@ -18,11 +18,10 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
     "use strict";
 
     function generateColumnExpression(fields, tableRef) {
-
         var s = "";
         _.each(fields, function (field, indx) {
             var prefix = false;
-            if (field.field === 'id') {
+            if (field.field === 'id' && tableRef !== stamp.getAlias()) {
                 prefix = true;
             }
             s += tableRef + "." + field.column;
@@ -35,7 +34,7 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
         });
         return s;
     }
-    
+
     function populateChildren(fields, childfields, object, childKey) {
         var child = {};
         _.each(childfields, function (field) {
@@ -47,51 +46,50 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                 delete object[field.column];
             }
         });
-        
+
         return child;
     }
-    
-    function processRow(rows, row) {
-        var s = _.findWhere(rows, { ID: row.sID });
-        if (!s) {
-            s = row;
-            s.ID = row.sID;
-            delete row.sID;
-            rows.push(row);
-        }
-        if (!s.CATALOGUENUMBER || s.CATALOGUENUMBER.length === 0) {
-        s.CATALOGUENUMBER = [];
-        }
-        if (!s.OWNERSHIP || s.OWNERSHIP.length === 0) {
-            s.OWNERSHIP = [];
-        }
-        s.CATALOGUENUMBER.push(populateChildren(stamp.getFieldDefinitions(), catalogueNumber.getFieldDefinitions(), row, 'cID'));
-        var oid = row.oID;
-        if (oid && !_.findWhere(s.OWNERSHIP, { ID: oid })) {
-            var ownerObj = populateChildren(stamp.getFieldDefinitions(), ownership.getFieldDefinitions(), row, 'oID');
-            if (!_.isEmpty(ownerObj)) {
-                s.OWNERSHIP.push(ownerObj);
-            }
-        } else {
-            logger.log(Logger.TRACE, "skipped for " + s.ID);
+
+    function populateKey(stamp, k) {
+        if (!_.has(stamp, k)) {
+            stamp[k] = [];
         }
     }
-    
+
+    function processRow(rows, row, fieldDef, key) {
+        var s = _.findWhere(rows, { ID: row.STAMP_ID });
+        if (!s) {
+            sqlTrace.log(Logger.TRACE, "No stamp found for " + row.STAMP_ID);
+            return;
+        }
+        populateKey(s,'CATALOGUENUMBER');
+        populateKey(s,'OWNERSHIP');
+
+        s[key].push(populateChildren(stamp.getFieldDefinitions(), fieldDef.getFieldDefinitions(), row, fieldDef.getAlias() + 'ID'));
+    }
+
+    function generateChildSelection(supportedFields, fieldDefinition, fromTables, whereClause, inValues) {
+        var select = 'SELECT ' + generateColumnExpression(supportedFields, fieldDefinition.getAlias());
+        select += ' FROM ' + fromTables + ' WHERE ' + ((whereClause.length > 0) ? (whereClause + ' AND ') : '');
+        select += fieldDefinition.getAlias() + '.STAMP_ID IN ' + inValues;
+        return select;
+    }
+
     return {
-        preCreate: function(obj) {
+        preCreate: function (obj) {
             obj.catalogueCount = (obj.catalogueNumbers) ? obj.catalogueNumbers.length : 0;
         },
-        preCommitUpdate: function(connection,merged,storedObj) {
+        preCommitUpdate: function (connection, merged, storedObj) {
             var defer = q.defer();
             var that = this;
             var updateList = [], createList = [];
-            var parseChildren = function(childName, fieldDef) {
-                if( merged[childName] && _.isArray(merged[childName])) {
-                    _.each(merged[childName], function(obj) {
-                        if( obj.ID) {
-                            var current = _.findWhere(storedObj[childName],{ ID: obj.ID});
-                            var sql = dataTranslator.generateUpdateByFields(fieldDef, obj, current,true);
-                            if( sql !== null ) {
+            var parseChildren = function (childName, fieldDef) {
+                if (merged[childName] && _.isArray(merged[childName])) {
+                    _.each(merged[childName], function (obj) {
+                        if (obj.ID) {
+                            var current = _.findWhere(storedObj[childName], { ID: obj.ID});
+                            var sql = dataTranslator.generateUpdateByFields(fieldDef, obj, current, true);
+                            if (sql !== null) {
                                 updateList.push(sql);
                             }
                         } else {
@@ -101,13 +99,13 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                     });
                 }
             };
-            parseChildren("CATALOGUENUMBER", catalogueNumber );
-            parseChildren("OWNERSHIP", ownership );
+            parseChildren("CATALOGUENUMBER", catalogueNumber);
+            parseChildren("OWNERSHIP", ownership);
 
             var total = updateList.length + createList.length;
             var count = 0;
-            var resolveWhenFinished = function() {
-                if( count === total ) {
+            var resolveWhenFinished = function () {
+                if (count === total) {
                     defer.resolve({
                         modified: total > 0
                     });
@@ -126,14 +124,14 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
 
                 });
             });
-            _.each(createList, function(obj) {
+            _.each(createList, function (obj) {
                 var creating = obj;
-                PersistentCollection.getNextSequence(creating.fieldDefinition, function(err,id) {
-                    if( err !== null ) {
+                PersistentCollection.getNextSequence(creating.fieldDefinition, function (err, id) {
+                    if (err !== null) {
                         defer.reject(dataTranslator.getErrorMessage(err));
                     } else {
                         creating.object.ID = id;
-                        var c_sql = dataTranslator.generateInsertByFields(creating.fieldDefinition,creating.object);
+                        var c_sql = dataTranslator.generateInsertByFields(creating.fieldDefinition, creating.object);
                         sqlTrace.log(Logger.DEBUG, c_sql);
                         connection.query(c_sql, function (err, data) {
                             if (err !== null) {
@@ -202,22 +200,22 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
             }
             return defer.promise;
         },
-      
+
         getFromTables: function ($filter) {
             var tables = stamp.getTableName() + ' AS ' + stamp.getAlias() + ' JOIN ' + catalogueNumber.getTableName() + ' AS ' + catalogueNumber.getAlias();
             tables += ' ON ' + stamp.getAlias() + '.ID=' + catalogueNumber.getAlias() + '.STAMP_ID ';
             tables += 'LEFT OUTER JOIN ' + ownership.getTableName() + ' AS ' + ownership.getAlias() + ' ON ' + stamp.getAlias() + '.ID = ' + ownership.getAlias() + '.STAMP_ID';
             return tables;
         },
-        
+
         getWhereClause: function ($filter) {
-            return ($filter) ? dataTranslator.toWhereClause($filter, [stamp,catalogueNumber,ownership]) : '';
+            return ($filter) ? dataTranslator.toWhereClause($filter, [stamp, catalogueNumber, ownership]) : '';
         },
 
-        find: function ($filter, $limit, $offset) {
+        find: function ($filter, $limit, $offset, $orderby) {
             var defer = q.defer();
             var that = this;
-            
+
             if (!$limit) {
                 $limit = 1000;
             }
@@ -225,40 +223,73 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                 $offset = 0;
             }
             var rejectFn = function (field) {
-                return (field.internal && field.internal === true || field.model);
+                return (field.internal && field.internal === true && field.required !== true || field.model);
             };
             var stampDef = _.reject(stamp.getFieldDefinitions(), rejectFn);
             var catDef = _.reject(catalogueNumber.getFieldDefinitions(), rejectFn);
             var ownerDef = _.reject(ownership.getFieldDefinitions(), rejectFn);
-            
-            var select = 'SELECT SQL_CALC_FOUND_ROWS ' + generateColumnExpression(stampDef, stamp.getAlias()) + ',';
-            select += generateColumnExpression(catDef, catalogueNumber.getAlias()) + ',' + generateColumnExpression(ownerDef, ownership.getAlias());
-            select += ' FROM ' + this.getFromTables();
-            
+
+            var select = 'SELECT SQL_CALC_FOUND_ROWS ' + generateColumnExpression(stampDef, stamp.getAlias()) + ' FROM ' + this.getFromTables();
             var whereClause = this.getWhereClause($filter);
             select += ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
             sqlTrace.log(Logger.DEBUG, select);
+            var t = (new Date()).getTime();
             connectionManager.getConnection().then(function (connection) {
-                var result = {
-                    rows: [],
-                    total: 0
-                };
-                var query = connection.query(select);
-                query.on('result', function (row) {
-                    processRow(result.rows, row);
-                }).on('end', function () {
-                    connection.query("SELECT FOUND_ROWS() AS ROWCOUNT", function(err,data) {
+                var query = connection.query(select, function (err, stamps) {
+                    if (err) {
                         connection.release();
-                        if( err ) {
-                            defer.reject(dataTranslator.getErrorMessage(err));
-                        } else {
-                            result.total = data[0].ROWCOUNT;
-                            defer.resolve(result);
-                        }
-                    });
-                }).on('error', function (err) {
-                    connection.release();
-                    defer.reject(dataTranslator.getErrorMessage(err));
+                        defer.reject(dataTranslator.getErrorMessage(err));
+                    } else {
+                        connection.query("SELECT FOUND_ROWS() AS ROWCOUNT", function (err, countData) {
+                            if (err) {
+                                connection.release();
+                                defer.reject(dataTranslator.getErrorMessage(err));
+                            } else {
+                                var result = {
+                                    rows: stamps,
+                                    total: countData[0].ROWCOUNT
+                                };
+                                if (result.total === 0) {
+                                    connection.release();
+                                    defer.resolve(result);
+                                } else {
+                                    var ids = _.pluck(result.rows, 'ID');
+                                    var inValues = dataTranslator.generateInValueStatement(ids);
+                                    var queries = [
+                                        {
+                                            sql: generateChildSelection(catDef, catalogueNumber, that.getFromTables(), whereClause, inValues),
+                                            fieldDefinition: catalogueNumber,
+                                            collectionKey: 'CATALOGUENUMBER'
+                                        },
+                                        {
+                                            sql: generateChildSelection(ownerDef, ownership, that.getFromTables(), whereClause, inValues),
+                                            fieldDefinition: ownership,
+                                            collectionKey: 'OWNERSHIP'
+                                        }
+                                    ];
+                                    var completed = 0;
+                                    var toExecute = queries.length;
+                                    _.each(queries, function (query) {
+                                        sqlTrace.log(Logger.DEBUG, query.sql);
+                                        var _query = connection.query(query.sql);
+                                        _query.on('result', function (row) {
+                                            processRow(result.rows, row, query.fieldDefinition, query.collectionKey)
+                                        }).on('end', function () {
+                                            completed++;
+                                            if (completed === toExecute) {
+                                                connection.release();
+                                                sqlTrace.log(Logger.INFO, "Time to query and process rows: " + (new Date().getTime() - t) + "ms");
+                                                defer.resolve(result);
+                                            }
+                                        }).on('error', function (err) {
+                                            connection.release();
+                                            defer.reject(dataTranslator.getErrorMessage(err));
+                                        });
+                                    });
+                                }
+                            }
+                        });
+                    }
                 });
             }, function (err) {
                 defer.reject(dataTranslator.getErrorMessage(err));

@@ -215,7 +215,7 @@ function PersistentCollection() {
             });
             return defer.promise;
         },
-        find: function ($filter, $limit, $offset) {
+        find: function ($filter, $limit, $offset, $orderby) {
             var defer = q.defer();
             var that = this;
             var whereClause = this.getWhereClause($filter);
