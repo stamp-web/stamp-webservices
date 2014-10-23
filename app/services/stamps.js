@@ -20,34 +20,12 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
     function generateColumnExpression(fields, tableRef) {
         var s = "";
         _.each(fields, function (field, indx) {
-            var prefix = false;
-            if (field.field === 'id' && tableRef !== stamp.getAlias()) {
-                prefix = true;
-            }
             s += tableRef + "." + field.column;
-            if (prefix) {
-                s += ' AS ' + tableRef + field.column;
-            }
             if (indx < fields.length - 1) {
                 s += ',';
             }
         });
         return s;
-    }
-
-    function populateChildren(fields, childfields, object, childKey) {
-        var child = {};
-        _.each(childfields, function (field) {
-            if (field.column === 'ID' && typeof object[childKey] !== 'undefined') {
-                child[field.column] = object[childKey];
-                delete object[childKey];
-            } else if (typeof object[field.column] !== 'undefined') {
-                child[field.column] = object[field.column];
-                delete object[field.column];
-            }
-        });
-
-        return child;
     }
 
     function populateKey(stamp, k) {
@@ -62,13 +40,18 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
             sqlTrace.log(Logger.TRACE, "No stamp found for " + row.STAMP_ID);
             return;
         }
-        s[key].push(populateChildren(stamp.getFieldDefinitions(), fieldDef.getFieldDefinitions(), row, fieldDef.getAlias() + 'ID'));
+        s[key].push(row);
     }
 
-    function generateChildSelection(supportedFields, fieldDefinition, fromTables, whereClause, inValues) {
+    function getFromTableForChildren (fieldDefinition) {
+        var tables = stamp.getTableName() + ' AS ' + stamp.getAlias() + ' JOIN ' + fieldDefinition.getTableName() + ' AS ' + fieldDefinition.getAlias();
+        tables += ' ON ' + stamp.getAlias() + '.ID=' + fieldDefinition.getAlias() + '.STAMP_ID';
+        return tables;
+    }
+
+    function generateChildSelection(supportedFields, fieldDefinition, inValues) {
         var select = 'SELECT ' + generateColumnExpression(supportedFields, fieldDefinition.getAlias());
-        select += ' FROM ' + fromTables + ' WHERE ' + ((whereClause.length > 0) ? (whereClause + ' AND ') : '');
-        select += fieldDefinition.getAlias() + '.STAMP_ID IN ' + inValues;
+        select += ' FROM ' + getFromTableForChildren(fieldDefinition) + ' WHERE ' + fieldDefinition.getAlias() + '.STAMP_ID IN ' + inValues;
         return select;
     }
 
@@ -258,12 +241,12 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                                     var inValues = dataTranslator.generateInValueStatement(ids);
                                     var queries = [
                                         {
-                                            sql: generateChildSelection(catDef, catalogueNumber, that.getFromTables(), whereClause, inValues),
+                                            sql: generateChildSelection(catDef, catalogueNumber, inValues),
                                             fieldDefinition: catalogueNumber,
                                             collectionKey: 'CATALOGUENUMBER'
                                         },
                                         {
-                                            sql: generateChildSelection(ownerDef, ownership, that.getFromTables(), whereClause, inValues),
+                                            sql: generateChildSelection(ownerDef, ownership, inValues),
                                             fieldDefinition: ownership,
                                             collectionKey: 'OWNERSHIP'
                                         }
@@ -274,7 +257,7 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                                         sqlTrace.log(Logger.DEBUG, query.sql);
                                         var _query = connection.query(query.sql);
                                         _query.on('result', function (row) {
-                                            processRow(result.rows, row, query.fieldDefinition, query.collectionKey)
+                                            processRow(result.rows, row, query.fieldDefinition, query.collectionKey);
                                         }).on('end', function () {
                                             completed++;
                                             if (completed === toExecute) {
