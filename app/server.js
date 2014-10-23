@@ -80,7 +80,10 @@ logger.log(Logger.INFO, "HTTPServer listening on port " + port);
 connectionMgr.startup().then(function () {
     process.on('exit', function () {
         connectionMgr.shutdown();
-    });    
+    });
+    process.on('uncaughtException', function(err) {
+        console.log(err.stack); // should update to use domains/clusters
+    });
     // See if the server is running as a child process and if so signal completion of startup
     if (process.send) {
         process.send("SERVER_STARTED");

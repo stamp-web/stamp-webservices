@@ -17,10 +17,14 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
 
     "use strict";
 
-    function generateColumnExpression(fields, tableRef) {
+    function generateColumnExpression(fields, tableRef,distinct) {
         var s = "";
         _.each(fields, function (field, indx) {
-            s += tableRef + "." + field.column;
+            var c = tableRef + "." + field.column;
+            if( distinct === true && field.column === 'ID' ) {
+                c = "DISTINCT(" + c + ")";
+            }
+            s += c;
             if (indx < fields.length - 1) {
                 s += ',';
             }
@@ -184,7 +188,7 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
         getFromTables: function ($filter) {
             var tables = stamp.getTableName() + ' AS ' + stamp.getAlias() + ' JOIN ' + catalogueNumber.getTableName() + ' AS ' + catalogueNumber.getAlias();
             tables += ' ON ' + stamp.getAlias() + '.ID=' + catalogueNumber.getAlias() + '.STAMP_ID ';
-            tables += 'LEFT OUTER JOIN ' + ownership.getTableName() + ' AS ' + ownership.getAlias() + ' ON ' + stamp.getAlias() + '.ID = ' + ownership.getAlias() + '.STAMP_ID';
+            tables += 'LEFT JOIN ' + ownership.getTableName() + ' AS ' + ownership.getAlias() + ' ON ' + stamp.getAlias() + '.ID = ' + ownership.getAlias() + '.STAMP_ID';
             return tables;
         },
 
@@ -209,7 +213,7 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
             var catDef = _.reject(catalogueNumber.getFieldDefinitions(), rejectFn);
             var ownerDef = _.reject(ownership.getFieldDefinitions(), rejectFn);
 
-            var select = 'SELECT SQL_CALC_FOUND_ROWS ' + generateColumnExpression(stampDef, stamp.getAlias()) + ' FROM ' + this.getFromTables();
+            var select = 'SELECT SQL_CALC_FOUND_ROWS ' + generateColumnExpression(stampDef, stamp.getAlias(),true) + ' FROM ' + this.getFromTables();
             var whereClause = this.getWhereClause($filter);
             select += ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
             sqlTrace.log(Logger.DEBUG, select);

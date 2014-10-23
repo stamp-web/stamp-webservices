@@ -126,11 +126,11 @@ if (nconf.get("sql_level")) {
 
             it('POST valid creation with 201 status', function (done) {
                 NamedCollectionVerifications.verifyPost('catalogues', {
-                    name: 'Scott Postage Specialized', issue: 2012, type: 1, currency: 'USD', description: 'Detailed specialized'
+                    name: 'Scott Postage Specialized', issue: 2012, type: 1, code: 'USD', description: 'Detailed specialized'
                 }, done, function (obj) {
                     expect(obj.issue).to.be.eql(2012);
                     expect(obj.type).to.be.eql(1);
-                    expect(obj.currency).to.be.eql('USD');
+                    expect(obj.code).to.be.eql('USD');
                 });
             });
 
