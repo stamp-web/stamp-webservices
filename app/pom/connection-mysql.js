@@ -92,7 +92,7 @@ module.exports = function () {
             var pool = this;
             this.config.keepalive = 30000;
             setInterval(function () {
-                logger.log(Logger.INFO, "Keep alive fired for " + pool._freeConnections.length + " connections");
+                logger.log(Logger.DEBUG, "Keep alive fired for " + pool._freeConnections.length + " connections");
                 pool._freeConnections.forEach(function (connection) {
                     connection.ping(function (err) {
                         if (err) {
@@ -119,7 +119,7 @@ module.exports = function () {
                     database: config.schema
                 });
                 dbPool.startKeepAlive();
-                logger.log(Logger.INFO, "MySQL database pool created for database named \'" + dbName + "\'");
+
                 dbPool.getConnection(function (err, connection) {
                     connectionCount++;
                     connection.release();
@@ -129,6 +129,9 @@ module.exports = function () {
                         defer.reject(err);
                     }
                 });
+                setTimeout(function() {
+                    logger.log(Logger.INFO, "MySQL database pool created for database named \'" + dbName + "\'");
+                }, 1000);
             });
         } else {
             var msg = "The database " + dbName + " was not found in the configuration.";

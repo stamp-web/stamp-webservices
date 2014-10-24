@@ -67,7 +67,7 @@ if (nconf.get("sql_level")) {
                 count++;
             });
 
-            var child = child_process.fork(__dirname + "/../app/server", [], {
+            var child = child_process.fork(__dirname + "/../app/server/server", [], {
                 cwd: "..",
                 env: {
                     database: database,

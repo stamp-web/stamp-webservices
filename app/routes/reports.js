@@ -45,7 +45,7 @@ function reports() {
         },
         configure: function (app, basePath) {
             app.get(basePath + "/reports", this.executeReport);
-            logger.log(Logger.INFO, "   Registering services at " + basePath + "/reports");
+            logger.log(Logger.DEBUG, "   Registering services at " + basePath + "/reports");
         }
     };
 }

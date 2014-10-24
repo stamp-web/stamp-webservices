@@ -1,0 +1,25 @@
+/*!
+ * domain-middleware - example/connect_with_cluster/dispatch.js
+ * Copyright(c) 2013 fengmk2 <fengmk2@gmail.com>
+ * MIT Licensed
+ */
+
+"use strict";
+var Logger = require('../util/logger');
+
+var nconf = require('nconf');
+nconf.argv().env();
+
+var port = nconf.get("port");
+if (!port) {
+    port = 9001;
+} else {
+    port = +port;
+}
+
+var logger = Logger.getLogger("server");
+
+var server = require('./server-app');
+server.listen(port);
+logger.log(Logger.INFO, "Server listening on port " + port + ", process=" + process.pid);
+

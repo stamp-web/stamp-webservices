@@ -11,3 +11,4 @@ logs/output.log
 /test/transaction-example.js
 www
 .idea
+stamp-web

@@ -4,6 +4,7 @@ var Logger = require('../util/logger');
 var routeHelper = require('./route-helper');
 
 var logger = Logger.getLogger("server");
+var initialized = false;
 
 function restInterfaces() {
     "use strict";
@@ -13,6 +14,7 @@ function restInterfaces() {
 
     return {
         initialize: function (app, basePath, col, f) {
+
             collection = col;
             field = f;
 
@@ -22,8 +24,7 @@ function restInterfaces() {
             app.get(basePath + "/!count", this.count);
             app.get(basePath + "/:id", this.findById);
             app.delete(basePath + '/:id', this.remove);
-
-            logger.log(Logger.INFO, "   Registering services at " + basePath);
+            logger.log(Logger.DEBUG, "   Registering services at " + basePath);
         },
         findById: function (req, res) {
             var that = this;
