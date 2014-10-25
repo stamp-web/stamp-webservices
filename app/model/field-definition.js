@@ -144,6 +144,19 @@ var fieldDefinition = function () {
             });
             return obj;
         },
+        /**
+         * Will attempt to resolve and handle expressions that are not resolvable through the columns of the object
+         * directly.  An example would be stampCollectionRef from stamps/ownerships.  A subselect is needed on the
+         * Albums table to resolve this.  Should return null if the expression is not resolvable.
+         *
+         * @param key
+         * @param op
+         * @param value
+         * @returns {string}
+         */
+        getSpecialExpression: function(key, op, value) {
+            return null;
+        },
         getFieldDefinitions: function () {
             throw new Error("getFieldDefinitions() needs to implemented by provider.");
         },

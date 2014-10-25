@@ -115,6 +115,7 @@ function DataTranslator() {
             expr += ")";
             return expr;
         },
+        // TODO: delete once generateInsertStatement is no longer used
         processFields: function (fieldDefinition, obj) {
             var config = {
                 DB_COLS: [],
@@ -134,7 +135,12 @@ function DataTranslator() {
             });
             return config;
         },
-        
+        /**
+         * Generate a valid value statement (x,x,x,x) for the array of objects
+         *
+         * @param ids
+         * @returns {string}
+         */
         generateInValueStatement: function (ids) {
             var id_vals = '';
             var len = ids.length;
@@ -206,10 +212,17 @@ function DataTranslator() {
                                     var d = new Date(value);
                                     value = "\'" + d.toFormat(Constants.MYSQL_DATEFORMAT) + "\'";
                                 }
+                                expression += predicate + op + value;
                                 break;
+                            } else {
+                                var expr = definition.getSpecialExpression(subject, op, value);
+                                if( expr !== null ) {
+                                   expression += expr;
+                                   break;
+                                }
                             }
                         }
-                        expression += predicate + op + value;
+
                     }
                 }
             };

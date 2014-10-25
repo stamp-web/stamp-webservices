@@ -25,6 +25,16 @@ var ownership = extend({}, fieldDefinition, function() {
                 { field: 'modifyTimestamp', column: 'MODIFYSTAMP', type: 'date', internal: true }
             ];
         },
+
+        getSpecialExpression: function(key, op, value) {
+            var exp = "";
+            switch(key) {
+                case 'stampCollectionRef':
+                    exp = this.getAlias() + '.ALBUM_ID IN (SELECT ID FROM ALBUMS WHERE COLLECTION_ID=' + value + ')';
+                    break;
+            }
+            return exp;
+        },
         getSequenceColumn: function () {
             return "OWNERSHIP_ID";
         },
