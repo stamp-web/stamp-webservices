@@ -14,7 +14,7 @@ function reports() {
                 res.status(routeHelper.StatusCode.BAD_REQUEST).send("A reportType query argument is required.").end();
                 return;
             }
-            var $filter = (req.query && req.query.$filter) ? odata.toPredicates(req.query.$filter) : null;
+            var $filter = (req.query && req.query.$filter) ? odata.parse(req.query.$filter) : null;
             var currency = req.query.code ? req.query.code : 'USD';
 
             var result = {

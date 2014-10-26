@@ -183,6 +183,9 @@ function DataTranslator() {
                         case 'le':
                             op = '<=';
                             break;
+                        case 'like':
+                            op = ' LIKE ';
+                            break;
                         case 'and':
                         case 'or':
                             binaryOp = false;
@@ -199,7 +202,7 @@ function DataTranslator() {
                         var value;
                         if (el.right) {
                             var val = el.right;
-                            value = (_.isNumber(val)) ? +val : '' + val;
+                            value = (_.isNumber(val)) ? +val : _.isString(val) ? val.replace(/\*/g,'%') : '' + val;
                         }
                         var predicate = subject;
                         for (var i = 0; i < fieldDefinitions.length; i++) {

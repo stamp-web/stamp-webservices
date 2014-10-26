@@ -23,7 +23,7 @@ var collections = extend(true, {}, new PersistentCollection(), function() {
          */
         preDelete: function (connection, id) {
             var defer = q.defer();
-            var $filter = odata.toPredicates("(" + _.findWhere(album.getFieldDefinitions(), { column: "COLLECTION_ID" }).field + " eq " + id + ")");
+            var $filter = odata.parse("(" + _.findWhere(album.getFieldDefinitions(), { column: "COLLECTION_ID" }).field + " eq " + id + ")");
             var albumCollection = albums.find($filter).then(function (results) {
                 var deleteCount = 0;
                 var len = results.rows.length;

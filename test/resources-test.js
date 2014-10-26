@@ -29,7 +29,7 @@ if (nconf.get("hostname")) {
 
 var database = (nconf.get("test_database") ? nconf.get("test_database") : "test");
 
-var sql_level = 'info';
+var sql_level = 'warn';
 if (nconf.get("sql_level")) {
     sql_level = nconf.get("sql_level");
 }

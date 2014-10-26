@@ -9,6 +9,8 @@ var http = require('http');
 var connect = require('connect');
 var domainMiddleware = require('domain-middleware');
 var Logger = require('../util/logger');
+var _ = require('../../lib/underscore/underscore');
+var path = require('path');
 
 nconf.argv().env();
 
@@ -42,6 +44,15 @@ function configureLoggerRemotely(req, resp) {
     }
 }
 
+function showLoggers(req,resp) {
+    var html = "<html><body><table><tr><th>Logger name</th><th>Level</th><th>Enable Debug</th></tr>";
+    _.each(Logger.loggers, function(logger,key) {
+        var _logger = Logger.getLogger(key);
+        html += "<tr><td>" + key + "</td><td>" + _logger.getLevel() + "</td><td><a href=\"logger/" + key + "?level=debug\"><button>Set</button></a></td></tr>";
+    });
+    html += "</table></body></html>";
+    resp.status(200).send(html);
+}
 
 var server = http.createServer();
 var app = express();
@@ -56,10 +67,12 @@ app.use(
         killTimeout: 3000
     }));
 
+app.get(BASEPATH + "config/logger", showLoggers);
 app.get(BASEPATH + "config/logger/:logger", configureLoggerRemotely);
 
+var www_path = path.resolve(__dirname, '..' + path.sep + '..' + path.sep + 'www/');
 app.get('/stamp-web/*', function (req, res) {
-    res.sendfile('./www/' + req.params['0']);
+    res.sendfile(www_path + path.sep + req.params['0']);
 });
 
 require("../routes/rest-preferences").configure(app, BASEPATH + SERVICES_PATH);

@@ -1,73 +1,93 @@
 var _ = require('../../lib/underscore/underscore');
 require("./string-utilities");
-var logger = require('../util/logger');
+var Logger = require('../util/logger');
 
+var logger = Logger.getLogger('odata');
 
 function ODataParser() {
     "use strict";
-    return {
-        indexOfMatchingParenthesis : function (s, startIndx) {
-            var indx = -1;
 
-            for (var i = startIndx; i < s.length; i++) {
-                if (s[i] === '(' && i !== startIndx) {
-                    var j = this.indexOfMatchingParenthesis(s.substring(i + 1), 0);
-                    if (j > 0) {
-                        indx = j + i;
-                        i += j + 1;
-                        continue;
-                    }
-                    throw new Error("not valid - no matching parenthesis for " + s);
-                } else if (s[i] === ')') {
-                    indx = i;
-                    break;
-                }
-            }
-            return indx;
-        },
-        toPredicates: function ($filter) {
+    var REGEX = {
+
+        parenthesis: /([(](.*)[)])$/,
+        andor: /^(.*) (or|and) (.*)$/,
+        op: /(\w*) (eq|gt|lt|ge|le|ne) (datetimeoffset'(.*)'|'(.*)'|[0-9]*)/,
+        startsWith: /^startswith[(](.*),'(.*)'[)]/,
+        endsWith: /^endswith[(](.*),'(.*)'[)]/,
+        contains: /^contains[(](.*),'(.*)'[)]/
+    } ;
+
+
+    function buildLike(match,key) {
+        var right = (key === 'startsWith') ? match[2] + '*' : (key === 'endsWith') ? '*' + match[2] : '*' + match[2] + '*';
+        if( match[0].charAt(match[0].lastIndexOf(')')-1) === "\'") {
+            right = "\'" + right + "\'";
+        }
+        return {
+            left: match[1],
+            type: 'like',
+            right: right
+        };
+    }
+    return {
+
+        parse: function(filter) {
+            var that = this;
             var obj = {};
-            if ($filter) {
-                $filter = $filter.trim();
-                var indx = $filter.indexOf('(');
-                if (indx >= 0) {
-                    var lastIndx = this.indexOfMatchingParenthesis($filter, 0);
-                    var f = $filter.substring(indx + 1, lastIndx);
-                    if (f.indexOf('(') === 0) {
-                        var p = this.toPredicates(f);
-                        if (f.indexOf(')') <= f.length -1) {
-                            obj.left = p;
-                        }
-                        return this.toPredicates(f);
-                    } else {
-                         $filter = f;
-                    }
+            if( filter ) {
+                filter = filter.trim();
+            }
+            var found = false;
+            _.each(REGEX, function (regex, key) {
+                if (found) {
+                    return;
                 }
-                var tokens = $filter.split(' ');
-                if (tokens.length >= 3) {
-                    obj = {
-                        left: tokens[0],
-                        type: tokens[1],
-                        right: tokens[2]
-                    };
-                    if (obj.right.indexOf('(') === 0) {
-                        obj.right = this.toPredicates(obj.right);
-                    }
-                    if (obj.right.indexOf("\'") < 0) {
-                        obj.right = +obj.right;
-                    } else {
-                        if (obj.right.lastIndexOf("\'") !== obj.right.length - 1) {
-                            for (var i = 3; i < tokens.length; i++) {
-                                obj.right += " " + tokens[i];
-                                if (tokens[i].endsWith("\'")) {
-                                    break;
-                                }
+
+                var match = filter.match(regex);
+                if (match) {
+                    found = true;
+                    switch (regex) {
+                        case REGEX.parenthesis:
+                            var s = match.length > 2 ? match[2] : match[1];
+                            var fnMatch;
+                            if( (fnMatch = filter.match(REGEX.startsWith)) !== null) {
+                                obj = buildLike(fnMatch,"startsWith");
+                                break;
+                            } else if( (fnMatch = filter.match(REGEX.endsWith)) !== null) {
+                                obj = buildLike(fnMatch,"endsWith");
+                                break;
+                            } else if ( (fnMatch = filter.match(REGEX.contains)) !== null) {
+                                obj = buildLike(fnMatch,"contains");
+                                break;
                             }
-                        }
+                            obj = that.parse(s);
+                            // If the "(" is not the first character, we need to process the left side and then substitute the right side
+                            if( filter.indexOf(s) !== 1) {
+                                var d_s = filter.substring(0,filter.indexOf(s) -1);
+                                var d_obj = that.parse(d_s + " $TEMP$");
+                                d_obj.right = obj;
+                                obj = d_obj;
+                            }
+                            break;
+                        case REGEX.andor:
+                            obj = {
+                                left: that.parse(match[1]),
+                                type: match[2],
+                                right: that.parse(match[3])
+                            };
+                            break;
+                        case REGEX.op:
+                            obj = {
+                                left: match[1],
+                                type: match[2],
+                                right: ( match[3].indexOf('\'') === -1) ? +match[3] : match[3]
+                            };
+                            break;
                     }
-                } else {
-                    throw new Error("Insufficient tokens for " + $filter);
                 }
+            });
+            if( logger.isEnabled(Logger.DEBUG)) {
+                logger.log(Logger.DEBUG, obj);
             }
             return obj;
         }

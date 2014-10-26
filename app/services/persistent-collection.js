@@ -206,7 +206,7 @@ function PersistentCollection() {
         },
         
         findById: function (id) {
-            var filter = odata.toPredicates("id eq " + id);
+            var filter = odata.parse("id eq " + id);
             var defer = q.defer();
             var that = this;
             that.find(filter).then(function (result) { // we can limit to 1,1 once the stamps find is fixed

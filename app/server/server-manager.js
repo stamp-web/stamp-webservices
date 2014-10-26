@@ -17,7 +17,7 @@ cluster.setupMaster({
 
 var created = 0;
 
-for(var i = 0; i < numForks; i++ ) {
+for(var i = 0; i < 1; i++ ) {
     cluster.fork();
 }
 

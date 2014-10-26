@@ -69,7 +69,7 @@ function restInterfaces() {
     
         },
         count: function (req, res) {
-            var filter = (req.query && req.query.$filter) ? odata.toPredicates(req.query.$filter) : null;
+            var filter = (req.query && req.query.$filter) ? odata.parse(req.query.$filter) : null;
             var that = this;
             collection.count(filter).then(function (result) {
                 res.format({
@@ -86,7 +86,7 @@ function restInterfaces() {
             });
         },
         find: function (req, res) {
-            var filter = (req.query && req.query.$filter) ? odata.toPredicates(req.query.$filter) : null;
+            var filter = (req.query && req.query.$filter) ? odata.parse(req.query.$filter) : null;
             var limit = req.query.$top;
             var offset = req.query.$skip;
             var orderby = req.query.$orderby;
