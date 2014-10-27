@@ -43,13 +43,13 @@ By default, the integration tests will look for a database in application.json c
 
 The server uses a clustered domain to execute multiple threads bound to the same TCPIP port.  By default the server will start on thread per OS reported CPU.  This can be overridden at startup using the --cpu flag described below.
 
-# Executing a single threaded server (useful for testing/debugging etc.)
+### Executing a single threaded server (useful for testing/debugging etc.)
 
 To execute the single threaded server, run the following command:
 
   * node app/server/server.js [options]
 
-To execute the multi-threaded cluster server run the following command:
+### Eecuting the multi-threaded cluster server
 
   * node app/server/server-manager.js [options]
 
