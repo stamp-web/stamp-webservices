@@ -38,6 +38,30 @@ By default, the integration tests will look for a database in application.json c
   * --hostname xxxx (default is localhost) - the hostname to connect to the server 
   * --test_database xxxx (default is test) - the database (in application.json) to use for registering the test NodeJS server.
   * --sql_level xxxx - the SQL tracing level
-  
+
+## Running the Server
+
+The server uses a clustered domain to execute multiple threads bound to the same TCPIP port.  By default the server will start on thread per OS reported CPU.  This can be overridden at startup using the --cpu flag described below.
+
+# Executing a single threaded server (useful for testing/debugging etc.)
+
+To execute the single threaded server, run the following command:
+
+  * node app/server/server.js [options]
+
+To execute the multi-threaded cluster server run the following command:
+
+  * node app/server/server-manager.js [options]
+
+The following are the supported options:
+
+  * --cpu x (only applies to server-manager) - the number of CPU threads to start
+  * --port xxxx - The port to bind the HTTP server to
+  * --basePath xxxx - The "web-app" name to use for the server (defaults to "stamp-webservices")
+  * --xxx_logger yyy - set the logger xxx to level yyy
+  * --database xxx - the named database defined in config/application.json
+  * --db_password xxx - the password to use for the database connection if not defined in the application.json and prompt is undesired.
+
+
 ## Code Coverage
 istanbul cover <path to mocha>\bin\_mocha
