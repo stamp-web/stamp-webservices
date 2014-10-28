@@ -12,7 +12,6 @@ var fx = require('money');
 var accounting = require('accounting');
 
 var sqlTrace = Logger.getLogger("sql");
-var logger = Logger.getLogger("server");
 
 var report = function () {
     "use strict";
@@ -31,7 +30,7 @@ var report = function () {
                     sql += "AND " + whereClause + " ";
                 }
                 sql += "GROUP BY " + catalogueNumber.getAlias() + ".CATALOGUE_REF";
-                sqlTrace.log(Logger.DEBUG, sql);
+                sqlTrace.debug(sql);
                 var query = connection.query(sql, function (err, results) {
                     if (err) {
                         defer.reject(dataTranslator.getErrorMessage(err));

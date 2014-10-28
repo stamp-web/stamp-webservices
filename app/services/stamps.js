@@ -11,7 +11,6 @@ var q = require('q');
 var Logger = require('../util/logger');
 
 var sqlTrace = Logger.getLogger("sql");
-var logger = Logger.getLogger("server");
 
 var stamps = extend(true, {}, new PersistentCollection(), function () {
 
@@ -41,7 +40,7 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
     function processRow(rows, row, fieldDef, key) {
         var s = _.findWhere(rows, { ID: row.STAMP_ID });
         if (!s) {
-            sqlTrace.log(Logger.TRACE, "No stamp found for " + row.STAMP_ID);
+            sqlTrace.trace("No stamp found for " + row.STAMP_ID);
             return;
         }
         s[key].push(row);
@@ -94,7 +93,7 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
             };
             resolveWhenFinished();
             _.each(updateList, function (sql) {
-                sqlTrace.log(Logger.DEBUG, sql);
+                sqlTrace.debug(sql);
                 connection.query(sql, function (err, data) {
                     if (err !== null) {
                         defer.reject(dataTranslator.getErrorMessage(err));
@@ -113,7 +112,7 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                     } else {
                         creating.object.ID = id;
                         var c_sql = dataTranslator.generateInsertByFields(creating.fieldDefinition, creating.object);
-                        sqlTrace.log(Logger.DEBUG, c_sql);
+                        sqlTrace.debug(c_sql);
                         connection.query(c_sql, function (err, data) {
                             if (err !== null) {
                                 defer.reject(dataTranslator.getErrorMessage(err));
@@ -140,7 +139,7 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                     that.generateId(catalogueNumber, catNum).then(function (id) {
                         catNum.ID = id;
                         var sql = dataTranslator. generateInsertByFields(catalogueNumber, catNum);
-                        sqlTrace.log(Logger.DEBUG, sql);
+                        sqlTrace.debug(sql);
                         connection.query(sql, function (err, result) {
                             if (err) {
                                 defer.reject(dataTranslator.getErrorMessage(err));
@@ -162,7 +161,7 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                     that.generateId(ownership, owner).then(function (id) {
                         owner.ID = id;
                         var sql = dataTranslator. generateInsertByFields(ownership, owner);
-                        sqlTrace.log(Logger.DEBUG, sql);
+                        sqlTrace.debug(sql);
                         connection.query(sql, function (err, result) {
                             if (err) {
                                 defer.reject(dataTranslator.getErrorMessage(err));
@@ -213,7 +212,7 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
             var select = 'SELECT SQL_CALC_FOUND_ROWS ' + generateColumnExpression(stampDef, stamp.getAlias(),true) + ' FROM ' + this.getFromTables();
             var whereClause = this.getWhereClause($filter);
             select += ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
-            sqlTrace.log(Logger.DEBUG, select);
+            sqlTrace.debug(select);
             var t = (new Date()).getTime();
             connectionManager.getConnection().then(function (connection) {
                 var query = connection.query(select, function (err, stamps) {
@@ -256,7 +255,7 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                                     var completed = 0;
                                     var toExecute = queries.length;
                                     _.each(queries, function (query) {
-                                        sqlTrace.log(Logger.DEBUG, query.sql);
+                                        sqlTrace.debug(query.sql);
                                         var _query = connection.query(query.sql);
                                         _query.on('result', function (row) {
                                             processRow(result.rows, row, query.fieldDefinition, query.collectionKey);
@@ -264,7 +263,7 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                                             completed++;
                                             if (completed === toExecute) {
                                                 connection.release();
-                                                sqlTrace.log(Logger.INFO, "Time to query and process rows: " + (new Date().getTime() - t) + "ms");
+                                                sqlTrace.info("Time to query and process rows: " + (new Date().getTime() - t) + "ms");
                                                 defer.resolve(result);
                                             }
                                         }).on('error', function (err) {

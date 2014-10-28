@@ -9,6 +9,8 @@ var http = require('http');
 var connect = require('connect');
 var domainMiddleware = require('domain-middleware');
 var Logger = require('../util/logger');
+var Level = require('../util/level');
+var Authenticator = require('../util/authenticator');
 var _ = require('../../lib/underscore/underscore');
 var path = require('path');
 
@@ -21,7 +23,7 @@ if (nconf.get("basePath")) {
 }
 
 function configureLogger(aLogger, name) {
-    aLogger.setLevel(nconf.get(name + "_level") ? nconf.get(name + "_level") : Logger.INFO);
+    aLogger.setLevel(nconf.get(name + "_level") ? nconf.get(name + "_level") : Level.INFO);
     if (nconf.get(name + "_target") === "file" && nconf.get(name + "_file")) {
         logger.setTarget(nconf.get(name + "_target"), nconf.get(name + "_file"));
     }
@@ -60,6 +62,8 @@ var app = express();
 app.use(favicon(__dirname + '/../../public/favicon.ico'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+
+Authenticator.initialize(app);
 
 app.use(
     domainMiddleware({
@@ -104,7 +108,7 @@ connectionMgr.startup().then(function () {
         process.send("SERVER_STARTED");
     }
 }, function (err) {
-    logger.log(Logger.ERROR, err);
+    logger.error(err);
     process.exit(1);
 });
 

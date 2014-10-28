@@ -3,6 +3,7 @@ var catalogueNumbers = require("../services/catalogue-numbers");
 var catalogueNumber = require('../model/catalogue-number');
 var stamp = require('../model/stamp');
 var extend = require('node.extend');
+var Authenticator = require('../util/authenticator');
 var routeHelper = require('./route-helper');
 
 var RESOURCE_PATH = "/catalogueNumbers";
@@ -26,7 +27,7 @@ exports.configure = function (app, basePath) {
         });
     };
 
-    app.post(basePath + RESOURCE_PATH + "/:id/makeActive", service.makeActive );
+    app.post(basePath + RESOURCE_PATH + "/:id/makeActive", Authenticator.applyAuthentication(), service.makeActive );
     service.initialize(app, basePath + RESOURCE_PATH, catalogueNumbers, catalogueNumber);
 
 

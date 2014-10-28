@@ -17,7 +17,7 @@ var catalogueService = extend(true, {}, new PersistentCollection(), function () 
             var defer = q.defer();
             var qs = 'SELECT COUNT(%a%.ID) AS COUNT FROM ' + catalogueNumber.getTableName() + ' AS %a% where %a%.CATALOGUE_REF=? AND %a%.ACTIVE=1';
             qs = qs.replace(new RegExp('%a%','g'),catalogueNumber.getAlias());
-            sqlTrace.log(Logger.DEBUG, qs);
+            sqlTrace.debug(qs);
                 connection.query(qs, [id], function (err, results) {
                     if (err !== null) {
                         defer.reject(dataTranslator.getErrorMessage(err));

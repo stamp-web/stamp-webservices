@@ -86,9 +86,7 @@ function ODataParser() {
                     }
                 }
             });
-            if( logger.isEnabled(Logger.DEBUG)) {
-                logger.log(Logger.DEBUG, obj);
-            }
+            logger.debug(obj);
             return obj;
         }
     };

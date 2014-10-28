@@ -163,7 +163,7 @@ function DataTranslator() {
             var expression = '';
             var that = this;
             if (!fieldDefinitions) {
-                logger.log(Logger.WARN, "The fieldDefinition parameter was not defined.");
+                logger.warn("The fieldDefinition parameter was not defined.");
             }
             var processExpression = function (el) {
                 if (typeof el === 'string') {
@@ -237,7 +237,7 @@ function DataTranslator() {
             } else if (typeof $filter === 'object') {
                 processExpression($filter);
             }
-            logger.log(Logger.DEBUG, "Expression is: " + expression);
+            logger.debug("Expression is: " + expression);
             return expression;
 
         }

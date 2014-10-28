@@ -45,7 +45,7 @@ function PersistentCollection() {
                     connectionManager.getConnection().then(function (connection) {
                         var qs = dataTranslator.generateUpdateByFields(that.fieldDefinition, provided, storedObj);
                         if( qs !== null ) {
-                            sqlTrace.log(Logger.DEBUG, qs);
+                            sqlTrace.debug(qs);
                             connection.beginTransaction(function (err) {
                                 connection.query(qs, function (err, rows) {
                                     if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
@@ -109,7 +109,7 @@ function PersistentCollection() {
                             var validation = that.fieldDefinition.validate(provided);
                             if( validation === null ) {
                                 var insertStatement = dataTranslator. generateInsertByFields(that.fieldDefinition, provided);
-                                sqlTrace.log(Logger.DEBUG, insertStatement);
+                                sqlTrace.debug(insertStatement);
                                 connection.query(insertStatement, function (err, rows) {
                                     if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
                                         that.postCreate(connection, provided).then(function (_obj) {
@@ -150,11 +150,11 @@ function PersistentCollection() {
                     if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
                         that.preDelete(connection, id).then(function () {
                             var qs = 'DELETE FROM ' + that.fieldDefinition.getTableName() + ' WHERE ID=?';
-                            sqlTrace.log(Logger.DEBUG, qs);
+                            sqlTrace.debug(qs);
                             connection.query(qs, [id], function (err, rows) {
                                 if (err || rows.affectedRows === 0) {
                                     if (err) {
-                                        logger.log(Logger.ERROR, "Issue during deletion" + err);
+                                        logger.error("Issue during deletion" + err);
                                     }
                                     connection.rollback(function () {
                                         connection.release();
@@ -188,7 +188,7 @@ function PersistentCollection() {
             var that = this;
             var whereClause = this.getWhereClause($filter);
             var qs = 'SELECT COUNT(DISTINCT ' + that.fieldDefinition.getAlias() + '.ID) AS COUNT FROM ' + this.getFromTables() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '');
-            sqlTrace.log(Logger.DEBUG, qs);
+            sqlTrace.debug(qs);
             connectionManager.getConnection().then(function (connection) {
                 connection.query(qs, function (err, result) {
                     connection.release();
@@ -232,7 +232,7 @@ function PersistentCollection() {
                 $offset = 0;
             }
             var qs = 'SELECT SQL_CALC_FOUND_ROWS ' + that.fieldDefinition.getAlias() + '.* FROM ' + that.getFromTables() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
-            sqlTrace.log(Logger.DEBUG, qs);
+            sqlTrace.debug(qs);
             connectionManager.getConnection().then(function (connection) {
                 connection.query(qs, function (err, dataRows) {
                     if (err !== null) {
@@ -343,7 +343,7 @@ PersistentCollection.updateSequence = function(_id, fieldDefinition) {
     "use strict";
     var defer = q.defer();
     var qs = "UPDATE SEQUENCE_GEN SET ID_VAL=? WHERE ID_NAME='" + fieldDefinition.getSequenceColumn() + "'";
-    sqlTrace.log(Logger.DEBUG, qs + " Bind params: [" + _id + "]");
+    sqlTrace.debug(qs + " Bind params: [" + _id + "]");
     connectionManager.getConnection().then(function (connection) {
         connection.beginTransaction(function (err) {
             connection.query(qs, [_id], function (err, rows) {

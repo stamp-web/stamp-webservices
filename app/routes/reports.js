@@ -1,4 +1,5 @@
 ﻿var Logger = require('../util/logger');
+var Authenticator = require('../util/authenticator');
 var odata = require('../util/odata-parser');
 var service = require('../services/reports');
 var routeHelper = require('./route-helper');
@@ -44,8 +45,8 @@ function reports() {
             
         },
         configure: function (app, basePath) {
-            app.get(basePath + "/reports", this.executeReport);
-            logger.log(Logger.DEBUG, "   Registering services at " + basePath + "/reports");
+            app.get(basePath + "/reports", Authenticator.applyAuthentication(), this.executeReport);
+            logger.debug("   Registering services at " + basePath + "/reports");
         }
     };
 }

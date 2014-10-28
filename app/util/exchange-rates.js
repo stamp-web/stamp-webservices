@@ -55,9 +55,9 @@ ExchangeRates.initialize = function (callback) {
             var chunks = "";
             var appId = nconf.get("openexchangerates.org").app_id;
             if (!appId) {
-                logger.log(Logger.WARN, "No app_id found for openexchangerates.org so no new rates can be obtained.");
+                logger.warn("No app_id found for openexchangerates.org so no new rates can be obtained.");
             } else {
-                logger.log(Logger.INFO, "Fetching rates from openexchangerates.org");
+                logger.info("Fetching rates from openexchangerates.org");
                 http.get('http://openexchangerates.org/api/latest.json?app_id=' + appId, function (res) {
                     if (res.statusCode === 200) {
                         res.on('data', function (chunk) {
@@ -69,10 +69,10 @@ ExchangeRates.initialize = function (callback) {
                             fs.writeFile(filename, JSON.stringify(exchangeData), function (err) {
                                 configureFx(exchangeData);
                             });
-                            logger.log(Logger.INFO, "Completed updating exchange rates data file.");
+                            logger.info("Completed updating exchange rates data file.");
                         });
                     } else {
-                        logger.log(Logger.ERROR, "Open Exchange responded with status code " + res.statusCode);
+                        logger.error("Open Exchange responded with status code " + res.statusCode);
                     }
                 });
             }

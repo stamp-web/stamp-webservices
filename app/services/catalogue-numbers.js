@@ -34,7 +34,7 @@ var catalogueNumberService = extend(true, {}, new PersistentCollection(), functi
                             connection.beginTransaction(function (err) {
                                 var updateFn = function(connection,id,isActive) {
                                     var sql = "UPDATE " + catalogueNumber.getTableName() + " SET ACTIVE=" + (isActive ? 1 : 0) + ",MODIFYSTAMP=CURDATE() WHERE ID=" + id;
-                                    sqlTrace.log(Logger.DEBUG,sql);
+                                    sqlTrace.debug(sql);
                                     connection.query(sql, function(err,result) {
                                         if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
                                             count++;
@@ -59,7 +59,7 @@ var catalogueNumberService = extend(true, {}, new PersistentCollection(), functi
                             });
                         });
                     } else {
-                        logger.log(Logger.WARN, "The catalogue number with ID " + id + " was already active.");
+                        logger.warn("The catalogue number with ID " + id + " was already active.");
                         defer.resolve(stamp);
                     }
                 });

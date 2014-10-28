@@ -3,6 +3,7 @@ var PoolConnection = require('mysql/lib/PoolConnection');
 var q = require('q');
 var fs = require('fs');
 var Logger = require('../util/logger');
+var Level = require('../util/level');
 var nconf = require('nconf');
 var path = require('path');
 var _ = require('../../lib/underscore/underscore');
@@ -10,7 +11,7 @@ var _ = require('../../lib/underscore/underscore');
 nconf.argv().env().file(__dirname + '/../../config/application.json');
 
 var logger = Logger.getLogger("connection");
-logger.setLevel(Logger.INFO);
+logger.setLevel(Level.INFO);
 
 var releaseCount = 0;
 /**
@@ -26,7 +27,7 @@ PoolConnection.prototype.release = function release() {
         return;
     }
     releaseCount++;
-    logger.log(Logger.DEBUG, "release connection: < " + releaseCount );
+    logger.trace( "release connection: < " + releaseCount );
     return pool.releaseConnection(this);
 };
 
@@ -61,7 +62,7 @@ module.exports = function () {
                     msg = "The database on host \"" + host + "\" was not reachable";
                     break;
             }
-            logger.log(Logger.ERROR, "A connection to the database could not be established.  The message was:\n\n   " + msg + "\n");
+            logger.error("A connection to the database could not be established.  The message was:\n\n   " + msg + "\n");
         }
     }
     
@@ -92,7 +93,7 @@ module.exports = function () {
             var pool = this;
             this.config.keepalive = 30000;
             setInterval(function () {
-                logger.log(Logger.DEBUG, "Keep alive fired for " + pool._freeConnections.length + " connections");
+                logger.debug("Keep alive fired for " + pool._freeConnections.length + " connections");
                 pool._freeConnections.forEach(function (connection) {
                     connection.ping(function (err) {
                         if (err) {
@@ -130,12 +131,12 @@ module.exports = function () {
                     }
                 });
                 setTimeout(function() {
-                    logger.log(Logger.INFO, "MySQL database pool created for database named \'" + dbName + "\'");
+                    logger.info("MySQL database pool created for database named \'" + dbName + "\'");
                 }, 1000);
             });
         } else {
             var msg = "The database " + dbName + " was not found in the configuration.";
-            logger.log(Logger.ERROR, msg);
+            logger.error(msg);
             defer.reject(msg);
         }
         return defer.promise;
@@ -190,17 +191,17 @@ module.exports = function () {
                         var del = connection._protocol._delegateError;
                         connection._protocol._delegateError = function (err, sequence) {
                             if (err.fatal) {
-                                logger.log(Logger.TRACE, 'fatal error: ' + err.message);
+                                logger.trace('fatal error: ' + err.message);
                             }
                             return del.call(this, err, sequence);
                         };
                         if( connectionCount > 1000000) {
                             releaseCount = 0;
                             connectionCount = 0;
-                            logger.log(Logger.DEBUG, "resetting connection counts to guard against buffer overrun...");
+                            logger.debug("resetting connection counts to guard against buffer overrun...");
                         }
                         connectionCount++;
-                        logger.log(Logger.DEBUG, "new connection:     > " + connectionCount + " (" + (connectionCount - releaseCount) + " unreleased)" );
+                        logger.trace("new connection:     > " + connectionCount + " (" + (connectionCount - releaseCount) + " unreleased)" );
                         defer.resolve(connection);
                     } else {
                         handleConnectionError(err);

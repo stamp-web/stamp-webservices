@@ -1,9 +1,10 @@
 "use strict";
 var fs = require('fs');
+var Level = require('./level');
 
 function Logger(loggerName) {
     var name = loggerName;
-    var debugLevel = Logger.INFO;
+    var debugLevel = Level.INFO;
     var target = "console";
     var targetPath;
   
@@ -20,6 +21,26 @@ function Logger(loggerName) {
             }
         }
     };
+
+    this.debug = function(message) {
+        this.log(Level.DEBUG, message);
+    };
+
+    this.error = function(message) {
+        this.log(Level.ERROR, message);
+    }
+
+    this.warn = function(message) {
+        this.log(Level.WARN, message);
+    };
+
+    this.info = function(message) {
+        this.log(Level.INFO, message);
+    };
+
+    this.trace = function(message) {
+        this.log(Level.TRACE, message);
+    }
     
     this.setLevel = function (level) {
         debugLevel = level; 
@@ -35,18 +56,10 @@ function Logger(loggerName) {
     };
 
     this.isEnabled = function (level) {
-        return (Logger.levels.indexOf(level) <= Logger.levels.indexOf(debugLevel));
+        return (Level.levels.indexOf(level) <= Level.levels.indexOf(debugLevel));
     };
 
 }
-
-Logger.levels = ['error', 'warn', 'info', 'debug', 'trace', 'all'];
-Logger.ERROR = Logger.levels[0];
-Logger.WARN = Logger.levels[1];
-Logger.INFO = Logger.levels[2];
-Logger.DEBUG = Logger.levels[3];
-Logger.TRACE = Logger.levels[4];
-Logger.ALL = Logger.levels[5];
 
 Logger.loggers = {};
 

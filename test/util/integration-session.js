@@ -1,5 +1,6 @@
 ﻿var _ = require('../../lib/underscore/underscore');
 var Logger = require('../../app/util/logger');
+var Level = require('../../app/util/level');
 var child_process = require('child_process');
 var path = require('path');
 var nconf = require('nconf');
@@ -63,6 +64,7 @@ module.exports = function () {
                 database: database,
                 basePath: "/",
                 port: server_port,
+                authentication: null,
                 sql_level: sql_level,
                 logger_target: "file",
                 logger_file: __dirname + "/../../logs/output.log"
@@ -71,13 +73,13 @@ module.exports = function () {
 
         child.on("message", function (m) {
             if (m && m === "SERVER_STARTED") {
-                logger.log(Logger.INFO, "Received message that server is successfully started...");
+                logger.info( "Received message that server is successfully started...");
                 var f = function () {
                     setTimeout(function () {
                         if (ready_for_test) {
                             callback();
                         } else {
-                            logger.log(Logger.INFO, "Server started but SQL statements are still executing...");
+                            logger.info( "Server started but SQL statements are still executing...");
                             f();
                         }
                     }, 150);
@@ -110,10 +112,10 @@ module.exports = function () {
         },
         initialize: function(callback) {
             if( !executed ) {
-                logger.setLevel(Logger.INFO);
+                logger.setLevel(Level.INFO);
                 logger.setTarget("file", __dirname + "/../../logs/output.log");
 
-                logger.log(Logger.INFO, "Reading SQL contents...");
+                logger.info( "Reading SQL contents...");
                 var file = ((process.cwd().indexOf('\\test') > 0) ? '../' : '') + 'test/dbscript/initial-data.sql';
                 var contents = fs.readFileSync(file, { encoding: 'utf-8' }).toString();
 
@@ -127,7 +129,7 @@ module.exports = function () {
                 forkProcess(callback);
                 executed = true;
             } else {
-                logger.log(Logger.INFO, "SQL statements already bootstrapped");
+                logger.info("SQL statements already bootstrapped");
                 callback();
             }
         },

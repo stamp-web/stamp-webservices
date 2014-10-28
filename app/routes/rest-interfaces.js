@@ -1,8 +1,8 @@
 var _ = require('../../lib/underscore/underscore');
 var odata = require('../util/odata-parser');
 var Logger = require('../util/logger');
+var Authenticator = require('../util/authenticator');
 var routeHelper = require('./route-helper');
-
 var logger = Logger.getLogger("server");
 var initialized = false;
 
@@ -18,13 +18,13 @@ function restInterfaces() {
             collection = col;
             field = f;
 
-            app.get(basePath, this.find);
-            app.post(basePath, this.create);
-            app.put(basePath + "/:id", this.update);
-            app.get(basePath + "/!count", this.count);
-            app.get(basePath + "/:id", this.findById);
-            app.delete(basePath + '/:id', this.remove);
-            logger.log(Logger.DEBUG, "   Registering services at " + basePath);
+            app.get(basePath, Authenticator.applyAuthentication(), this.find);
+            app.post(basePath, Authenticator.applyAuthentication(), this.create);
+            app.put(basePath + "/:id", Authenticator.applyAuthentication(), this.update);
+            app.get(basePath + "/!count", Authenticator.applyAuthentication(), this.count);
+            app.get(basePath + "/:id", Authenticator.applyAuthentication(), this.findById);
+            app.delete(basePath + '/:id', Authenticator.applyAuthentication(), this.remove);
+            logger.debug("   Registering services at " + basePath);
         },
         findById: function (req, res) {
             var that = this;
@@ -51,7 +51,7 @@ function restInterfaces() {
                 var data = field.externalize(obj);
                 res.send(JSON.stringify(data));
             }, function (err) {
-                logger.log(Logger.ERROR, err);
+                logger.error(err);
                 routeHelper.setErrorStatus(res, err);
             });
         },
@@ -63,7 +63,7 @@ function restInterfaces() {
                 var data = field.externalize(obj);
                 res.send(JSON.stringify(data));
             }, function (err) {
-                logger.log(Logger.ERROR, err);
+                logger.error(err);
                 routeHelper.setErrorStatus(res, err);
             });
     
@@ -81,7 +81,7 @@ function restInterfaces() {
                     }
                 });
             }, function (err) {
-                logger.log(Logger.DEBUG, err);
+                logger.error(err);
                 res.status(routeHelper.StatusCode.INTERNAL_ERROR).send(routeHelper.ClientMessages.INTERNAL_ERROR).end();
             });
         },
@@ -103,7 +103,7 @@ function restInterfaces() {
                 res.status(routeHelper.StatusCode.OK);
                 res.json(result);
             }, function (err) {
-                logger.log(Logger.ERROR, err);
+                logger.error(err);
                 res.status(routeHelper.StatusCode.INTERNAL_ERROR).send(routeHelper.ClientMessages.INTERNAL_ERROR).end();
             });
         },
