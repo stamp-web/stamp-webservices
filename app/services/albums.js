@@ -110,10 +110,10 @@ var albums = extend(true, {}, new PersistentCollection(), function () {
         postCreate: function (connection, obj) {
             var defer = q.defer();
             if (obj.countries && obj.countries.length > 0) {
-                _.each(obj.countries, function (countryId) {
+                _.each(obj.COUNTRIES, function (countryId) {
                     var insert_link = "INSERT INTO ALBUMS_COUNTRIES (ALBUM_ID,COUNTRY_ID) VALUES(?,?)";
                     sqlTrace.log(Logger.DEBUG, insert_link);
-                    connection.query(insert_link, [obj.id,countryId], function (err, results) {
+                    connection.query(insert_link, [obj.ID,countryId], function (err, results) {
                         if (err) {
                             defer.reject(dataTranslator.getErrorMessage(err));
                         } else {

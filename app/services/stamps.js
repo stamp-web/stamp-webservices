@@ -131,15 +131,15 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
 
         postCreate: function (connection, obj) {
             var defer = q.defer();
-            var total = ((obj.catalogueNumbers) ? obj.catalogueNumbers.length : 0) + ((obj.stampOwnerships) ? obj.stampOwnerships.length : 0);
+            var total = ((obj.CATALOGUENUMBER) ? obj.CATALOGUENUMBER.length : 0) + ((obj.OWNERSHIP) ? obj.OWNERSHIP.length : 0);
             var created = 0;
             var that = this;
-            if (obj.catalogueNumbers && _.isArray(obj.catalogueNumbers)) {
-                _.each(obj.catalogueNumbers, function (catNum) {
-                    catNum.stampRef = obj.id;
+            if (obj.CATALOGUENUMBER && _.isArray(obj.CATALOGUENUMBER)) {
+                _.each(obj.CATALOGUENUMBER, function (catNum) {
+                    catNum.STAMP_ID = obj.ID;
                     that.generateId(catalogueNumber, catNum).then(function (id) {
-                        catNum.id = id;
-                        var sql = dataTranslator.generateInsertStatement(catalogueNumber, catNum);
+                        catNum.ID = id;
+                        var sql = dataTranslator. generateInsertByFields(catalogueNumber, catNum);
                         sqlTrace.log(Logger.DEBUG, sql);
                         connection.query(sql, function (err, result) {
                             if (err) {
@@ -156,12 +156,12 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
                     });
                 });
             }
-            if (obj.stampOwnerships && _.isArray(obj.stampOwnerships)) {
-                _.each(obj.stampOwnerships, function (owner) {
-                    owner.stampRef = obj.id;
+            if (obj.OWNERSHIP && _.isArray(obj.OWNERSHIP)) {
+                _.each(obj.OWNERSHIP, function (owner) {
+                    owner.STAMP_ID = obj.ID;
                     that.generateId(ownership, owner).then(function (id) {
-                        owner.id = id;
-                        var sql = dataTranslator.generateInsertStatement(ownership, owner);
+                        owner.ID = id;
+                        var sql = dataTranslator. generateInsertByFields(ownership, owner);
                         sqlTrace.log(Logger.DEBUG, sql);
                         connection.query(sql, function (err, result) {
                             if (err) {

@@ -7,22 +7,22 @@ describe('Field definition tests', function (done) {
     describe('Country field definition tests', function () {
         it("Validate with all required specified", function () {
             var c = {
-                name: "Australia",
-                id: 500
+                NAME: "Australia",
+                ID: 500
             };
             expect(country.validate(c)).to.be(null);
         });
 
         it("Validate missing required parameters", function () {
             var c = {
-                name: "Australia",
-                desc: "other stuff"
+                NAME: "Australia",
+                DESCRIPTION: "other stuff"
             };
             var validate = country.validate(c);
             expect(validate).to.not.be(null);
             expect(validate.code).to.be.eql('REQUIRED_FIELD');
-            delete c.name;
-            c.id = 250;
+            delete c.NAME;
+            c.ID = 250;
             validate = country.validate(c);
             expect(validate).to.not.be(null);
             expect(validate.code).to.be.eql('REQUIRED_FIELD');
@@ -44,10 +44,10 @@ describe('Field definition tests', function (done) {
     describe('Preference field definition tests', function () {
         it("Validate with all required specified", function () {
             var c = {
-                name: "imagePath",
-                id: 25670,
-                category: "stamps",
-                value: "some path"
+                NAME: "imagePath",
+                ID: 25670,
+                CATEGORY: "stamps",
+                VALUE: "some path"
             };
             expect(preference.validate(c)).to.be(null);
         });

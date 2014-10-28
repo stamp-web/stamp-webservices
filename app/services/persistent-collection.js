@@ -14,8 +14,8 @@ function PersistentCollection() {
     return {
         generateId : function (fieldDefinition, obj) {
             var defer = q.defer();
-            if (obj.id) {
-                defer.resolve(obj.id);
+            if (obj.ID) {
+                defer.resolve(obj.ID);
             } else {
                 PersistentCollection.getNextSequence(fieldDefinition, function (err, new_id) {
                     if (err) {
@@ -98,20 +98,21 @@ function PersistentCollection() {
         create: function (obj) {
             var defer = q.defer();
             var that = this;
+            var provided = this.fieldDefinition.internalize(obj);
             var generateId = false;
             connectionManager.getConnection().then(function (connection) {
                 connection.beginTransaction(function (err) {
                     if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
-                        that.generateId(that.fieldDefinition, obj).then(function (id) {
-                            obj.id = id;
-                            that.preCreate(obj); // opportunity for services to manipulate the object
-                            var validation = that.fieldDefinition.validate(obj);
+                        that.generateId(that.fieldDefinition, provided).then(function (id) {
+                            provided.ID = id;
+                            that.preCreate(provided); // opportunity for services to manipulate the object
+                            var validation = that.fieldDefinition.validate(provided);
                             if( validation === null ) {
-                                var insertStatement = dataTranslator.generateInsertStatement(that.fieldDefinition, obj);
+                                var insertStatement = dataTranslator. generateInsertByFields(that.fieldDefinition, provided);
                                 sqlTrace.log(Logger.DEBUG, insertStatement);
                                 connection.query(insertStatement, function (err, rows) {
                                     if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
-                                        that.postCreate(connection, obj).then(function (_obj) {
+                                        that.postCreate(connection, provided).then(function (_obj) {
                                             connection.commit(function () {
                                                 connection.release();
                                                 that.findById(id).then(function (result) {

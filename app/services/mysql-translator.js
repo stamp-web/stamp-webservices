@@ -66,6 +66,9 @@ function DataTranslator() {
             var config = { DB_COLS: [], VALUES: [] };
             _.each(Object.keys(obj), function(col) {
                 var definition = _.findWhere(fieldDefinition.getFieldDefinitions(), { column: col });
+                if( definition.type === 'id_array' || definition.type === 'obj_array') {
+                    return;
+                }
                 config.DB_COLS.push(col);
                 config.VALUES.push(fieldDefinition.formatValue(definition, obj[col]));
             });

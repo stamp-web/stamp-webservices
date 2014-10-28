@@ -1,6 +1,8 @@
+var _ = require('../lib/underscore/underscore');
 var superagent = require('superagent');
 var expect = require('expect.js');
 var session = require('./util/integration-session');
+var stampUtil= require('./util/stamp-utilities');
 
 (function (describe, it, after, before) {
     "use strict";
@@ -51,34 +53,30 @@ var session = require('./util/integration-session');
                     }
                 ]
             };
-            superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
-                .send(stamp)
-                .end(function (e, res) {
-                    expect(e).to.eql(null);
-                    expect(res.status).to.eql(201);
-                    var result = res.body;
-                    expect(result.id).to.be.greaterThan(1000);
-                    expect(result.rate).to.be.eql("1d");
-                    expect(result.description).to.be.eql("red");
-                    expect(result.countryRef).to.be(1);
-                    var catalogueNumbers = res.body.catalogueNumbers;
-                    expect(catalogueNumbers.length).to.be(1);
-                    expect(catalogueNumbers[0].id).to.be.greaterThan(1000);
-                    expect(catalogueNumbers[0].value).to.be.within(0.64999, 0.65001);
-                    expect(catalogueNumbers[0].number).to.be.eql("23a");
-                    expect(catalogueNumbers[0].condition).to.be(1);
-                    expect(catalogueNumbers[0].active).to.be(true);
-                    var ownership = res.body.stampOwnerships[0];
-                    expect(ownership.grade).to.be(1);
-                    expect(ownership.condition).to.be(2);
-                    expect(ownership.albumRef).to.be(2);
-                    expect(ownership.notes).to.be.eql("this is a note");
-                    expect(ownership.pricePaid).to.be.within(0.24999, 0.25001);
-                    expect(ownership.code).to.be.eql("USD");
-                    expect(ownership.sellerRef).to.be(1);
-                    expect(ownership.purchased.indexOf("2007-05-15")).to.be(0);
-                    done();
-                });
+            stampUtil.create(stamp, function(e,res) {
+                var result = res.body;
+                expect(result.id).to.be.greaterThan(1000);
+                expect(result.rate).to.be.eql("1d");
+                expect(result.description).to.be.eql("red");
+                expect(result.countryRef).to.be(1);
+                var catalogueNumbers = res.body.catalogueNumbers;
+                expect(catalogueNumbers.length).to.be(1);
+                expect(catalogueNumbers[0].id).to.be.greaterThan(1000);
+                expect(catalogueNumbers[0].value).to.be.within(0.64999, 0.65001);
+                expect(catalogueNumbers[0].number).to.be.eql("23a");
+                expect(catalogueNumbers[0].condition).to.be(1);
+                expect(catalogueNumbers[0].active).to.be(true);
+                var ownership = res.body.stampOwnerships[0];
+                expect(ownership.grade).to.be(1);
+                expect(ownership.condition).to.be(2);
+                expect(ownership.albumRef).to.be(2);
+                expect(ownership.notes).to.be.eql("this is a note");
+                expect(ownership.pricePaid).to.be.within(0.24999, 0.25001);
+                expect(ownership.code).to.be.eql("USD");
+                expect(ownership.sellerRef).to.be(1);
+                expect(ownership.purchased.indexOf("2007-05-15")).to.be(0);
+                done();
+            });
         });
 
         it('POST Create a wantlist stamp with 201 status', function (done) {
@@ -97,15 +95,11 @@ var session = require('./util/integration-session');
                     }
                 ]
             };
-            superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
-                .send(stamp)
-                .end(function (e, res) {
-                    expect(e).to.eql(null);
-                    expect(res.status).to.eql(201);
-                    expect(res.body.stampOwnerships).to.not.be(undefined);
-                    expect(res.body.stampOwnerships.length).to.be(0);
-                    done();
-                });
+            stampUtil.create(stamp, function(e,res) {
+                expect(res.body.stampOwnerships).to.not.be(undefined);
+                expect(res.body.stampOwnerships.length).to.be(0);
+                done();
+            });
         });
 
         it('Verify trigger behavior on INSERT/DELETE catalogue numbers', function (done) {
@@ -243,6 +237,64 @@ var session = require('./util/integration-session');
                     expect(res.body.stamps).to.not.be(undefined);
                     expect(res.body.total).to.be.greaterThan(0);
                     done();
+                });
+        });
+
+        it('Verify exists checking', function(done) {
+            var stamp = {
+                countryRef: 1,
+                rate: "6d",
+                description: "green",
+                wantList: true,
+                catalogueNumbers: [
+                    {
+                        catalogueRef: 1,
+                        number: "26",
+                        value: 57.50,
+                        condition: 1,
+                        unknown: true,
+                        nospace: true,
+                        active: true
+                    }
+                ]
+            };
+            superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
+                .send(stamp)
+                .end(function (e, res) {
+                    expect(e).to.eql(null);
+                    expect(res.status).to.be(201);
+                    var existsChecks = [{
+                        filter: "(((countryRef eq 1) and (catalogueRef eq 1)) and (number eq '26'))",
+                        total: 1
+                    }, {
+                        filter: "(((countryRef eq 9999) and (catalogueRef eq 1)) and (number eq '26'))",
+                        total: 0
+                    }, {
+                        filter: "(((countryRef eq 1) and (catalogueRef eq 9999)) and (number eq '26'))",
+                        total: 0
+                    }, {
+                        filter: "(((countryRef eq 1) and (catalogueRef eq 1)) and (number eq '26-9999'))",
+                        total: 0
+                    }, {
+                        filter: "(((countryRef eq 9999) and (catalogueRef eq 9999)) and (number eq '26-9999'))",
+                        total: 0
+                    }];
+                    var count = 0;
+                    var fn = function(exists) {
+                        superagent.get('http://' + hostname + ':' + server_port + '/rest/stamps?$filter=' + exists.filter)
+                            .end(function(e,res) {
+                                expect(e).to.be(null);
+                                expect(res.status).to.be(200);
+                                count++;
+                                expect(res.body.total).to.be(exists.total);
+                                if( count === existsChecks.length) {
+                                    done();
+                                }
+                            });
+                    };
+                    _.each(existsChecks,function(exist) {
+                        fn(exist);
+                    });
                 });
         });
     });

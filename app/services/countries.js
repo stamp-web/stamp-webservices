@@ -15,20 +15,7 @@ var countries = extend(true, {}, new PersistentCollection(), function() {
     "use strict";
     return {
         collectionName: 'countries',
-        fieldDefinition: country,
-        preDelete: function (connection, id) {
-            var defer = q.defer();
-            // TODO Not needed with constraints added
-            var delete_link = "DELETE FROM ALBUMS_COUNTRIES WHERE COUNTRY_ID= ?";
-            connection.query(delete_link, [id], function (err, results) {
-                if (err) {
-                    defer.reject(dataTranslator.getErrorMessage(err));
-                } else {
-                    defer.resolve();
-                }
-            });
-            return defer.promise;
-        }
+        fieldDefinition: country
     };
 }());
 

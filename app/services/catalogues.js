@@ -15,7 +15,6 @@ var catalogueService = extend(true, {}, new PersistentCollection(), function () 
     return {
         preDelete: function (connection, id) {
             var defer = q.defer();
-            //var qs = 'SELECT %a%.STAMP_ID, COUNT(%a%.ID) as COUNT FROM ' + catalogueNumber.getTableName() + ' AS %a% WHERE %a%.STAMP_ID IN (SELECT STAMP_ID FROM ' + catalogueNumber.getTableName() + ' WHERE CATALOGUE_REF=?) GROUP BY %a%.STAMP_ID';
             var qs = 'SELECT COUNT(%a%.ID) AS COUNT FROM ' + catalogueNumber.getTableName() + ' AS %a% where %a%.CATALOGUE_REF=? AND %a%.ACTIVE=1';
             qs = qs.replace(new RegExp('%a%','g'),catalogueNumber.getAlias());
             sqlTrace.log(Logger.DEBUG, qs);
@@ -28,16 +27,6 @@ var catalogueService = extend(true, {}, new PersistentCollection(), function () 
                         } else {
                             defer.resolve();
                         }
-                        /*var valid = true;
-                        _.each(results, function(result) {
-                            if( result.COUNT === 1 ) {
-                                valid = false;
-                                defer.reject({ message: "Stamps would be orphaned if the catalogue was deleted.", code: "CONFLICT", processed: true });
-                            }
-                        });
-                        if( valid ) {
-                            defer.resolve();
-                        }*/
                     }
                 });
 

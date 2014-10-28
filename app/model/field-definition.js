@@ -19,7 +19,7 @@ var fieldDefinition = function () {
             var valid = null;
             _.each(this.getFieldDefinitions(), function (definition) {
                 if (definition.required === true) {
-                    if (!obj[definition.field]) {
+                    if (!obj[definition.column]) {
                         valid = { code: 'REQUIRED_FIELD', message: 'A value for field \'' + definition.field + '\' is required.', processed: true};
                         return false;
                     }
