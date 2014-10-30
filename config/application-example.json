@@ -2,6 +2,7 @@
     "openexchangerates.org": {
         "app_id": "YOUR_APP_ID_HERE"
     },
+    "authentication": "none",
     "database": "mysql",
     "databases": {
         "mysql": {

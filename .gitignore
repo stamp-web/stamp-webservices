@@ -12,3 +12,4 @@ logs/output.log
 www
 .idea
 stamp-web
+/config/users.json
