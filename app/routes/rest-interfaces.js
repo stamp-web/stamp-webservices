@@ -28,7 +28,7 @@ function restInterfaces() {
         },
         findById: function (req, res) {
             var that = this;
-            var id = routeHelper.findIdFromPath(req.url);
+            var id = req.params.id;
             collection.findById(id).then(function (row) {
                 if (row !== null) {
                     var data = field.externalize(row);
@@ -44,7 +44,7 @@ function restInterfaces() {
         },
         update: function (req, res) {
             var that = this;
-            var id = routeHelper.findIdFromPath(req.url);
+            var id = req.params.id;
             collection.update(req.body, id).then(function (obj) {
                 res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                 res.status(routeHelper.StatusCode.OK);
@@ -69,9 +69,14 @@ function restInterfaces() {
     
         },
         count: function (req, res) {
-            var filter = (req.query && req.query.$filter) ? odata.parse(req.query.$filter) : null;
+            var params = {
+                $filter : (req.query && req.query.$filter) ? odata.parse(req.query.$filter) : null,
+                $limit: req.query.$top,
+                $offset: req.query.$skip,
+                $orderby: req.query.$orderby
+            };
             var that = this;
-            collection.count(filter).then(function (result) {
+            collection.count(params).then(function (result) {
                 res.format({
                     'text/plain': function () {
                         res.send('' + result);
@@ -86,12 +91,14 @@ function restInterfaces() {
             });
         },
         find: function (req, res) {
-            var filter = (req.query && req.query.$filter) ? odata.parse(req.query.$filter) : null;
-            var limit = req.query.$top;
-            var offset = req.query.$skip;
-            var orderby = req.query.$orderby;
+            var params = {
+                $filter : (req.query && req.query.$filter) ? odata.parse(req.query.$filter) : null,
+                $limit: req.query.$top || 1000,
+                $offset: req.query.$skip || 0,
+                $orderby: req.query.$orderby || null
+            };
             var that = this;
-            collection.find(filter, limit, offset, orderby).then(function (data) {
+            collection.find(params).then(function (data) {
                 var result = {
                     total: data.total
                 };
@@ -109,7 +116,7 @@ function restInterfaces() {
         },
         remove: function (req, res) {
             var that = this;
-            var id = routeHelper.findIdFromPath(req.url);
+            var id = req.params.id;
             collection.remove(id).then(function () {
                 res.status(routeHelper.StatusCode.NO_CONTENT).end();
             }, function (err) {

@@ -47,7 +47,7 @@ var StampUtilities = {
                 purchased: "2007-05-15T00:00:00-05:00"
             };
             stamp = extend(true, {}, s, (stamp === null) ? { } : stamp );
-            if( stamp.wantList === false ) {
+            if( stamp.wantList === false && stamp.stampOwnerships.length === 0) {
                 stamp.stampOwnerships.push(owner);
             }
 

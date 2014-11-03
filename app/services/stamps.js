@@ -181,27 +181,21 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
             return defer.promise;
         },
 
-        getFromTables: function ($filter) {
+        getFromTables: function (params) {
             var tables = stamp.getTableName() + ' AS ' + stamp.getAlias() + ' JOIN ' + catalogueNumber.getTableName() + ' AS ' + catalogueNumber.getAlias();
             tables += ' ON ' + stamp.getAlias() + '.ID=' + catalogueNumber.getAlias() + '.STAMP_ID ';
             tables += 'LEFT JOIN ' + ownership.getTableName() + ' AS ' + ownership.getAlias() + ' ON ' + stamp.getAlias() + '.ID = ' + ownership.getAlias() + '.STAMP_ID';
             return tables;
         },
 
-        getWhereClause: function ($filter) {
-            return ($filter) ? dataTranslator.toWhereClause($filter, [stamp, catalogueNumber, ownership]) : '';
+        getWhereClause: function (params) {
+            return (params && params.$filter) ? dataTranslator.toWhereClause(params.$filter, [stamp, catalogueNumber, ownership]) : '';
         },
 
-        find: function ($filter, $limit, $offset, $orderby) {
+        find: function (params) {
             var defer = q.defer();
             var that = this;
 
-            if (!$limit) {
-                $limit = 1000;
-            }
-            if (!$offset) {
-                $offset = 0;
-            }
             var rejectFn = function (field) {
                 return (field.internal && field.internal === true && field.required !== true || field.model);
             };
@@ -210,8 +204,8 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
             var ownerDef = _.reject(ownership.getFieldDefinitions(), rejectFn);
 
             var select = 'SELECT SQL_CALC_FOUND_ROWS ' + generateColumnExpression(stampDef, stamp.getAlias(),true) + ' FROM ' + this.getFromTables();
-            var whereClause = this.getWhereClause($filter);
-            select += ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
+            var whereClause = this.getWhereClause(params);
+            select += ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + params.$offset + ',' + params.$limit;
             sqlTrace.debug(select);
             var t = (new Date()).getTime();
             connectionManager.getConnection().then(function (connection) {

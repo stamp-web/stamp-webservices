@@ -144,50 +144,54 @@ function PersistentCollection() {
         
         remove: function (id) {
             var defer = q.defer();
-            var that = this;
-            connectionManager.getConnection().then(function (connection) {
-                connection.beginTransaction(function (err) {
-                    if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
-                        that.preDelete(connection, id).then(function () {
-                            var qs = 'DELETE FROM ' + that.fieldDefinition.getTableName() + ' WHERE ID=?';
-                            sqlTrace.debug(qs);
-                            connection.query(qs, [id], function (err, rows) {
-                                if (err || rows.affectedRows === 0) {
-                                    if (err) {
-                                        logger.error("Issue during deletion" + err);
+            if( !id ) {
+                defer.reject( { message: "No ID specified", code: "NOT_FOUND", processed: true });
+            } else {
+                var that = this;
+                connectionManager.getConnection().then(function (connection) {
+                    connection.beginTransaction(function (err) {
+                        if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
+                            that.preDelete(connection, id).then(function () {
+                                var qs = 'DELETE FROM ' + that.fieldDefinition.getTableName() + ' WHERE ID=?';
+                                sqlTrace.debug(qs);
+                                connection.query(qs, [id], function (err, rows) {
+                                    if (err || rows.affectedRows === 0) {
+                                        if (err) {
+                                            logger.error("Issue during deletion" + err);
+                                        }
+                                        connection.rollback(function () {
+                                            connection.release();
+                                            defer.reject({ message: "No object found", code: "NOT_FOUND", processed: true });
+                                        });
+                                    } else {
+                                        connection.commit(function () {
+                                            connection.release();
+                                            defer.resolve(rows.affectedRows);
+                                        });
                                     }
-                                    connection.rollback(function () {
-                                        connection.release();
-                                        defer.reject({ message: "No object found", code: "NOT_FOUND", processed: true });
-                                    });
-                                } else {
-                                    connection.commit(function () {
-                                        connection.release();
-                                        defer.resolve(rows.affectedRows);
-                                    });
-                                }
+                                });
+                            }, function (err) {
+                                PersistentCollection.rollbackOnError(connection, defer, err);
                             });
-                        }, function (err) {
-                            PersistentCollection.rollbackOnError(connection, defer, err);
-                        });
-                    }
+                        }
+                    });
                 });
-            });
+            }
             return defer.promise;
         },
         
-        getFromTables: function ($filter) {
+        getFromTables: function (params) {
             return this.fieldDefinition.getTableName() + " AS " + this.fieldDefinition.getAlias();
         },
-        
-        getWhereClause: function ($filter) {
-            return ($filter) ? dataTranslator.toWhereClause($filter, [this.fieldDefinition]) : '';
+
+        getWhereClause: function (params) {
+            return (params && params.$filter) ? dataTranslator.toWhereClause(params.$filter, [this.fieldDefinition]) : '';
         },
-        count: function ($filter) {
+        count: function (params) {
             var defer = q.defer();
             var that = this;
-            var whereClause = this.getWhereClause($filter);
-            var qs = 'SELECT COUNT(DISTINCT ' + that.fieldDefinition.getAlias() + '.ID) AS COUNT FROM ' + this.getFromTables() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '');
+            var whereClause = this.getWhereClause(params);
+            var qs = 'SELECT COUNT(DISTINCT ' + that.fieldDefinition.getAlias() + '.ID) AS COUNT FROM ' + this.getFromTables(params) + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '');
             sqlTrace.debug(qs);
             connectionManager.getConnection().then(function (connection) {
                 connection.query(qs, function (err, result) {
@@ -207,10 +211,15 @@ function PersistentCollection() {
         },
         
         findById: function (id) {
-            var filter = odata.parse("id eq " + id);
+            var params = {
+                $filter: odata.parse("id eq " + id),
+                $limit: 1000,
+                $offset: 0,
+                $orderby: null
+            };
             var defer = q.defer();
             var that = this;
-            that.find(filter).then(function (result) { // we can limit to 1,1 once the stamps find is fixed
+            that.find(params).then(function (result) { // we can limit to 1,1 once the stamps find is fixed
                 if (result.rows && result.rows.length > 0) {
                     defer.resolve(result.rows[0]);
                 } else {
@@ -221,17 +230,17 @@ function PersistentCollection() {
             });
             return defer.promise;
         },
-        find: function ($filter, $limit, $offset, $orderby) {
+        find: function (params) {
             var defer = q.defer();
             var that = this;
-            var whereClause = this.getWhereClause($filter);
-            if (!$limit) {
-                $limit = 1000;
+            var whereClause = this.getWhereClause(params);
+            if (!params.$limit) {
+                params.$limit = 1000;
             }
-            if (!$offset) {
-                $offset = 0;
+            if (!params.$offset) {
+                params.$offset = 0;
             }
-            var qs = 'SELECT SQL_CALC_FOUND_ROWS ' + that.fieldDefinition.getAlias() + '.* FROM ' + that.getFromTables() + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + $offset + ',' + $limit;
+            var qs = 'SELECT SQL_CALC_FOUND_ROWS ' + that.fieldDefinition.getAlias() + '.* FROM ' + that.getFromTables(params) + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + params.$offset + ',' + params.$limit;
             sqlTrace.debug(qs);
             connectionManager.getConnection().then(function (connection) {
                 connection.query(qs, function (err, dataRows) {

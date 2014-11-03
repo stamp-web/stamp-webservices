@@ -22,11 +22,6 @@ var routeHelper = function () {
         }, 
         Headers : {
             CONTENT_TYPE: "Content-Type"
-        }, 
-        findIdFromPath : function (urlPath) {
-            var path = url.parse(urlPath).pathname;
-            var last = path.lastIndexOf("/");
-            return +path.substring(path.lastIndexOf('/') + 1);
         },
         setErrorStatus : function (res, err) {
             var code = this.StatusCode.INTERNAL_ERROR;

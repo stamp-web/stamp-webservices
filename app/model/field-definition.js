@@ -154,7 +154,7 @@ var fieldDefinition = function () {
                     }
                 });
             } catch( err ) {
-                console.log(err);
+                logger.error(err);
             }
 
             return obj;
