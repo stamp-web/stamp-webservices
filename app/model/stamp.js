@@ -1,5 +1,6 @@
 var extend = require('node.extend');
 var fieldDefinition = require('./field-definition');
+var country = require('./country');
 
 var stamp = extend({}, fieldDefinition, function() {
         "use strict";
@@ -10,7 +11,7 @@ var stamp = extend({}, fieldDefinition, function() {
                 { field: 'rate', column: 'DENOMINATION', type: 'string', required: true },
                 { field: 'description', column: 'DESCRIPTION', type: 'string' },
                 { field: 'catalogueCount', column: 'CATALOGUE_COUNT', type: 'int', internal: true },
-                { field: 'countryRef', column: 'COUNTRY_ID', type: 'long', required: true, joinWith: 'COUNTRIES' },
+                { field: 'countryRef', column: 'COUNTRY_ID', type: 'long', required: true, joinWith: 'COUNTRIES', sortFn: this.sortByCountry },
                 { field: 'wantList', type: 'boolean', column: 'WANTLIST' },
                 { field: 'catalogueCount', column: 'CATALOGUE_COUNT', type: 'int', internal: true },
                 { field: 'createTimestamp', column: 'CREATESTAMP', type: 'date', internal: true },
@@ -27,6 +28,9 @@ var stamp = extend({}, fieldDefinition, function() {
         },
         getAlias: function () {
             return "s";
+        },
+        sortByCountry: function() {
+            return country.getAlias() + '.NAME';
         }
 
     };

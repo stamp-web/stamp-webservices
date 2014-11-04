@@ -6,6 +6,8 @@ var odata = require('../util/odata-parser');
 var stamp = require('../model/stamp');
 var ownership = require('../model/ownership');
 var catalogueNumber = require('../model/catalogue-number');
+var catalogue = require('../model/catalogue');
+var country = require('../model/country');
 var _ = require('../../lib/underscore/underscore');
 var q = require('q');
 var Logger = require('../util/logger');
@@ -185,11 +187,23 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
             var tables = stamp.getTableName() + ' AS ' + stamp.getAlias() + ' JOIN ' + catalogueNumber.getTableName() + ' AS ' + catalogueNumber.getAlias();
             tables += ' ON ' + stamp.getAlias() + '.ID=' + catalogueNumber.getAlias() + '.STAMP_ID ';
             tables += 'LEFT JOIN ' + ownership.getTableName() + ' AS ' + ownership.getAlias() + ' ON ' + stamp.getAlias() + '.ID = ' + ownership.getAlias() + '.STAMP_ID';
+            if( params.$orderby ) {
+                var orderby = params.$orderby;
+                if( orderby.indexOf('number') > -1) {
+                    tables += ' LEFT JOIN ' + catalogue.getTableName() + ' AS ' + catalogue.getAlias() + ' ON ' + catalogueNumber.getAlias() + '.CATALOGUE_REF=' + catalogue.getAlias() + '.ID';
+                } else if( orderby.indexOf('countryRef') > -1) {
+                    tables += ' LEFT JOIN ' + country.getTableName() + ' AS ' + country.getAlias() + ' ON ' + stamp.getAlias() + '.COUNTRY_ID=' + country.getAlias() + '.ID';
+                }
+            }
             return tables;
         },
 
         getWhereClause: function (params) {
-            return (params && params.$filter) ? dataTranslator.toWhereClause(params.$filter, [stamp, catalogueNumber, ownership]) : '';
+            var clause = (params && params.$filter) ? dataTranslator.toWhereClause(params.$filter, [stamp, catalogueNumber, ownership]) : '';
+            if( clause.length > 0 ) {
+                clause += ' AND ' + catalogueNumber.getAlias() + '.ACTIVE=1';
+            }
+            return clause;
         },
 
         find: function (params) {
@@ -203,9 +217,10 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
             var catDef = _.reject(catalogueNumber.getFieldDefinitions(), rejectFn);
             var ownerDef = _.reject(ownership.getFieldDefinitions(), rejectFn);
 
-            var select = 'SELECT SQL_CALC_FOUND_ROWS ' + generateColumnExpression(stampDef, stamp.getAlias(),true) + ' FROM ' + this.getFromTables();
+            var select = 'SELECT SQL_CALC_FOUND_ROWS ' + generateColumnExpression(stampDef, stamp.getAlias(),true) + ' FROM ' + this.getFromTables(params);
             var whereClause = this.getWhereClause(params);
-            select += ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + params.$offset + ',' + params.$limit;
+            var orderby = this.getOrderByClause(params, [stamp, ownership, catalogueNumber]);
+            select += ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' ' + orderby + ' LIMIT ' + params.$offset + ',' + params.$limit;
             sqlTrace.debug(select);
             var t = (new Date()).getTime();
             connectionManager.getConnection().then(function (connection) {

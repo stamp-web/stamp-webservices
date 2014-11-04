@@ -187,6 +187,41 @@ function PersistentCollection() {
         getWhereClause: function (params) {
             return (params && params.$filter) ? dataTranslator.toWhereClause(params.$filter, [this.fieldDefinition]) : '';
         },
+
+        getOrderByClause: function(params, definitions) {
+            if( params.$orderby === null ) {
+                return '';
+            }
+            if( !definitions ) {
+                definitions = [];
+                definitions.push(this.fieldDefinition);
+            }
+            var sortKeys = params.$orderby.split(' ');
+            var orderby = '';
+            var found = false;
+            _.each( definitions, function(definition) {
+                if( !found ) {
+                    var field = _.findWhere(definition.getFieldDefinitions(), { field: sortKeys[0] });
+                    if( field ) {
+                        if( field.sortFn ) {
+                            orderby = (field.sortFn.apply(definition));
+                        } else if( field.type !== 'id_array' || field.type !== 'obj_array') {
+                            orderby = definition.getAlias() + '.' + field.column;
+                        }
+                        found = true;
+                    }
+                }
+
+            });
+
+            if( orderby.length > 0 ) {
+                orderby = 'ORDER BY ' + orderby;
+                if( sortKeys.length > 1 ) {
+                    orderby += ' ' + sortKeys[1].toUpperCase();
+                }
+            }
+            return orderby;
+        },
         count: function (params) {
             var defer = q.defer();
             var that = this;
@@ -240,7 +275,7 @@ function PersistentCollection() {
             if (!params.$offset) {
                 params.$offset = 0;
             }
-            var qs = 'SELECT SQL_CALC_FOUND_ROWS ' + that.fieldDefinition.getAlias() + '.* FROM ' + that.getFromTables(params) + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' LIMIT ' + params.$offset + ',' + params.$limit;
+            var qs = 'SELECT SQL_CALC_FOUND_ROWS ' + that.fieldDefinition.getAlias() + '.* FROM ' + that.getFromTables(params) + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' ' + that.getOrderByClause(params) + ' LIMIT ' + params.$offset + ',' + params.$limit;
             sqlTrace.debug(qs);
             connectionManager.getConnection().then(function (connection) {
                 connection.query(qs, function (err, dataRows) {
