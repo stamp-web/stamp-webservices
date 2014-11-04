@@ -1,5 +1,8 @@
 ﻿# stamp-webservices
 
+## Build Status
+
+[![Build Status](http://drake-server.ddns.net:9000/hudson/buildStatus/icon?job=stamp-webservices 4.0)](http://drake-server.ddns.net:9000/hudson/job/stamp-webservices%204.0/)
 
 ## Configuring the system
 While many parameters can be passed on the command line to the server, it is recommended to utilize config/application.json to store 
