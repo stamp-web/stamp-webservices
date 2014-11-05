@@ -189,9 +189,9 @@ var stamps = extend(true, {}, new PersistentCollection(), function () {
             tables += 'LEFT JOIN ' + ownership.getTableName() + ' AS ' + ownership.getAlias() + ' ON ' + stamp.getAlias() + '.ID = ' + ownership.getAlias() + '.STAMP_ID';
             if( params.$orderby ) {
                 var orderby = params.$orderby;
-                if( orderby.indexOf('number') > -1) {
+                /*if( orderby.indexOf('number') > -1) {
                     tables += ' LEFT JOIN ' + catalogue.getTableName() + ' AS ' + catalogue.getAlias() + ' ON ' + catalogueNumber.getAlias() + '.CATALOGUE_REF=' + catalogue.getAlias() + '.ID';
-                } else if( orderby.indexOf('countryRef') > -1) {
+                } else*/ if( orderby.indexOf('countryRef') > -1) {
                     tables += ' LEFT JOIN ' + country.getTableName() + ' AS ' + country.getAlias() + ' ON ' + stamp.getAlias() + '.COUNTRY_ID=' + country.getAlias() + '.ID';
                 }
             }
