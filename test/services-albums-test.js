@@ -103,6 +103,25 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
                 });
         });
 
+        it('Move album to new collection', function(done) {
+            var name = 'Move Album';
+            superagent.post('http://' + hostname + ':' + server_port + '/rest/albums')
+                .send({ name: name, stampCollectionRef: 1 })
+                .end(function (e, res) {
+                    expect(e).to.eql(null);
+                    expect(res.status).to.eql(201);
+                    var id = res.body.id;
+                    superagent.post('http://' + hostname + ':' + server_port + '/rest/albums/' + id + '/moveTo/2').end(function(e,res) {
+                        expect(e).to.eql(null);
+                        expect(res.status).to.be(200);
+                        var body = res.body;
+                        expect(body.name).to.eql('Move Album');
+                        expect(body.stampCollectionRef).to.eql(2);
+                        done();
+                    });
+                });
+        });
+
         it('PUT successfully with 200 status', function (done) {
             var name = 'POST album';
             superagent.post('http://' + hostname + ':' + server_port + '/rest/albums')
