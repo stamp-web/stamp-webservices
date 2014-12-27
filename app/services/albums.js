@@ -44,6 +44,9 @@ var albums = extend(true, {}, new PersistentCollection(), function () {
                         }  
                     }
                     var totalUpdates = remove_ids.length + current.length;
+                    if( totalUpdates === 0 ) {
+                        defer.resolve(obj);
+                    }
                     var updates = 0;
 
                     if (remove_ids.length > 0) {
@@ -83,6 +86,7 @@ var albums = extend(true, {}, new PersistentCollection(), function () {
                             });
                         }   
                     }
+
                 }
             });
         }

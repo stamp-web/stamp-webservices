@@ -16,10 +16,10 @@ exports.configure = function (app, basePath) {
 
     service.moveTo = function(req, res) {
         var scId = req.params.scId;
-        var obj = {
+        var params = {
             stampCollectionRef: scId
         };
-        albums.update(obj, req.params.id).then(function(obj) {
+        albums.update(params, req.params.id).then(function(obj) {
             res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
             res.status(routeHelper.StatusCode.OK);
             var data = album.externalize(obj);
