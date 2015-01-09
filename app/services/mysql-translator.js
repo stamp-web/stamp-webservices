@@ -9,7 +9,7 @@ var logger = Logger.getLogger("server");
 function DataTranslator() {
     "use strict";
     function validateBinaryOperation(el) {
-        if (!el.left || !el.right) {
+        if (typeof el.left === 'undefined' || typeof el.right === 'undefined') {
             throw new Error("left and right sides of expression are required.");
         }
     }
@@ -203,7 +203,7 @@ function DataTranslator() {
                         validateBinaryOperation(el);
                         var subject = el.left;
                         var value;
-                        if (el.right) {
+                        if (typeof el.right !== 'undefined') {
                             var val = el.right;
                             value = (_.isNumber(val)) ? +val : _.isString(val) ? val.replace(/\*/g,'%') : '' + val;
                         }
