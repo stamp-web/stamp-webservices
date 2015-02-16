@@ -32,11 +32,10 @@ function PersistentCollection() {
             return defer.promise;
         },
 
-        update: function (obj, id) {
+        update: function (obj, id, params) {
             var defer = q.defer();
             var provided = this.fieldDefinition.internalize(obj);
             var that = this;
-
             this.findById(id).then(function (storedObj) {
                 if(storedObj === null ) {
                     defer.reject({ message: "The object was not found", code: "NOT_FOUND", processed: true });
@@ -56,7 +55,7 @@ function PersistentCollection() {
                                             });
                                         } else {
                                             var merged = that.fieldDefinition.merge(provided, storedObj);
-                                            that.preCommitUpdate(connection, merged, storedObj).then(function (output) {
+                                            that.preCommitUpdate(connection, merged, storedObj, params).then(function (output) {
                                                 connection.commit(function (err) {
                                                     connection.release();
                                                     if (err) {

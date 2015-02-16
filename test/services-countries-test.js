@@ -2,6 +2,7 @@ var superagent = require('superagent');
 var expect = require('expect.js');
 var session = require('./util/integration-session');
 var NamedCollectionVerifications = require('./util/named-collection-verifier');
+var stampUtil= require('./util/stamp-utilities');
 
 (function (describe, it, after, before) {
     "use strict";
@@ -104,6 +105,46 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
                             expect(res.body.description).to.eql('Description on update');
                             done();
                         });
+                });
+        });
+
+        it('PUT successfully changing image paths on stamps', function (done) {
+            var name = 'Country Test';
+            superagent.post('http://' + hostname + ':' + server_port + '/rest/countries')
+                .send({ name: name })
+                .end(function (e, res) {
+                    expect(e).to.eql(null);
+                    expect(res.status).to.eql(201);
+                    var id = res.body.id;
+                    var stamp = {
+                        id: (new Date()).getTime() % 1024,
+                        countryRef: id,
+                        stampOwnerships: [{
+                            albumRef: 2,
+                            condition: 2,
+                            grade: 1,
+                            img: name + '/55.jpg'
+                        }]
+                    }
+                    stampUtil.create(stamp, function(e, res) {
+                        superagent.put('http://' + hostname + ':' + server_port + '/rest/countries/' + id + '?modifyImagePath=true')
+                            .send({ name: 'Another Country Name' })
+                            .end(function (e, res) {
+                                expect(e).to.eql(null);
+                                expect(res.status).to.eql(200);
+                                expect(res.body.name).to.eql('Another Country Name');
+                                superagent.get('http://' + hostname + ':' + server_port + '/rest/stamps?$filter=(countryRef eq ' + id + ')')
+                                    .end(function(e,res) {
+                                        expect(e).to.eql(null);
+                                        expect(res.body.total).to.be.greaterThan(0);
+                                        var stamp = res.body.stamps[0];
+                                        var ownership = stamp.stampOwnerships[0];
+                                        expect(ownership.img).to.eql('Another Country Name/55.jpg' );
+                                        done();
+                                    })
+                            });
+                    });
+
                 });
         });
 

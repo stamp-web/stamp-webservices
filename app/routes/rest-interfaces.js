@@ -45,7 +45,7 @@ function restInterfaces() {
         update: function (req, res) {
             var that = this;
             var id = req.params.id;
-            collection.update(req.body, id).then(function (obj) {
+            collection.update(req.body, id, req.query).then(function (obj) {
                 res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                 res.status(routeHelper.StatusCode.OK);
                 var data = field.externalize(obj);
