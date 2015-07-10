@@ -1,4 +1,5 @@
 var extend = require('node.extend');
+var EntityManagement = require('./entity-management');
 var PersistentCollection = require('./persistent-collection');
 var dataTranslator = require('./mysql-translator');
 var country = require('../model/country');
@@ -6,7 +7,7 @@ var ownership = require('../model/ownership');
 var stamp = require('../model/stamp');
 var q = require('q');
 
-var countries = extend(true, {}, new PersistentCollection(), function() {
+var countries = extend(true, {}, new EntityManagement(), new PersistentCollection(), function() {
     "use strict";
 
     function updateImagePaths(connection,merged,storedObj) {
@@ -29,6 +30,10 @@ var countries = extend(true, {}, new PersistentCollection(), function() {
     return {
         collectionName: 'countries',
         fieldDefinition: country,
+
+        getCountStampWhereStatement: function() {
+            return stamp.getAlias() + '.COUNTRY_ID=' + this.fieldDefinition.getAlias() + '.ID';
+        },
 
         preCommitUpdate: function(connection,merged,storedObj,params) {
             var defer = q.defer();

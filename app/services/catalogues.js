@@ -1,7 +1,9 @@
 var extend = require('node.extend');
 var PersistentCollection = require('./persistent-collection');
+var EntityManagement = require('./entity-management');
 var dataTranslator = require('./mysql-translator');
 var catalogue = require('../model/catalogue');
+var stamp = require('../model/stamp');
 var catalogueNumber = require('../model/catalogue-number');
 var connectionManager = require('../pom/connection-mysql');
 var _ = require('../../lib/underscore/underscore');
@@ -10,9 +12,16 @@ var Logger = require('../util/logger');
 
 var sqlTrace = Logger.getLogger('sql');
 
-var catalogueService = extend(true, {}, new PersistentCollection(), function () {
+var catalogueService = extend(true, {}, new EntityManagement(), new PersistentCollection(), function () {
     "use strict";
     return {
+        getCountStampWhereStatement: function() {
+            return catalogueNumber.getAlias() + '.ACTIVE=1 AND ' + stamp.getAlias() + '.ID=' + catalogueNumber.getAlias() + '.STAMP_ID AND ' + catalogueNumber.getAlias() + '.CATALOGUE_REF=' + catalogue.getAlias() + '.ID';
+        },
+
+        getCountStampFromTables: function() {
+            return this.fieldDefinition.getTableClause() + ',' + stamp.getTableClause() + ',' + catalogueNumber.getTableClause();
+        },
         preDelete: function (connection, id) {
             var defer = q.defer();
             var qs = 'SELECT COUNT(%a%.ID) AS COUNT FROM ' + catalogueNumber.getTableName() + ' AS %a% where %a%.CATALOGUE_REF=? AND %a%.ACTIVE=1';

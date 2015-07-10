@@ -1,8 +1,11 @@
 var extend = require('node.extend');
 var PersistentCollection = require('./persistent-collection');
+var EntityManagement = require('./entity-management');
 var dataTranslator = require('./mysql-translator');
 var album = require('../model/album');
 var countries = require('./countries');
+var ownership = require('../model//ownership');
+var stamp = require('../model/stamp');
 var _ = require('../../lib/underscore/underscore');
 var q = require('q');
 
@@ -10,7 +13,7 @@ var Logger = require('../util/logger');
 
 var sqlTrace = Logger.getLogger('sql');
 
-var albums = extend(true, {}, new PersistentCollection(), function () {
+var albums = extend(true, {}, new EntityManagement(), new PersistentCollection(), function () {
 
     "use strict";
 
@@ -96,6 +99,15 @@ var albums = extend(true, {}, new PersistentCollection(), function () {
     return {
         collectionName: 'albums',
         fieldDefinition: album,
+
+        getCountStampWhereStatement: function() {
+            return ownership.getAlias() + '.ALBUM_ID=' + this.fieldDefinition.getAlias() + '.ID AND ' + stamp.getAlias() + '.ID=' + ownership.getAlias() + '.STAMP_ID';
+        },
+
+        getCountStampFromTables: function() {
+            return this.fieldDefinition.getTableClause() + ',' + stamp.getTableClause() + ',' + ownership.getTableClause();
+        },
+
         preDelete: function (connection, id) {
             var defer = q.defer();
             // TODO: Should no longer be needed with CASCADE rule

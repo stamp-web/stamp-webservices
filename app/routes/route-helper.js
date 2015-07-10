@@ -1,4 +1,5 @@
 ﻿var url = require('url');
+var _ = require('../../lib/underscore/underscore');
 
 var routeHelper = function () {
     "use strict";
@@ -41,6 +42,18 @@ var routeHelper = function () {
                     break;
             }
             res.status(code).send(err.message);
+        },
+        convertMap: function(results) {
+            var obj = [];
+            _.forEach(results, function(result) {
+                var keys = Object.keys(result);
+                var r = {};
+                _.forEach(keys, function(key) {
+                    r[key.toLowerCase()] = result[key];
+                })
+                obj.push(r);
+            })
+            return obj;
         }
     };
 };

@@ -1,18 +1,34 @@
 var extend = require('node.extend');
 var PersistentCollection = require('./persistent-collection');
-var stampCollection = require('../model/stamp-collection');
+var EntityManagement = require('./entity-management');
 var dataTranslator = require('./mysql-translator');
 var odata = require('../util/odata-parser');
+var stampCollection = require('../model/stamp-collection');
 var album = require('../model/album');
+var stamp = require('../model/stamp');
+var ownership = require('../model/ownership');
 var albums = require('./albums');
 var q = require('q');
 var _ = require('../../lib/underscore/underscore');
 
-var collections = extend(true, {}, new PersistentCollection(), function() {
+var collections = extend(true, {},  new EntityManagement(), new PersistentCollection(), function() {
     "use strict";
     return {
         collectionName: 'stampCollections',
         fieldDefinition: stampCollection,
+
+        getCountStampWhereStatement: function() {
+            return album.getAlias() + '.COLLECTION_ID=' + this.fieldDefinition.getAlias() + '.ID AND ' +
+                ownership.getAlias() + '.ALBUM_ID = ' + album.getAlias() + '.ID AND ' + ownership.getAlias() + '.STAMP_ID=' +
+                stamp.getAlias() + '.ID';
+        },
+
+        getCountStampFromTables: function() {
+            return this.fieldDefinition.getTableClause() + ',' + stamp.getTableClause() + ',' +
+                ownership.getTableClause() + ',' + album.getTableClause();
+
+        },
+
         /**
          * Will pre-delete the album(s) for the stamp collection.
          * 

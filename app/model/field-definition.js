@@ -183,6 +183,9 @@ var fieldDefinition = function () {
         },
         getAlias: function () {
             throw new Error("getAlias() needs to be implemented by provider.");
+        },
+        getTableClause: function() {
+            return this.getTableName() + ' AS ' + this.getAlias();
         }
     };
 };

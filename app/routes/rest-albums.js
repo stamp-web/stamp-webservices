@@ -1,4 +1,5 @@
 var restInterfaces = require('./rest-interfaces')();
+var entityManaged = require('./rest-entitymanaged');
 var albums = require("../services/albums");
 var album = require('../model/album');
 var extend = require('node.extend');
@@ -12,7 +13,7 @@ var RESOURCE_PATH = "/albums";
 
 exports.configure = function (app, basePath) {
     "use strict";
-    var service = extend(true, {}, restInterfaces);
+    var service = extend(true, {}, new entityManaged(albums), restInterfaces);
 
     service.moveTo = function(req, res) {
         var scId = req.params.scId;
@@ -31,5 +32,6 @@ exports.configure = function (app, basePath) {
 
     };
     app.post(basePath + RESOURCE_PATH + "/:id/moveTo/:scId", Authenticator.applyAuthentication(), service.moveTo );
+    app.get(basePath + RESOURCE_PATH + "/!countStamps", Authenticator.applyAuthentication(), service.countStamps);
     service.initialize(app, basePath + RESOURCE_PATH, albums, album);
 };
