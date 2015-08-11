@@ -79,6 +79,48 @@ var stampUtil= require('./util/stamp-utilities');
             });
         });
 
+        it('POST with apostrophe is valid creation with 201 status (Issue #36)', function (done) {
+            var stamp = {
+                countryRef: 1,
+                rate: "1d'ish",
+                description: "Lidth's Jay",
+                wantList: false,
+                catalogueNumbers: [
+                    {
+                        catalogueRef: 1,
+                        number: "ss'5",
+                        value: 25.4,
+                        condition: 1,
+                        active: true
+                    }
+                ],
+                stampOwnerships: [
+                    {
+                        albumRef: 2,
+                        condition: 2,
+                        grade: 1,
+                        notes: "this is a note of happy day of you'll love",
+                        pricePaid: 0.25,
+                        code: "USD",
+                        sellerRef: 1,
+                        purchased: "2007-05-15T00:00:00-05:00"
+                    }
+                ]
+            };
+            stampUtil.create(stamp, function(e,res) {
+                var result = res.body;
+                expect(result.id).to.be.greaterThan(1000);
+                expect(result.rate).to.be.eql("1d'ish");
+                expect(result.description).to.be.eql("Lidth's Jay");
+                var catalogueNumbers = res.body.catalogueNumbers;
+                expect(catalogueNumbers.length).to.be(1);
+                expect(catalogueNumbers[0].number).to.be.eql("ss'5");
+                var ownership = res.body.stampOwnerships[0];
+                expect(ownership.notes).to.be.eql("this is a note of happy day of you'll love");
+                done();
+            });
+        });
+
         it('POST Create a wantlist stamp with 201 status', function (done) {
             var stamp = {
                 countryRef: 1,

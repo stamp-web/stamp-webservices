@@ -109,7 +109,7 @@ var stampUtil= require('./util/stamp-utilities');
         });
 
         it('PUT successfully changing image paths on stamps', function (done) {
-            var name = 'Country Test';
+            var name = 'Country Test' + (new Date()).getTime();
             superagent.post('http://' + hostname + ':' + server_port + '/rest/countries')
                 .send({ name: name })
                 .end(function (e, res) {
@@ -125,7 +125,7 @@ var stampUtil= require('./util/stamp-utilities');
                             grade: 1,
                             img: name + '/55.jpg'
                         }]
-                    }
+                    };
                     stampUtil.create(stamp, function(e, res) {
                         superagent.put('http://' + hostname + ':' + server_port + '/rest/countries/' + id + '?modifyImagePath=true')
                             .send({ name: 'Another Country Name' })
@@ -141,7 +141,7 @@ var stampUtil= require('./util/stamp-utilities');
                                         var ownership = stamp.stampOwnerships[0];
                                         expect(ownership.img).to.eql('Another Country Name/55.jpg' );
                                         done();
-                                    })
+                                    });
                             });
                     });
 

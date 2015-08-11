@@ -77,7 +77,12 @@ var fieldDefinition = function () {
                         });
                     }
                     else {
-                        obj[field.column] = o[key];
+                        var val = o[key];
+                        if( field.type === 'string' && val && val.replace ) {
+                            val = val.replace("\'", "\'\'"); // escape apostrophe
+                        }
+                        obj[field.column] = val;
+
                     }
                 }
             });
