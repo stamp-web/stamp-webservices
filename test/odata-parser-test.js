@@ -42,6 +42,36 @@ describe('OData Parser Tests', function (done) {
             expect(obj.right).to.be.eql(5);
         });
 
+        it('Simple binary expression with text containing parenthesis', function() {
+            var s = "name eq 'ultramarine (R)'";
+            var obj = parser.parse(s);
+            expect(obj.left).to.be.eql("name");
+            expect(obj.type).to.be.eql("eq");
+            expect(obj.right).to.be.eql("'ultramarine (R)'");
+        });
+
+        it('Simple binary expression with text containing parenthesis and bracketted parenthesis', function() {
+            var s = "(name eq 'ultramarine (R)')";
+            var obj = parser.parse(s);
+            expect(obj.left).to.be.eql("name");
+            expect(obj.type).to.be.eql("eq");
+            expect(obj.right).to.be.eql("'ultramarine (R)'");
+        });
+
+        it.skip('Compound binary expression with text containing parenthesis', function() {
+            var s = "((name eq 'ultramarine (R)') and (rate eq '1d'))";
+            var obj = parser.parse(s);
+            var left = obj.left;
+            var right = obj.right;
+            expect( obj.type).to.be.eql("and");
+            expect(left.left).to.be.eql("name");
+            expect(left.type).to.be.eql("eq");
+            expect(left.right).to.be.eql("'ultramarine (R)'");
+            expect(right.left).to.be.eql("rate");
+            expect(right.type).to.be.eql("eq");
+            expect(right.right).to.be.eql("1d");
+        });
+
         it('Compound binary expression with parenthesis on right', function () {
             var s = "((name eq 'Bob') and (id gt 5))";
             var obj = parser.parse(s);
