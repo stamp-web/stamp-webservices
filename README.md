@@ -31,6 +31,10 @@ As well, a small web-service is available to toggle this on the fly under the pa
 
 ## Executing Tests
 
+The tests will require mocha to be installed.  It is recommended to install mocha globally with the -g flag
+
+  * npm install -g mocha
+
 Some of the tests (especially the web-service tests) may take longer than the 2000ms maximum time that mocha imposes by default to execute a test and commit done.  The following settings have worked reasonable well on my development system:
 
   * mocha test --timeout 6000 --sql_level error
