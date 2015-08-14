@@ -77,6 +77,7 @@ app.get(BASEPATH + "config/logger/:logger", configureLoggerRemotely);
 var material_path = path.resolve(__dirname, '..' + path.sep + '..' + path.sep + 'www/material/');
 var aurelia_path = path.resolve(__dirname, '..' + path.sep + '..' + path.sep + 'www/aurelia/');
 var www_path = path.resolve(__dirname, '..' + path.sep + '..' + path.sep + 'www/');
+
 app.get('/stamp-web/*', function (req, res) {
     res.sendfile(www_path + path.sep + req.params['0']);
 });
@@ -87,6 +88,10 @@ app.get('/stamp-material/*', function (req, res) {
 
 app.get('/stamp-aurelia/*', function (req, res) {
     res.sendfile(aurelia_path + path.sep + req.params['0']);
+});
+
+app.get('/stamp-webservices/build-number.json', function (req, res) {
+    res.sendfile(www_path + path.sep + 'build-number.json');
 });
 
 require("../routes/rest-preferences").configure(app, BASEPATH + SERVICES_PATH);
