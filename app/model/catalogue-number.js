@@ -5,6 +5,20 @@ var fieldDefinition = require('./field-definition');
 var catalogueNumber = extend({}, fieldDefinition, function () {
     "use strict";
 
+    var JSCA_PREFIXES = {
+        "A": 5000,
+        "C": 5010,
+        "P": 5030,
+        "N": 5040,
+        "R": 5050,
+        "OK": 7100,
+        "OC": 7110,
+        "M": 5120,
+        "O": 5100,
+        "PC": 5200,
+        "PP": 5210
+    };
+
     var STANLEY_GIBBONS_PREFIXES = {
         "RAB": 7270,
         "RAC": 7280,
@@ -69,7 +83,7 @@ var catalogueNumber = extend({}, fieldDefinition, function () {
     };
 
 
-    var PREFIX_LIST = _.extend({},/*SCOTT_PREFIXES,*/ STANLEY_GIBBONS_PREFIXES);
+    var PREFIX_LIST = _.extend({},/*SCOTT_PREFIXES,*/ STANLEY_GIBBONS_PREFIXES, JSCA_PREFIXES);
     var sortString;
 
     return {
