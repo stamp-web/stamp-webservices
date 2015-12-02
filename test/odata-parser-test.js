@@ -4,7 +4,7 @@ var _ = require('../lib/underscore/underscore');
 var parser = require("../app/util/odata-parser");
 var country = require("../app/model/country");
 
-describe('OData Parser Tests', function (done) {
+describe('ODataParser Tests', function (done) {
 
     describe('OData parsing tests', function () {
 
@@ -58,7 +58,7 @@ describe('OData Parser Tests', function (done) {
             expect(obj.right).to.be.eql("'ultramarine (R)'");
         });
 
-        it.skip('Compound binary expression with text containing parenthesis', function() {
+        it('Compound binary expression with text containing parenthesis', function() {
             var s = "((name eq 'ultramarine (R)') and (rate eq '1d'))";
             var obj = parser.parse(s);
             var left = obj.left;
@@ -69,7 +69,7 @@ describe('OData Parser Tests', function (done) {
             expect(left.right).to.be.eql("'ultramarine (R)'");
             expect(right.left).to.be.eql("rate");
             expect(right.type).to.be.eql("eq");
-            expect(right.right).to.be.eql("1d");
+            expect(right.right).to.be.eql("'1d'");
         });
 
         it('Compound binary expression with parenthesis on right', function () {
