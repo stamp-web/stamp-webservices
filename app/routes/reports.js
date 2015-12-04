@@ -1,6 +1,6 @@
 ﻿var Logger = require('../util/logger');
 var Authenticator = require('../util/authenticator');
-var odata = require('../util/odata-parser');
+var Parser = require('odata-filter-parser').Parser;
 var service = require('../services/reports');
 var routeHelper = require('./route-helper');
 
@@ -15,7 +15,7 @@ function reports() {
                 res.status(routeHelper.StatusCode.BAD_REQUEST).send("A reportType query argument is required.").end();
                 return;
             }
-            var $filter = (req.query && req.query.$filter) ? odata.parse(req.query.$filter) : null;
+            var $filter = (req.query && req.query.$filter) ? Parser.parse(req.query.$filter) : null;
             var currency = req.query.code ? req.query.code : 'USD';
 
             var result = {

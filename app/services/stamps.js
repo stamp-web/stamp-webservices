@@ -2,7 +2,6 @@ var extend = require('node.extend');
 var PersistentCollection = require('./persistent-collection');
 var connectionManager = require('../pom/connection-mysql');
 var dataTranslator = require('./mysql-translator');
-var odata = require('../util/odata-parser');
 var stamp = require('../model/stamp');
 var ownership = require('../model/ownership');
 var catalogueNumber = require('../model/catalogue-number');

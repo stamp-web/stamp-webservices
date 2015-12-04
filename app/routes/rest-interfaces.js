@@ -1,5 +1,5 @@
 var _ = require('../../lib/underscore/underscore');
-var odata = require('../util/odata-parser');
+var Parser = require('odata-filter-parser').Parser;
 var Logger = require('../util/logger');
 var Authenticator = require('../util/authenticator');
 var routeHelper = require('./route-helper');
@@ -70,7 +70,7 @@ function restInterfaces() {
         },
         count: function (req, res) {
             var params = {
-                $filter : (req.query && req.query.$filter) ? odata.parse(req.query.$filter) : null,
+                $filter : (req.query && req.query.$filter) ? Parser.parse(req.query.$filter) : null,
                 $limit: req.query.$top,
                 $offset: req.query.$skip,
                 $orderby: req.query.$orderby
@@ -92,7 +92,7 @@ function restInterfaces() {
         },
         find: function (req, res) {
             var params = {
-                $filter : (req.query && req.query.$filter) ? odata.parse(req.query.$filter) : null,
+                $filter : (req.query && req.query.$filter) ? Parser.parse(req.query.$filter) : null,
                 $limit: req.query.$top || 1000,
                 $offset: req.query.$skip || 0,
                 $orderby: req.query.$orderby || null

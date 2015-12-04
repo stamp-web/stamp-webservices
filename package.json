@@ -33,6 +33,7 @@
     "mysql": "2.5.2",
     "nconf": "^0.6.9",
     "node.extend": "^1.1.2",
+    "odata-filter-parser": "0.2.5",
     "passport": "^0.2.1",
     "passport-http": "^0.2.2",
     "pw": "0.0.4",

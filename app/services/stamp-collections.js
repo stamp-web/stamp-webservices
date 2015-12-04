@@ -2,7 +2,8 @@ var extend = require('node.extend');
 var PersistentCollection = require('./persistent-collection');
 var EntityManagement = require('./entity-management');
 var dataTranslator = require('./mysql-translator');
-var odata = require('../util/odata-parser');
+var Predicate = require('odata-filter-parser').Predicate;
+var Operators = require('odata-filter-parser').Operators;
 var stampCollection = require('../model/stamp-collection');
 var album = require('../model/album');
 var stamp = require('../model/stamp');
@@ -40,7 +41,11 @@ var collections = extend(true, {},  new EntityManagement(), new PersistentCollec
         preDelete: function (connection, id) {
             var defer = q.defer();
             var params = {
-                $filter : odata.parse("(" + _.findWhere(album.getFieldDefinitions(), { column: "COLLECTION_ID" }).field + " eq " + id + ")"),
+                $filter : new Predicate({
+                        subject: _.findWhere(album.getFieldDefinitions(), { column: "COLLECTION_ID" }).field,
+                        operator: Operators.EQUALS,
+                        value: id
+                    }),
                 $limit: 1000,
                 $offset: 0,
                 $orderby: null

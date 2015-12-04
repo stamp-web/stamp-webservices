@@ -2,7 +2,10 @@ var _ = require('../../lib/underscore/underscore');
 var q = require('q');
 var connectionManager = require('../pom/connection-mysql');
 var dataTranslator = require('./mysql-translator');
-var odata = require('../util/odata-parser');
+var odata = require('odata-filter-parser')
+var Parser = odata.Parser;
+var Operators = odata.Operators;
+var Predicate = odata.Predicate;
 var Logger = require('../util/logger');
 
 var sqlTrace = Logger.getLogger("sql");
@@ -246,7 +249,11 @@ function PersistentCollection() {
         
         findById: function (id) {
             var params = {
-                $filter: odata.parse("id eq " + id),
+                $filter: new Predicate({
+                        subject: 'id',
+                        operator: Operators.EQUALS,
+                        value: id
+                }),
                 $limit: 1000,
                 $offset: 0,
                 $orderby: null

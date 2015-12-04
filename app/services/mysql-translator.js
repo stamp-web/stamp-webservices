@@ -1,6 +1,8 @@
 var _ = require('../../lib/underscore/underscore');
 var Logger = require('../util/logger');
 require("date-utils");
+var Predicate = require('odata-filter-parser').Predicate;
+var Operators = require('odata-filter-parser').Operators;
 require("../util/string-utilities");
 var Constants = require("../util/constants");
 
@@ -9,7 +11,7 @@ var logger = Logger.getLogger("server");
 function DataTranslator() {
     "use strict";
     function validateBinaryOperation(el) {
-        if (typeof el.left === 'undefined' || typeof el.right === 'undefined') {
+        if (typeof el.subject === 'undefined' || typeof el.value === 'undefined') {
             throw new Error("left and right sides of expression are required.");
         }
     }
@@ -168,43 +170,43 @@ function DataTranslator() {
             var processExpression = function (el) {
                 if (typeof el === 'string') {
                     return;
-                } else if (typeof el === 'object' && el.type) {
+                } else if (el instanceof Predicate) {
                     var op = '=';
                     var binaryOp = true;
-                    switch (el.type) {
-                        case 'eq':
+                    switch (el.operator) {
+                        case Operators.EQUALS:
                             break;
-                        case 'lt':
+                        case Operators.LESS_THAN:
                             op = '<';
                             break;
-                        case 'gt':
+                        case Operators.GREATER_THAN:
                             op = '>';
                             break;
-                        case 'ge':
+                        case Operators.GREATER_THAN_EQUAL:
                             op = '>=';
                             break;
-                        case 'le':
+                        case Operators.LESS_THAN_EQUAL:
                             op = '<=';
                             break;
-                        case 'like':
+                        case Operators.LIKE:
                             op = ' LIKE ';
                             break;
-                        case 'and':
-                        case 'or':
+                        case Operators.AND:
+                        case Operators.OR:
                             binaryOp = false;
-                            var left = that.toWhereClause(el.left, fieldDefinitions);
-                            var right = that.toWhereClause(el.right, fieldDefinitions);
-                            expression += left + ' ' + el.type.toUpperCase() + ' ' + right;
+                            var left = that.toWhereClause(el.subject, fieldDefinitions);
+                            var right = that.toWhereClause(el.value, fieldDefinitions);
+                            expression += left + ' ' + el.operator.toUpperCase() + ' ' + right;
                             break;
                         default:
                             throw new Error("Unrecognized operator type");
                     }
                     if (binaryOp) {
                         validateBinaryOperation(el);
-                        var subject = el.left;
+                        var subject = el.subject;
                         var value;
-                        if (typeof el.right !== 'undefined') {
-                            var val = el.right;
+                        if (typeof el.value !== 'undefined') {
+                            var val = el.value;
                             value = (_.isNumber(val)) ? +val : _.isString(val) ? val.replace(/\*/g,'%') : '' + val;
                         }
                         var predicate = subject;
