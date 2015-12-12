@@ -218,7 +218,8 @@ function DataTranslator() {
                                 if (field.type === 'date' && value.startsWith(Constants.DATEOFFSET_STARTING)) {
                                     value = value.substring(Constants.DATEOFFSET_STARTING.length, value.length - 1);
                                     var d = new Date(value);
-                                    value = "\'" + d.toFormat(Constants.MYSQL_DATEFORMAT) + "\'";
+                                    var df = d.toFormat(Constants.MYSQL_DATEFORMAT);
+                                    value = "\'" + df  + "\'";
                                 }
                                 expression += predicate + op + value;
                                 break;
