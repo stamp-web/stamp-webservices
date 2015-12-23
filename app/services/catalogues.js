@@ -6,7 +6,7 @@ var catalogue = require('../model/catalogue');
 var stamp = require('../model/stamp');
 var catalogueNumber = require('../model/catalogue-number');
 var connectionManager = require('../pom/connection-mysql');
-var _ = require('../../lib/underscore/underscore');
+var _ = require('lodash');
 var q = require('q');
 var Logger = require('../util/logger');
 

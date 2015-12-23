@@ -1,9 +1,0 @@
-{
-  "name": "stamp-webservices",
-  "description": "Stamp Web Services",
-  "version": "4.0.0",
-  "private": true,
-  "dependencies": {
-    "underscore": "1.7.0"
-  }
-}

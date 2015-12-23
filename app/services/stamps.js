@@ -7,7 +7,7 @@ var ownership = require('../model/ownership');
 var catalogueNumber = require('../model/catalogue-number');
 var catalogue = require('../model/catalogue');
 var country = require('../model/country');
-var _ = require('../../lib/underscore/underscore');
+var _ = require('lodash');
 var q = require('q');
 var Logger = require('../util/logger');
 

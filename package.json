@@ -8,15 +8,15 @@
     "email": "jadrake75@gmail.com"
   },
   "dependencies": {
-    "bower": "^1.3.1",
     "jade": "*",
     "stylus": "*"
   },
   "scripts": {
-    "postinstall": "bower install"
   },
-  "license": {
-    "type": "apache20"
+  "license":"Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/stamp-web/stamp-webservices.git"
   },
   "devDependencies": {
     "accounting": "^0.4.1",
@@ -33,6 +33,7 @@
     "mysql": "2.5.2",
     "nconf": "^0.6.9",
     "node.extend": "^1.1.2",
+    "lodash": "^3.10.1",
     "odata-filter-parser": "0.2.5",
     "passport": "^0.2.1",
     "passport-http": "^0.2.2",

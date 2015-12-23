@@ -1,5 +1,5 @@
 var extend = require('node.extend');
-var _ = require('../../lib/underscore/underscore');
+var _ = require('lodash');
 var fieldDefinition = require('./field-definition');
 
 var catalogueNumber = extend({}, fieldDefinition, function () {

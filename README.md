@@ -75,4 +75,9 @@ The following are the supported options:
 
 
 ## Code Coverage
-istanbul cover <path to mocha>\bin\_mocha
+
+Istanbul should be installed globally via "npm install -g istanbul".
+If mocha is installed locally you can execute the mocha tests with istanbul code coverage.
+
+  * istanbul cover node_modules/mocha/bin/_mocha -- --ui bdd -R spec -t 6000
+

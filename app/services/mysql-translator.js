@@ -1,4 +1,4 @@
-var _ = require('../../lib/underscore/underscore');
+var _ = require('lodash');
 var Logger = require('../util/logger');
 require("date-utils");
 var Predicate = require('odata-filter-parser').Predicate;
@@ -194,9 +194,10 @@ function DataTranslator() {
                         case Operators.AND:
                         case Operators.OR:
                             binaryOp = false;
+                            var or = el.operator === Operators.OR;
                             var left = that.toWhereClause(el.subject, fieldDefinitions);
                             var right = that.toWhereClause(el.value, fieldDefinitions);
-                            expression += left + ' ' + el.operator.toUpperCase() + ' ' + right;
+                            expression += (or ? '(' : '') + left + ' ' + el.operator.toUpperCase() + ' ' + right + (or ? ')' : '');
                             break;
                         default:
                             throw new Error("Unrecognized operator type");

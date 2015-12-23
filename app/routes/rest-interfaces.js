@@ -1,4 +1,4 @@
-var _ = require('../../lib/underscore/underscore');
+var _ = require('lodash');
 var Parser = require('odata-filter-parser').Parser;
 var Logger = require('../util/logger');
 var Authenticator = require('../util/authenticator');

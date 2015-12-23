@@ -6,7 +6,7 @@ var album = require('../model/album');
 var countries = require('./countries');
 var ownership = require('../model//ownership');
 var stamp = require('../model/stamp');
-var _ = require('../../lib/underscore/underscore');
+var _ = require('lodash');
 var q = require('q');
 
 var Logger = require('../util/logger');

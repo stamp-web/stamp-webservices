@@ -1,4 +1,4 @@
-var _ = require('../../lib/underscore/underscore');
+var _ = require('lodash');
 var Constants = require('../util/constants');
 var Logger = require('../util/logger');
 

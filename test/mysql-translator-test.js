@@ -1,10 +1,15 @@
 var expect = require('expect.js')
 var country = require("../app/model/country");
+var catalogueNumber = require("../app/model/catalogue-number");
 var album = require("../app/model/album");
 var preference = require("../app/model/preference");
 var translator = require("../app/services/mysql-translator");
 var dateUtils = require("date-utils");
 var Constants = require("../app/util/constants");
+var ODataParser = require('odata-filter-parser');
+
+var Predicate = ODataParser.Predicate;
+var Operators = ODataParser.Operators;
 
 describe('MySQL Translator tests', function (done) {
 
@@ -102,6 +107,44 @@ describe('MySQL Translator tests', function (done) {
         it("No values", function () {
             var ids = [];
             expect(translator.generateInValueStatement(ids)).to.be.eql("");
+        });
+    });
+
+    describe('Generate WhereClause statements', function () {
+        it("Generate OR clause with brackets", function () {
+            var p = Predicate.concat(Operators.OR, [
+                new Predicate({subject: 'condition', value: 1}),
+                new Predicate({subject: 'condition', value: 4})
+            ]);
+
+            var output = translator.toWhereClause(p, [catalogueNumber]);
+            expect(output).to.be.eql("(c.CAT_CONDITION=1 OR c.CAT_CONDITION=4)");
+        });
+
+        it("Generate AND clause", function () {
+            var p = Predicate.concat(Operators.AND, [
+                new Predicate({subject: 'active', value: 1}),
+                new Predicate({subject: 'catalogueRef', value: 23})
+            ]);
+
+            var output = translator.toWhereClause(p, [catalogueNumber]);
+            expect(output).to.be.eql("c.ACTIVE=1 AND c.CATALOGUE_REF=23");
+        });
+
+        it("Generate AND with OR clause", function () {
+            var p = Predicate.concat(Operators.AND, [
+                new Predicate({subject: 'active', value: 1}),
+                new Predicate({subject: 'catalogueRef', value: 23}),
+                Predicate.concat(Operators.OR, [
+                    new Predicate({subject: 'condition', value: 1}),
+                    new Predicate({subject: 'condition', value: 4}),
+                    new Predicate({subject: 'condition', value: 7})
+                ])
+
+            ]);
+
+            var output = translator.toWhereClause(p, [catalogueNumber]);
+            expect(output).to.be.eql("c.ACTIVE=1 AND c.CATALOGUE_REF=23 AND (c.CAT_CONDITION=1 OR (c.CAT_CONDITION=4 OR c.CAT_CONDITION=7))");
         });
     });
 });

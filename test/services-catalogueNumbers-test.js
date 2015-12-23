@@ -1,4 +1,4 @@
-var _ = require('../lib/underscore/underscore');
+var _ = require('lodash');
 var superagent = require('superagent');
 var expect = require('expect.js');
 var session = require('./util/integration-session');

@@ -1,8 +1,9 @@
-var _ = require('../lib/underscore/underscore');
+var _ = require('lodash');
 var superagent = require('superagent');
 var expect = require('expect.js');
 var session = require('./util/integration-session');
 var stampUtil= require('./util/stamp-utilities');
+var NamedCollectionVerifications = require('./util/named-collection-verifier');
 
 (function (describe, it, after, before) {
     "use strict";
@@ -78,6 +79,57 @@ var stampUtil= require('./util/stamp-utilities');
                 done();
             });
         });
+
+        it('GET collection with multiple conditions in OR with countryRef', function (done) {
+            NamedCollectionVerifications.verifyPost('countries', {
+                name: 'test-multiple-conditions'
+            }, null, function(country) {
+                var stamp = {
+                    countryRef: country.id,
+                    rate: "1d",
+                    description: "red",
+                    wantList: true,
+                    catalogueNumbers: [
+                        {
+                            catalogueRef: 1,
+                            number: "or-test-1",
+                            value: 0.65,
+                            condition: 1,
+                            active: true
+                        }
+                    ]
+                };
+                stampUtil.create(stamp, function (e, res) {
+                    stamp = {
+                        countryRef: country.id,
+                        rate: "2d",
+                        description: "green",
+                        wantList: true,
+                        catalogueNumbers: [
+                            {
+                                catalogueRef: 1,
+                                number: "or-test-2",
+                                value: 1.25,
+                                condition: 2, // set to a condition not included in test
+                                active: true
+                            }
+                        ]
+                    };
+                    stampUtil.create(stamp, function (e, res) {
+                        superagent.get('http://' + hostname + ':' + server_port + '/rest/stamps?$filter=(countryRef eq ' + country.id + ' and ((condition eq 1) or (condition eq 4)))')
+                            .end(function (e, res) {
+                                expect(e).to.eql(null);
+                                expect(res.status).to.eql(200);
+                                expect(res.body.total).to.be.eql(1);
+                                expect(res.body.stamps).to.not.be(undefined);
+                                done();
+                            });
+                    });
+                });
+            });
+
+        });
+
 
         it('POST with apostrophe is valid creation with 201 status (Issue #36)', function (done) {
             var stamp = {

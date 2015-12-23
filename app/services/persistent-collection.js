@@ -1,4 +1,4 @@
-var _ = require('../../lib/underscore/underscore');
+var _ = require('lodash');
 var q = require('q');
 var connectionManager = require('../pom/connection-mysql');
 var dataTranslator = require('./mysql-translator');

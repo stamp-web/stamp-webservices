@@ -1,5 +1,5 @@
 ﻿var url = require('url');
-var _ = require('../../lib/underscore/underscore');
+var _ = require('lodash');
 
 var routeHelper = function () {
     "use strict";

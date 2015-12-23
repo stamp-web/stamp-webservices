@@ -6,7 +6,7 @@ var Logger = require('../util/logger');
 var Level = require('../util/level');
 var nconf = require('nconf');
 var path = require('path');
-var _ = require('../../lib/underscore/underscore');
+var _ = require('lodash');
 
 nconf.argv().env().file(__dirname + '/../../config/application.json');
 

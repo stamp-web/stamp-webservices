@@ -1,4 +1,4 @@
-﻿var _ = require('../../lib/underscore/underscore');
+﻿var _ = require('lodash');
 var Logger = require('../../app/util/logger');
 var Level = require('../../app/util/level');
 var child_process = require('child_process');

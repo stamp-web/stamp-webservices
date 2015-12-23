@@ -11,7 +11,7 @@ var domainMiddleware = require('domain-middleware');
 var Logger = require('../util/logger');
 var Level = require('../util/level');
 var Authenticator = require('../util/authenticator');
-var _ = require('../../lib/underscore/underscore');
+var _ = require('lodash');
 var path = require('path');
 
 nconf.argv().env();

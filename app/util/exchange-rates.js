@@ -1,4 +1,4 @@
-﻿var _ = require('../../lib/underscore/underscore');
+﻿var _ = require('lodash');
 var q = require('q');
 var Logger = require('./logger');
 var fx = require('money');

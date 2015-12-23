@@ -10,7 +10,7 @@ var stamp = require('../model/stamp');
 var ownership = require('../model/ownership');
 var albums = require('./albums');
 var q = require('q');
-var _ = require('../../lib/underscore/underscore');
+var _ = require('lodash');
 
 var collections = extend(true, {},  new EntityManagement(), new PersistentCollection(), function() {
     "use strict";
