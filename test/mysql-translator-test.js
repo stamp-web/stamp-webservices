@@ -1,6 +1,7 @@
 var expect = require('expect.js')
 var country = require("../app/model/country");
 var catalogueNumber = require("../app/model/catalogue-number");
+var ownership = require("../app/model/ownership");
 var album = require("../app/model/album");
 var preference = require("../app/model/preference");
 var translator = require("../app/services/mysql-translator");
@@ -111,6 +112,42 @@ describe('MySQL Translator tests', function (done) {
     });
 
     describe('Generate WhereClause statements', function () {
+        it("Generate less than clause", function() {
+            var output = translator.toWhereClause(new Predicate({subject: 'value', operator: Operators.LESS_THAN, value: 100}), [catalogueNumber]);
+            expect(output).to.be.eql("c.CATALOGUEVALUE<100");
+        });
+        it("Generate less than equal clause", function() {
+            var output = translator.toWhereClause(new Predicate({subject: 'value', operator: Operators.LESS_THAN_EQUAL, value: 50.50}), [catalogueNumber]);
+            expect(output).to.be.eql("c.CATALOGUEVALUE<=50.5");
+        });
+        it("Generate greater than clause", function() {
+            var output = translator.toWhereClause(new Predicate({subject: 'value', operator: Operators.GREATER_THAN, value: 100}), [catalogueNumber]);
+            expect(output).to.be.eql("c.CATALOGUEVALUE>100");
+        });
+        it("Generate greater than clause with Date", function() {
+            var d = new Date();
+            var dStr = d.toISOString(); // equivalent to date string passed on URLs
+            var output = translator.toWhereClause(new Predicate({subject: 'purchased', operator: Operators.GREATER_THAN, value: 'datetimeoffset\'' + dStr + '\''}), [ownership]);
+
+            // output format is  YYYY-MM-DD HH:MM:SS
+            var pad = function(val,max) {
+                var t = val%max;
+                if( t < 10 ) {
+                    t = 0 + '' + t;
+                }
+                return t;
+            }
+            var hours = d.getHours()%12;
+            if( hours < 10 ) {
+                hours = 0 + '' + hours;
+            }
+            var dbStr = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate() + ' ' + pad(d.getHours(),12) +':'+ pad(d.getMinutes(),60)+':'+ pad(d.getSeconds(),60);
+            expect(output).to.be.eql("o.PURCHASED>'" + dbStr + "'");
+        });
+        it("Generate greater than equal clause", function() {
+            var output = translator.toWhereClause(new Predicate({subject: 'value', operator: Operators.GREATER_THAN_EQUAL, value: 50.50}), [catalogueNumber]);
+            expect(output).to.be.eql("c.CATALOGUEVALUE>=50.5");
+        });
         it("Generate OR clause with brackets", function () {
             var p = Predicate.concat(Operators.OR, [
                 new Predicate({subject: 'condition', value: 1}),
