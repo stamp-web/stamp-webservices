@@ -83,7 +83,12 @@ var report = function () {
                                 if( !cur || cur === '' ) {
                                     cur = 'USD';
                                 }
-                                sum += fx.convert(result.VALUE, { from: cur, to: currency });
+                                try {
+                                    sum += fx.convert(result.VALUE, { from: cur, to: currency });
+                                } catch( fxErr ) {
+                                    sqlTrace.error(fxErr);
+                                }
+
                             }
                         });
                         var value = accounting.toFixed(sum, 2);
