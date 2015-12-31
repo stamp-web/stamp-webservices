@@ -113,9 +113,10 @@ module.exports = function () {
         initialize: function(callback) {
             if( !executed ) {
                 logger.setLevel(Level.INFO);
-                logger.setTarget("file", __dirname + "/../../logs/output.log");
+                logger.setTarget("file", __dirname + "/../../logs/output.log").then( function() {
+                    logger.info( "Reading SQL contents...");
+                });
 
-                logger.info( "Reading SQL contents...");
                 var file = ((process.cwd().indexOf('\\test') > 0) ? '../' : '') + 'test/dbscript/initial-data.sql';
                 var contents = fs.readFileSync(file, { encoding: 'utf-8' }).toString();
 
