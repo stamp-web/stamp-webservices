@@ -76,6 +76,15 @@ var catalogueNumber = extend({}, fieldDefinition, function () {
         "J": 7150,
         "Q": 7210
     };
+
+    var MICHEL_PREFIXES = {
+        "KZ" : 5004,
+        "Block": 0,
+        "H-Blatt": 5000,
+        "W" : 5041,
+        "WZ": 5042
+    };
+
     var SCOTT_PREFIXES = {
 
 
@@ -83,7 +92,7 @@ var catalogueNumber = extend({}, fieldDefinition, function () {
     };
 
 
-    var PREFIX_LIST = _.extend({},/*SCOTT_PREFIXES,*/ STANLEY_GIBBONS_PREFIXES, JSCA_PREFIXES);
+    var PREFIX_LIST = _.extend({},/*SCOTT_PREFIXES,*/ STANLEY_GIBBONS_PREFIXES, MICHEL_PREFIXES, JSCA_PREFIXES);
     var sortString;
 
     return {
