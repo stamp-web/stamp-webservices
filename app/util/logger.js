@@ -1,5 +1,6 @@
 "use strict";
 var fs = require('fs');
+var FileStreamRotator = require('file-stream-rotator');
 var Level = require('./level');
 var q = require('q');
 
@@ -8,17 +9,26 @@ function Logger(loggerName) {
     var debugLevel = Level.INFO;
     var target = "console";
     var targetPath;
-  
+
+    var CONSOLE_LOGGING = Level.levels.indexOf(Level.INFO); // 2
+
+    var accessLogStream = FileStreamRotator.getStream({
+        date_format: 'YYYYMMDD',
+        filename: __dirname + '/../../logs/' + loggerName + '-%DATE%.log',
+        frequency: 'daily',
+        verbose: false
+    });
+
     this.log = function(level, message) {
         if (this.isEnabled(level)) {
             if (typeof message !== 'string') {
                 message = JSON.stringify(message);
             }
             var msg = level.toUpperCase() + ': ' + message;
-            if (target === "file" && targetPath) {
-                fs.appendFileSync(targetPath, msg + '\n');
-            } else {
-                console.log(msg);
+            accessLogStream.write( msg );
+            var ordinal = Level.levels.indexOf(level);
+            if( ordinal <= CONSOLE_LOGGING || ordinal === 5 ) {
+                console.log(message);
             }
         }
     };

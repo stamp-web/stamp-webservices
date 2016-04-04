@@ -3,7 +3,7 @@ obj
 lib
 /.ntvs_analysis.dat
 coverage
-/logs/output.log
+/logs/*
 
 logs/output.log
 /config/application.json

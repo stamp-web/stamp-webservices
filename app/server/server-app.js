@@ -1,6 +1,9 @@
 "use strict";
 
 var express = require("express");
+var compression = require("compression");
+var serveStatic = require('serve-static');
+var morgan = require('morgan');
 var connectionMgr = require('../pom/connection-mysql');
 var favicon = require('serve-favicon');
 var bodyParser = require('body-parser');
@@ -8,6 +11,7 @@ var nconf = require('nconf');
 var http = require('http');
 var connect = require('connect');
 var domainMiddleware = require('domain-middleware');
+var FileStreamRotator = require('file-stream-rotator');
 var Logger = require('../util/logger');
 var Level = require('../util/level');
 var Authenticator = require('../util/authenticator');
@@ -57,8 +61,15 @@ function showLoggers(req,resp) {
 }
 
 var server = http.createServer();
-var app = express();
 
+var app = express();
+app.use(compression());
+app.use(morgan('tiny', {stream: FileStreamRotator.getStream({
+    date_format: 'YYYYMMDD',
+    filename: __dirname + '/../../logs/access-%DATE%.log',
+    frequency: 'daily',
+    verbose: false })
+}));
 app.use(favicon(__dirname + '/../../public/favicon.ico'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -74,25 +85,13 @@ app.use(
 app.get(BASEPATH + "config/logger", showLoggers);
 app.get(BASEPATH + "config/logger/:logger", configureLoggerRemotely);
 
-var material_path = path.resolve(__dirname, '..' + path.sep + '..' + path.sep + 'www/material/');
 var aurelia_path = path.resolve(__dirname, '..' + path.sep + '..' + path.sep + 'www/aurelia/');
 var www_path = path.resolve(__dirname, '..' + path.sep + '..' + path.sep + 'www/');
 
-app.get('/stamp-web/*', function (req, res) {
-    res.sendfile(www_path + path.sep + req.params['0']);
-});
-
-app.get('/stamp-material/*', function (req, res) {
-    res.sendfile(material_path + path.sep + req.params['0']);
-});
-
-app.get('/stamp-aurelia/*', function (req, res) {
-    res.sendfile(aurelia_path + path.sep + req.params['0']);
-});
-
-app.get('/stamp-webservices/build-number.json', function (req, res) {
-    res.sendfile(www_path + path.sep + 'build-number.json');
-});
+app.use('/stamp-web', serveStatic(www_path));
+app.use('/stamp-webservices', serveStatic(www_path));
+app.use('/stamp-aurelia', serveStatic(aurelia_path));
+app.use(serveStatic(www_path));
 
 require("../routes/rest-preferences").configure(app, BASEPATH + SERVICES_PATH);
 require("../routes/rest-countries").configure(app, BASEPATH + SERVICES_PATH);

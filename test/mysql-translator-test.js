@@ -6,6 +6,7 @@ var album = require("../app/model/album");
 var preference = require("../app/model/preference");
 var translator = require("../app/services/mysql-translator");
 var dateUtils = require("date-utils");
+var DateUtilities = require('../app/util/date-utilities');
 var Constants = require("../app/util/constants");
 var ODataParser = require('odata-filter-parser');
 
@@ -136,12 +137,15 @@ describe('MySQL Translator tests', function (done) {
                     t = 0 + '' + t;
                 }
                 return t;
+            };
+
+
+            var hours = pad(d.getHours(),12);
+            if(d.isDST() ) {
+                hours -= 1;
             }
-            var hours = d.getHours()%12;
-            if( hours < 10 ) {
-                hours = 0 + '' + hours;
-            }
-            var dbStr = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate() + ' ' + pad(d.getHours(),12) +':'+ pad(d.getMinutes(),60)+':'+ pad(d.getSeconds(),60);
+
+            var dbStr = d.getFullYear() + '-' + pad((d.getMonth()+1),12) + '-' + pad(d.getDate(),31) + ' ' + pad(hours,12) +':'+ pad(d.getMinutes(),60)+':'+ pad(d.getSeconds(),60);
             expect(output).to.be.eql("o.PURCHASED>'" + dbStr + "'");
         });
         it("Generate greater than equal clause", function() {

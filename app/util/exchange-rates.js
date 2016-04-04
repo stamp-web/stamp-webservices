@@ -21,7 +21,7 @@ ExchangeRates.initialize = function (callback) {
 
     var filename = __dirname + '/../../config/exchange-rates.json';
     
-    var configureFx = function (data) {
+    function configureFx(data) {
         if (data) {
             if (typeof fx !== "undefined" && fx.rates) {
                 fx.rates = data.rates;
@@ -37,46 +37,52 @@ ExchangeRates.initialize = function (callback) {
             callback();
         }
     };
-    
-    
-    
+
+
+    function retrieveExchangeData() {
+        var exchangeData = {};
+        var chunks = "";
+        var appId = nconf.get("openexchangerates.org").app_id;
+        if (!appId) {
+            logger.warn("No app_id found for openexchangerates.org so no new rates can be obtained.");
+        } else {
+            logger.info("Fetching rates from openexchangerates.org");
+            http.get('http://openexchangerates.org/api/latest.json?app_id=' + appId, function (res) {
+                if (res.statusCode === 200) {
+                    res.on('data', function (chunk) {
+                        chunks += chunk;
+                    });
+                    res.on('end', function () {
+                        exchangeData = JSON.parse(chunks);
+                        exchangeData.lastUpdated = new Date().getTime();
+                        fs.writeFile(filename, JSON.stringify(exchangeData), function (err) {
+                            configureFx(exchangeData);
+                        });
+                        logger.info("Completed updating exchange rates data file.");
+                    });
+                } else {
+                    logger.error("Open Exchange responded with status code " + res.statusCode);
+                }
+            });
+        }
+        return exchangeData;
+    }
+
     fs.exists(filename, function (exists) {
         var getNew = !exists;
         var exchangeData = {};
         if (exists) {
             getNew = false;
-            var data = fs.readFileSync(filename, { encoding: 'UTF-8' });
-            exchangeData = JSON.parse(data);
-            if (!exchangeData.lastUpdated || new Date().getTime() - exchangeData.lastUpdated > TIME_INTERVAL) {
-                getNew = true;
-            }
+            var data = fs.readFile(filename, { encoding: 'UTF-8' }, function(err,data) {
+                exchangeData = JSON.parse(data);
+                if (!exchangeData.lastUpdated || new Date().getTime() - exchangeData.lastUpdated > TIME_INTERVAL) {
+                    exchangeData = retrieveExchangeData();
+                }
+                configureFx(exchangeData);
+            });
         }
         if (getNew) {
-            var chunks = "";
-            var appId = nconf.get("openexchangerates.org").app_id;
-            if (!appId) {
-                logger.warn("No app_id found for openexchangerates.org so no new rates can be obtained.");
-            } else {
-                logger.info("Fetching rates from openexchangerates.org");
-                http.get('http://openexchangerates.org/api/latest.json?app_id=' + appId, function (res) {
-                    if (res.statusCode === 200) {
-                        res.on('data', function (chunk) {
-                            chunks += chunk;
-                        });
-                        res.on('end', function () {
-                            exchangeData = JSON.parse(chunks);
-                            exchangeData.lastUpdated = new Date().getTime();
-                            fs.writeFile(filename, JSON.stringify(exchangeData), function (err) {
-                                configureFx(exchangeData);
-                            });
-                            logger.info("Completed updating exchange rates data file.");
-                        });
-                    } else {
-                        logger.error("Open Exchange responded with status code " + res.statusCode);
-                    }
-                });
-            }
-        } else {
+            exchangeData = retrieveExchangeData();
             configureFx(exchangeData);
         }
     }); // end exists
