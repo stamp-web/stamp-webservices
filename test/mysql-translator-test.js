@@ -142,7 +142,7 @@ describe('MySQL Translator tests', function (done) {
 
             var hours = pad(d.getHours(),12);
             if(d.isDST() ) {
-                hours -= 1;
+                hours += 1;
             }
 
             var dbStr = d.getFullYear() + '-' + pad((d.getMonth()+1),12) + '-' + pad(d.getDate(),31) + ' ' + pad(hours,12) +':'+ pad(d.getMinutes(),60)+':'+ pad(d.getSeconds(),60);

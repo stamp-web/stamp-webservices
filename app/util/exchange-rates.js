@@ -23,16 +23,8 @@ ExchangeRates.initialize = function (callback) {
     
     function configureFx(data) {
         if (data) {
-            if (typeof fx !== "undefined" && fx.rates) {
-                fx.rates = data.rates;
-                fx.base = data.base;
-            } else {
-                // If not, apply to fxSetup global:
-                window.fxSetup = {
-                    rates : data.rates,
-                    base : data.base
-                };
-            }
+            fx.base = data.base;
+            fx.rates = data.rates;
             ExchangeRates.initialized = true;
             callback();
         }
