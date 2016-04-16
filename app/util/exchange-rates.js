@@ -32,11 +32,12 @@ ExchangeRates.initialize = function (callback) {
 
 
     function retrieveExchangeData() {
+        var defer = q.defer();
         var exchangeData = {};
         var chunks = "";
         var appId = nconf.get("openexchangerates.org").app_id;
         if (!appId) {
-            logger.warn("No app_id found for openexchangerates.org so no new rates can be obtained.");
+            defer.reject("No app_id found for openexchangerates.org so no new rates can be obtained.");
         } else {
             logger.info("Fetching rates from openexchangerates.org");
             http.get('http://openexchangerates.org/api/latest.json?app_id=' + appId, function (res) {
@@ -48,16 +49,16 @@ ExchangeRates.initialize = function (callback) {
                         exchangeData = JSON.parse(chunks);
                         exchangeData.lastUpdated = new Date().getTime();
                         fs.writeFile(filename, JSON.stringify(exchangeData), function (err) {
-                            configureFx(exchangeData);
+                            defer.resolve(exchangeData);
                         });
                         logger.info("Completed updating exchange rates data file.");
                     });
                 } else {
-                    logger.error("Open Exchange responded with status code " + res.statusCode);
+                    defer.reject("Open Exchange responded with status code " + res.statusCode);
                 }
             });
         }
-        return exchangeData;
+        return defer.promise;
     }
 
     fs.exists(filename, function (exists) {
@@ -68,14 +69,24 @@ ExchangeRates.initialize = function (callback) {
             var data = fs.readFile(filename, { encoding: 'UTF-8' }, function(err,data) {
                 exchangeData = JSON.parse(data);
                 if (!exchangeData.lastUpdated || new Date().getTime() - exchangeData.lastUpdated > TIME_INTERVAL) {
-                    exchangeData = retrieveExchangeData();
+                    exchangeData = retrieveExchangeData().then(function(exchangeData) {
+                        configureFx(exchangeData);
+                    }, function(err) {
+                        logger.error(err);
+                    });
+                } else {
+                    configureFx(exchangeData);
                 }
-                configureFx(exchangeData);
+
             });
         }
         if (getNew) {
-            exchangeData = retrieveExchangeData();
-            configureFx(exchangeData);
+            retrieveExchangeData().then( function(data) {
+                configureFx(data);
+            }, function(err) {
+                logger.error(err);
+            });
+
         }
     }); // end exists
 };
