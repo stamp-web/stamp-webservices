@@ -80,6 +80,40 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
             });
         });
 
+        it('POST for descriptions with apostrophes (issue #48)', function (done) {
+            var description = "blackish opal-green (rotary press printing - 1'5'1)";
+            var stamp = {
+                countryRef: 1,
+                rate: "30pf",
+                description: description,
+                wantList: true,
+                catalogueNumbers: [
+                    {
+                        catalogueRef: 1,
+                        number: "172 W OR",
+                        value: 2.50,
+                        condition: 1,
+                        active: true
+                    }
+                ]
+            };
+            stampUtil.create(stamp, function(e,res) {
+                var result = res.body;
+                expect(result.id).to.be.greaterThan(1000);
+                expect(result.rate).to.be.eql("30pf");
+                expect(result.description).to.be.eql(description);
+                expect(result.countryRef).to.be(1);
+                var catalogueNumbers = res.body.catalogueNumbers;
+                expect(catalogueNumbers.length).to.be(1);
+                expect(catalogueNumbers[0].id).to.be.greaterThan(1000);
+                expect(catalogueNumbers[0].value).to.be.within(2.4999, 2.5001);
+                expect(catalogueNumbers[0].number).to.be.eql("172 W OR");
+                expect(catalogueNumbers[0].condition).to.be(1);
+                expect(catalogueNumbers[0].active).to.be(true);
+                done();
+            });
+        });
+
         it('GET collection with multiple conditions in OR with countryRef', function (done) {
             NamedCollectionVerifications.verifyPost('countries', {
                 name: 'test-multiple-conditions'

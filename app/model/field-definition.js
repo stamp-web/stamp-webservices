@@ -79,7 +79,7 @@ var fieldDefinition = function () {
                     else {
                         var val = o[key];
                         if( field.type === 'string' && val && val.replace ) {
-                            val = val.replace("\'", "\'\'"); // escape apostrophe
+                            val = val.replace(/\'/g, "\'\'"); // escape apostrophe
                         }
                         obj[field.column] = val;
 
