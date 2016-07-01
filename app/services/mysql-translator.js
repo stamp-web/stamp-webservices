@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var Logger = require('../util/logger');
-require("date-utils");
+var moment = require('moment');
 var Predicate = require('odata-filter-parser').Predicate;
 var Operators = require('odata-filter-parser').Operators;
 require("../util/string-utilities");
@@ -218,9 +218,7 @@ function DataTranslator() {
                                 predicate = ((definition.getAlias()) ? definition.getAlias() + '.' : '') + field.column;
                                 if (field.type === 'date' && value.startsWith(Constants.DATEOFFSET_STARTING)) {
                                     value = value.substring(Constants.DATEOFFSET_STARTING.length, value.length - 1);
-                                    var d = new Date(value);
-                                    var df = d.toFormat(Constants.MYSQL_DATEFORMAT);
-                                    value = "\'" + df  + "\'";
+                                    value = "\'" + new moment(value).format(Constants.MYSQL_DATEFORMAT)  + "\'";
                                 }
                                 expression += predicate + op + value;
                                 break;

@@ -5,10 +5,10 @@ var ownership = require("../app/model/ownership");
 var album = require("../app/model/album");
 var preference = require("../app/model/preference");
 var translator = require("../app/services/mysql-translator");
-var dateUtils = require("date-utils");
 var DateUtilities = require('../app/util/date-utilities');
 var Constants = require("../app/util/constants");
 var ODataParser = require('odata-filter-parser');
+var moment = require('moment');
 
 var Predicate = ODataParser.Predicate;
 var Operators = ODataParser.Operators;
@@ -70,15 +70,15 @@ describe('MySQL Translator tests', function (done) {
         });
         
         it("Country with create timestamp pre-set", function () {
-            var date = Date.yesterday();
-            var date_s = date.toFormat(Constants.MYSQL_DATEFORMAT);
+            var date = moment().subtract(1,'days').toDate();
+            var dStr = moment(date).format(Constants.MYSQL_DATEFORMAT);
             var c = {
                 name: "Australian States - Queensland",
                 id: 150,
                 createTimestamp: date
             };
             expect(translator.generateInsertStatement(country, c)).to.be.eql(
-                "INSERT INTO COUNTRIES (NAME,ID,CREATESTAMP) VALUES('Australian States - Queensland',150,'" + date_s + "')"
+                "INSERT INTO COUNTRIES (NAME,ID,CREATESTAMP) VALUES('Australian States - Queensland',150,'" + dStr + "')"
 );
             
         });
@@ -138,15 +138,8 @@ describe('MySQL Translator tests', function (done) {
                 }
                 return t;
             };
-
-
-            var hours = pad(d.getHours(),12);
-            if(d.isDST() ) {
-                hours += 1;
-            }
-
-            var dbStr = d.getFullYear() + '-' + pad((d.getMonth()+1),12) + '-' + pad(d.getDate(),31) + ' ' + pad(hours,12) +':'+ pad(d.getMinutes(),60)+':'+ pad(d.getSeconds(),60);
-            expect(output).to.be.eql("o.PURCHASED>'" + dbStr + "'");
+            var str = new moment(d).format(Constants.MYSQL_DATEFORMAT);
+            expect(output).to.be.eql("o.PURCHASED>'" + str + "'");
         });
         it("Generate greater than equal clause", function() {
             var output = translator.toWhereClause(new Predicate({subject: 'value', operator: Operators.GREATER_THAN_EQUAL, value: 50.50}), [catalogueNumber]);

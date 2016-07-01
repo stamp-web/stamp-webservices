@@ -1,7 +1,7 @@
 var _ = require('lodash');
 var Constants = require('../util/constants');
 var Logger = require('../util/logger');
-
+var moment = require('moment');
 
 var fieldDefinition = function () {
     "use strict";
@@ -47,11 +47,8 @@ var fieldDefinition = function () {
                     }
                     break;
                 case 'date':
-                    if (_.isDate(value)) {
-                        val = "\'" + value.toFormat(Constants.MYSQL_DATEFORMAT) + "\'";
-                    } else if (_.isString(value)) {
-                        value = new Date(value);
-                        val = "\'" + value.toFormat(Constants.MYSQL_DATEFORMAT) + "\'";
+                    if (_.isDate(value) || _.isString(value)) {
+                        val = "\'" + new moment(value).format(Constants.MYSQL_DATEFORMAT) + "\'";
                     }
                     break;
                 case 'boolean':
