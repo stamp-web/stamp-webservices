@@ -16,7 +16,7 @@ var countries = extend(true, {}, new EntityManagement(), new PersistentCollectio
         var selection = "UPDATE " + ownership.getTableName() + " " + ownership.getAlias() + " INNER JOIN " +
           stamp.getTableName() + " "  + stamp.getAlias() + " on " + ownership.getAlias() + ".STAMP_ID = " + stamp.getAlias() +
             ".ID AND " + stamp.getAlias() + ".COUNTRY_ID = " + storedObj.ID + " SET IMAGE = REPLACE(IMAGE, '" +
-            storedObj.NAME + "', '" + merged.NAME + "') WHERE IMAGE LIKE '" + storedObj.NAME + "%';";
+            storedObj.NAME + "', '" + merged.NAME + "') WHERE IMAGE LIKE '" + storedObj.NAME + "/%';";
         connection.query(selection, null, function (err, results) {
             if (err) {
                 defer.reject(dataTranslator.getErrorMessage(err));
