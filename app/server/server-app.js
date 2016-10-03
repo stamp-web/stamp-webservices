@@ -1,6 +1,7 @@
 "use strict";
 
 var express = require("express");
+var helmet = require('helmet');
 var compression = require("compression");
 var serveStatic = require('serve-static');
 var morgan = require('morgan');
@@ -64,6 +65,7 @@ var server = http.createServer();
 
 var app = express();
 app.use(compression());
+app.use(helmet());
 app.use(morgan('tiny', {stream: FileStreamRotator.getStream({
     date_format: 'YYYYMMDD',
     filename: __dirname + '/../../logs/access-%DATE%.log',
