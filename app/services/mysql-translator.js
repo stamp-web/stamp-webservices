@@ -62,6 +62,7 @@ function DataTranslator() {
             } else {
                 expr = null;
             }
+            logger.debug("Update Expression: " + expr);
             return expr;
         },
         generateInsertByFields: function (fieldDefinition, obj) {

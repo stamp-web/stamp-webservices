@@ -48,7 +48,7 @@ var fieldDefinition = function () {
                     break;
                 case 'date':
                     if (_.isDate(value) || _.isString(value)) {
-                        val = "\'" + new moment(value).format(Constants.MYSQL_DATEFORMAT) + "\'";
+                        val = "\'" + moment(value).format(Constants.MYSQL_DATEFORMAT) + "\'";
                     }
                     break;
                 case 'boolean':
@@ -143,12 +143,11 @@ var fieldDefinition = function () {
                                 val = (!_.isBoolean(val)) ? (val === 1) : val;
                                 break;
                             case 'date':
-                                if( !val.toFormat ) {
-                                    logger.warn("object with id " + o.ID + " has invalid date: " + val);
+                                if( _.isDate(val) || _.isString(val)) {
+                                    val = moment(val).format('YYYY-MM-DDTHH:mm:ss.SSSZ');
                                 } else {
-                                    val = val.toFormat("YYYY-MM-DDTHH:MI:SS") + "-05:00";
+                                    logger.warn("object with id " + o.ID + " has invalid date: " + val);
                                 }
-
                                 break;
                         }
                         obj[field.field] = val;

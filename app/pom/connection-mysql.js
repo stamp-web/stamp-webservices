@@ -123,7 +123,9 @@ module.exports = function () {
 
                 dbPool.getConnection(function (err, connection) {
                     connectionCount++;
-                    connection.release();
+                    if( connection ) {
+                        connection.release();
+                    }
                     if (!err) {
                         defer.resolve(dbPool);
                     } else {
