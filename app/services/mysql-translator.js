@@ -217,8 +217,11 @@ function DataTranslator() {
                             var field = _.findWhere(definition.getFieldDefinitions(), { field: subject });
                             if (field && field.column && !field.nonPersistent) {
                                 predicate = ((definition.getAlias()) ? definition.getAlias() + '.' : '') + field.column;
-                                if (field.type === 'date' && value.startsWith('\'' + Constants.DATEOFFSET_STARTING)) {
-                                    value = value.substring(Constants.DATEOFFSET_STARTING.length + 1, value.length - 2);
+                                if (field.type === 'date') {
+                                    if (value.startsWith('\'' + Constants.DATEOFFSET_STARTING)) {
+                                        value = value.substring(Constants.DATEOFFSET_STARTING.length + 1, value.length - 2);
+                                    }
+                                    value = (_.isDate(value)) ? value.toISOString() : new Date(Date.parse(value)).toISOString();
                                     value = "\'" + new moment(value).format(Constants.MYSQL_DATEFORMAT)  + "\'";
                                 }
                                 expression += predicate + op + value;

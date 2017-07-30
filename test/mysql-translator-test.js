@@ -130,17 +130,19 @@ describe('MySQL Translator tests', function (done) {
             var dStr = d.toISOString(); // equivalent to date string passed on URLs
             var output = translator.toWhereClause(new Predicate({subject: 'purchased', operator: Operators.GREATER_THAN, value: 'datetimeoffset\'' + dStr + '\''}), [ownership]);
 
-            // output format is  YYYY-MM-DD HH:MM:SS
-            var pad = function(val,max) {
-                var t = val%max;
-                if( t < 10 ) {
-                    t = 0 + '' + t;
-                }
-                return t;
-            };
             var str = new moment(d).format(Constants.MYSQL_DATEFORMAT);
             expect(output).to.be.eql("o.PURCHASED>'" + str + "'");
         });
+
+        it("Generate greater than clause with Date object", function() {
+            var d = new Date();
+            var dStr = d.toISOString(); // equivalent to date string passed on URLs
+            var output = translator.toWhereClause(new Predicate({subject: 'purchased', operator: Operators.GREATER_THAN, value: d}), [ownership]);
+
+            var str = new moment(d.toISOString()).format(Constants.MYSQL_DATEFORMAT);
+            expect(output).to.be.eql("o.PURCHASED>'" + str + "'");
+        });
+
         it("Generate greater than equal clause", function() {
             var output = translator.toWhereClause(new Predicate({subject: 'value', operator: Operators.GREATER_THAN_EQUAL, value: 50.50}), [catalogueNumber]);
             expect(output).to.be.eql("c.CATALOGUEVALUE>=50.5");
