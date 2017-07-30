@@ -209,7 +209,7 @@ function DataTranslator() {
                         var value;
                         if (typeof el.value !== 'undefined') {
                             var val = el.value;
-                            value = (_.isNumber(val)) ? +val : _.isString(val) ? val.replace(/\*/g,'%') : '' + val;
+                            value = (_.isNumber(val)) ? +val : _.isString(val) ? '\'' + val.replace(/\*/g,'%') + '\'' : '' + val;
                         }
                         var predicate = subject;
                         for (var i = 0; i < fieldDefinitions.length; i++) {
@@ -217,8 +217,8 @@ function DataTranslator() {
                             var field = _.findWhere(definition.getFieldDefinitions(), { field: subject });
                             if (field && field.column && !field.nonPersistent) {
                                 predicate = ((definition.getAlias()) ? definition.getAlias() + '.' : '') + field.column;
-                                if (field.type === 'date' && value.startsWith(Constants.DATEOFFSET_STARTING)) {
-                                    value = value.substring(Constants.DATEOFFSET_STARTING.length, value.length - 1);
+                                if (field.type === 'date' && value.startsWith('\'' + Constants.DATEOFFSET_STARTING)) {
+                                    value = value.substring(Constants.DATEOFFSET_STARTING.length + 1, value.length - 2);
                                     value = "\'" + new moment(value).format(Constants.MYSQL_DATEFORMAT)  + "\'";
                                 }
                                 expression += predicate + op + value;

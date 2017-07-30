@@ -191,7 +191,7 @@ function PersistentCollection() {
         },
 
         getOrderByClause: function(params, definitions) {
-            if( params.$orderby === null ) {
+            if( !params.$orderby ) {
                 return '';
             }
             if( !definitions ) {
@@ -275,12 +275,12 @@ function PersistentCollection() {
             var defer = q.defer();
             var that = this;
             var whereClause = this.getWhereClause(params);
-            if (!params.$limit) {
-                params.$limit = 1000;
-            }
-            if (!params.$offset) {
-                params.$offset = 0;
-            }
+            const _defaults = {
+                $limit: 1000,
+                $offset: 0
+            };
+            params = params || _defaults;
+            let t = (new Date()).getTime();
             var qs = 'SELECT SQL_CALC_FOUND_ROWS ' + that.fieldDefinition.getAlias() + '.* FROM ' + that.getFromTables(params) + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' ' + that.getOrderByClause(params) + ' LIMIT ' + params.$offset + ',' + params.$limit;
             sqlTrace.debug(qs);
             connectionManager.getConnection().then(function (connection) {
@@ -301,6 +301,7 @@ function PersistentCollection() {
                             };
                             that.postFind(connection, result).then(function () {
                                 connection.release();
+                                console.log("Total time: " + ((new Date()).getTime() - t) + "ms");
                                 defer.resolve(result);
                             }, function(err) {
                                 connection.release();

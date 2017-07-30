@@ -106,6 +106,7 @@ var catalogueNumber = extend({}, fieldDefinition, function () {
                 { field: 'nospace', column: 'NOTAVAILABLE', type: 'boolean', externalizeOnEmpty: false },
                 { field: 'active', column: 'ACTIVE', type: 'boolean' },
                 { field: 'stampRef', column: 'STAMP_ID', type: 'long', required: true, joinWith: 'STAMPS', internal: true },
+                { field: 'numberSort', column: 'NUMBERSORT', type: 'string', internal: true}, // still prototype
                 { field: 'catalogueRef', column: 'CATALOGUE_REF', type: 'long', joinWith: 'CATALOGUES' },
                 { field: 'createTimestamp', column: 'CREATESTAMP', type: 'date', internal: true },
                 { field: 'modifyTimestamp', column: 'MODIFYSTAMP', type: 'date', internal: true }
@@ -136,6 +137,7 @@ var catalogueNumber = extend({}, fieldDefinition, function () {
                 sortString += replace + " AS UNSIGNED)," + this.getAlias() + ".NUMBER";
             }
             return sortString;
+            //return this.getAlias() + '.NUMBERSORT';
         }
 
     };
