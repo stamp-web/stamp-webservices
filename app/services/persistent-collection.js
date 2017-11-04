@@ -97,7 +97,7 @@ function PersistentCollection() {
             return defer.promise;
         },
 
-        create: function (obj) {
+        create: function(obj) {
             var defer = q.defer();
             var that = this;
             var provided = this.fieldDefinition.internalize(obj);
@@ -107,30 +107,32 @@ function PersistentCollection() {
                     if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
                         that.generateId(that.fieldDefinition, provided).then(function (id) {
                             provided.ID = id;
-                            that.preCreate(provided); // opportunity for services to manipulate the object
-                            var validation = that.fieldDefinition.validate(provided);
-                            if( validation === null ) {
-                                var insertStatement = dataTranslator. generateInsertByFields(that.fieldDefinition, provided);
-                                sqlTrace.debug(insertStatement);
-                                connection.query(insertStatement, function (err, rows) {
-                                    if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
-                                        that.postCreate(connection, provided).then(function (_obj) {
-                                            connection.commit(function () {
-                                                connection.release();
-                                                that.findById(id).then(function (result) {
-                                                    defer.resolve(result);
-                                                }, function (err) {
-                                                    defer.reject(dataTranslator.getErrorMessage(err));
+                            that.preCreate(provided).then(() => {  // opportunity for services to manipulate the object
+                                var validation = that.fieldDefinition.validate(provided);
+                                if( validation === null ) {
+                                    var insertStatement = dataTranslator. generateInsertByFields(that.fieldDefinition, provided);
+                                    sqlTrace.debug(insertStatement);
+                                    connection.query(insertStatement, function (err, rows) {
+                                        if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
+                                            that.postCreate(connection, provided).then(function (_obj) {
+                                                connection.commit(function () {
+                                                    connection.release();
+                                                    that.findById(id).then(function (result) {
+                                                        defer.resolve(result);
+                                                    }, function (err) {
+                                                        defer.reject(dataTranslator.getErrorMessage(err));
+                                                    });
                                                 });
+                                            }, function (err) {
+                                                PersistentCollection.rollbackOnError(connection, defer, err);
                                             });
-                                        }, function (err) {
-                                            PersistentCollection.rollbackOnError(connection, defer, err);
-                                        });
-                                    }
-                                });
-                            } else {
-                                PersistentCollection.rollbackOnError(connection, defer, validation);
-                            }
+                                        }
+                                    });
+                                } else {
+                                    PersistentCollection.rollbackOnError(connection, defer, validation);
+                                }
+                            });
+
                         }, function (err) {
                             // error from generate id
                             PersistentCollection.rollbackOnError(connection, defer, err);
@@ -280,10 +282,11 @@ function PersistentCollection() {
                 $offset: 0
             };
             params = params || _defaults;
-            let t = (new Date()).getTime();
+
             var qs = 'SELECT SQL_CALC_FOUND_ROWS ' + that.fieldDefinition.getAlias() + '.* FROM ' + that.getFromTables(params) + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' ' + that.getOrderByClause(params) + ' LIMIT ' + params.$offset + ',' + params.$limit;
             sqlTrace.debug(qs);
             connectionManager.getConnection().then(function (connection) {
+                let t = (new Date()).getTime();
                 connection.query(qs, function (err, dataRows) {
                     if (err !== null) {
                         connection.release();
@@ -301,7 +304,7 @@ function PersistentCollection() {
                             };
                             that.postFind(connection, result).then(function () {
                                 connection.release();
-                                console.log("Total time: " + ((new Date()).getTime() - t) + "ms");
+                                console.log("find time: " + ((new Date()).getTime() - t) + "ms");
                                 defer.resolve(result);
                             }, function(err) {
                                 connection.release();
@@ -319,7 +322,8 @@ function PersistentCollection() {
             });
             return defer.promise;
         },
-        preCreate: function (obj) {
+        preCreate: obj => {
+            return Promise.resolve();
         },
         postFind: function (connection, rows) {
             var defer = q.defer();
@@ -332,7 +336,7 @@ function PersistentCollection() {
             defer.resolve(obj);
             return defer.promise;
         },
-        preCommitUpdate: function(connection,merged,storedObj) {
+        preCommitUpdate: async (connection,merged,storedObj) => {
             var defer = q.defer();
             defer.resolve({
                 modified: false

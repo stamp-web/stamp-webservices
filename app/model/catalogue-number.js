@@ -1,11 +1,11 @@
-var extend = require('node.extend');
-var _ = require('lodash');
-var fieldDefinition = require('./field-definition');
+let extend = require('node.extend');
+let _ = require('lodash');
+let fieldDefinition = require('./field-definition');
 
-var catalogueNumber = extend({}, fieldDefinition, function () {
+let catalogueNumber = extend({}, fieldDefinition, function () {
     "use strict";
 
-    var JSCA_PREFIXES = {
+ /*   let JSCA_PREFIXES = {
         "A": 5000,
         "C": 5010,
         "P": 5030,
@@ -19,7 +19,7 @@ var catalogueNumber = extend({}, fieldDefinition, function () {
         "PP": 5210
     };
 
-    var STANLEY_GIBBONS_PREFIXES = {
+    let STANLEY_GIBBONS_PREFIXES = {
         "RAB": 7270,
         "RAC": 7280,
         "RAJ": 7290,
@@ -31,7 +31,7 @@ var catalogueNumber = extend({}, fieldDefinition, function () {
         "SB": 5030,
         "TD": 5160,
         "ZA": 5180,
-        /* Scott */
+        /!* Scott *!/
         "AR": 7300,
         "NJ": 7320,
         "NB": 7330,
@@ -70,14 +70,14 @@ var catalogueNumber = extend({}, fieldDefinition, function () {
         "Z": 5170,
         "F": 5190,
         "A": 5200,
-        /* Scott */
+        /!* Scott *!/
         "C": 7010,
         "I": 7100,
         "J": 7150,
         "Q": 7210
     };
 
-    var MICHEL_PREFIXES = {
+    let MICHEL_PREFIXES = {
         "KZ" : 5004,
         "Block": 0,
         "H-Blatt": 5000,
@@ -85,15 +85,15 @@ var catalogueNumber = extend({}, fieldDefinition, function () {
         "WZ": 5042
     };
 
-    var SCOTT_PREFIXES = {
+    let SCOTT_PREFIXES = {
 
 
 
     };
+*/
 
-
-    var PREFIX_LIST = _.extend({},/*SCOTT_PREFIXES,*/ STANLEY_GIBBONS_PREFIXES, MICHEL_PREFIXES, JSCA_PREFIXES);
-    var sortString;
+  //  let PREFIX_LIST = _.extend({},/*SCOTT_PREFIXES,*/ STANLEY_GIBBONS_PREFIXES, MICHEL_PREFIXES, JSCA_PREFIXES);
+  //  let sortString;
 
     return {
         getFieldDefinitions: function () {
@@ -122,11 +122,11 @@ var catalogueNumber = extend({}, fieldDefinition, function () {
             return "c";
         },
         catalogueNumberSort: function () {
-            if (!sortString) {
+            /* if (!sortString) {
                 sortString = 'CAST(';
-                var replace = '';
-                var keys = Object.keys(PREFIX_LIST);
-                var that = this;
+                let replace = '';
+                let keys = Object.keys(PREFIX_LIST);
+                let that = this;
                 _.each(keys,function(key) {
                     if( replace.length === 0 ) {
                         replace ='REPLACE(' + that.getAlias() + '.NUMBER,\'' + key + '\',' + PREFIX_LIST[key] + ')';
@@ -136,8 +136,8 @@ var catalogueNumber = extend({}, fieldDefinition, function () {
                 });
                 sortString += replace + " AS UNSIGNED)," + this.getAlias() + ".NUMBER";
             }
-            return sortString;
-            //return this.getAlias() + '.NUMBERSORT';
+            return sortString; */
+            return this.getAlias() + '.NUMBERSORT';
         }
 
     };

@@ -1,7 +1,7 @@
-var _ = require('lodash');
-var zpad = require('zpad');
+let _ = require('lodash');
+let zpad = require('zpad');
 
-var PREFIX = require('./prefix.json');
+let PREFIX = require('./prefix.json');
 
 module.exports = function () {
 
@@ -15,7 +15,22 @@ module.exports = function () {
             case 2:
                 lookup = 'MICHEL';
                 break;
+            case 3:
+                lookup = 'FACIT';
+                break;
+            case 4:
+                lookup = 'OTHER';
+                break;
+            case 5:
+                lookup = 'DARNELL';
+                break;
+            case 6:
+                lookup = 'BRIDGER_AND_KAY';
+                break;
             case 7:
+                lookup = 'VAN_DAM';
+                break;
+            case 8:
                 lookup = 'JSCA';
                 break;
         }
@@ -45,10 +60,10 @@ module.exports = function () {
                     //console.log(parts);
                     let prefix = generatePrefix(parts[1], _.find(catalogues, {ID: cn.CATALOGUE_REF}).TYPE);
                     let num = zpad(parts[2], 5);
-                    let postfix = parts[3];
+                    let postfix = parts[3]
                     result = prefix + num;
                     if (!_.isEmpty(postfix)) {
-                        result += postfix.trim();
+                        result += postfix.replace(/\s/g, '').trim();
                     }
                     //console.log('r=' + result);
                 }

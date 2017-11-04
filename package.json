@@ -44,7 +44,8 @@
     "url": "git://github.com/stamp-web/stamp-webservices.git"
   },
   "devDependencies": {
-    "superagent": "^0.18.2"
+    "superagent": "^0.18.2",
+    "mocha": "^4.0.1"
   },
   "keywords": [],
   "bugs": {

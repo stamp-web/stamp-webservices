@@ -1,19 +1,40 @@
-var extend = require('node.extend');
-var PersistentCollection = require('./persistent-collection');
-var stamps = require('./stamps');
-var dataTranslator = require('./mysql-translator');
-var catalogueNumber = require('../model/catalogue-number');
-var _ = require('lodash');
-var q = require('q');
-var Logger = require('../util/logger');
-var connectionManager = require('../pom/connection-mysql');
+let extend = require('node.extend');
+let PersistentCollection = require('./persistent-collection');
+let stamps = require('./stamps');
+let catalogues = require('./catalogues');
+let dataTranslator = require('./mysql-translator');
+let catalogueNumber = require('../model/catalogue-number');
+let catalogueNumberHelper = require('../model/catalogue-number-helper');
+let _ = require('lodash');
+let q = require('q');
+let Logger = require('../util/logger');
+let connectionManager = require('../pom/connection-mysql');
 
-var logger = Logger.getLogger("server");
-var sqlTrace = Logger.getLogger("sql");
+let logger = Logger.getLogger("server");
+let sqlTrace = Logger.getLogger("sql");
 
-var catalogueNumberService = extend(true, {}, new PersistentCollection(), function () {
+let catalogueNumberService = extend(true, {}, new PersistentCollection(), function () {
     "use strict";
+
+    const getCatalogues = async () => {
+        let values = await catalogues.find();
+        return values;
+    }
+
     return {
+
+        preCreate: async provided => {
+            let catResult = await getCatalogues();
+            let cats = catResult.rows;
+            provided.NUMBERSORT = catalogueNumberHelper.serialize(provided, cats);
+        },
+
+        preCommitUpdate: async (connection,merged,storedObj) => {
+            let catResult = await getCatalogues();
+            let cats = catResult.rows;
+            merged.NUMBERSORT = catalogueNumberHelper.serialize(merged, cats);
+        },
+
         /**
          * Set the catalogue number identified by id to be the active catalogue number.
          *
@@ -21,19 +42,19 @@ var catalogueNumberService = extend(true, {}, new PersistentCollection(), functi
          * @returns {defer.promise|*}
          */
         makeActive: function(id) {
-            var defer = q.defer();
-            var that = this;
+            let defer = q.defer();
+            let that = this;
             this.findById(id).then(function(catNum) {
                 stamps.findById(catNum.STAMP_ID).then(function(stamp) {
                     catNum = _.findWhere(stamp.CATALOGUENUMBER, {ID: +id});
-                    var activeCN = _.findWhere(stamp.CATALOGUENUMBER, {ACTIVE:1});
+                    let activeCN = _.findWhere(stamp.CATALOGUENUMBER, {ACTIVE:1});
                     if( !activeCN || +activeCN.ID !== +id ) {
-                        var count = 0;
-                        var total = activeCN ? 2 : 1;
+                        let count = 0;
+                        let total = activeCN ? 2 : 1;
                         connectionManager.getConnection().then(function (connection) {
                             connection.beginTransaction(function (err) {
-                                var updateFn = function(connection,id,isActive) {
-                                    var sql = "UPDATE " + catalogueNumber.getTableName() + " SET ACTIVE=" + (isActive ? 1 : 0) + ",MODIFYSTAMP=CURDATE() WHERE ID=" + id;
+                                let updateFn = function(connection,id,isActive) {
+                                    let sql = "UPDATE " + catalogueNumber.getTableName() + " SET ACTIVE=" + (isActive ? 1 : 0) + ",MODIFYSTAMP=CURDATE() WHERE ID=" + id;
                                     sqlTrace.debug(sql);
                                     connection.query(sql, function(err,result) {
                                         if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
