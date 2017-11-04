@@ -100,6 +100,7 @@ function PersistentCollection() {
         create: function(obj) {
             var defer = q.defer();
             var that = this;
+
             var provided = this.fieldDefinition.internalize(obj);
             var generateId = false;
             connectionManager.getConnection().then(function (connection) {
@@ -304,7 +305,9 @@ function PersistentCollection() {
                             };
                             that.postFind(connection, result).then(function () {
                                 connection.release();
-                                console.log("find time: " + ((new Date()).getTime() - t) + "ms");
+                                if( that.collectionName === 'stamps') {
+                                    console.log("query time: " + ((new Date()).getTime() - t) + "ms");
+                                }
                                 defer.resolve(result);
                             }, function(err) {
                                 connection.release();
@@ -337,11 +340,11 @@ function PersistentCollection() {
             return defer.promise;
         },
         preCommitUpdate: async (connection,merged,storedObj) => {
-            var defer = q.defer();
-            defer.resolve({
-                modified: false
+            return new Promise((resolve) => {
+                resolve({
+                    modified: false
+                });
             });
-            return defer.promise;
         },
         preDelete: function (connection, id) {
             var defer = q.defer();

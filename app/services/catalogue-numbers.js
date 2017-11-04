@@ -16,23 +16,33 @@ let sqlTrace = Logger.getLogger("sql");
 let catalogueNumberService = extend(true, {}, new PersistentCollection(), function () {
     "use strict";
 
-    const getCatalogues = async () => {
-        let values = await catalogues.find();
-        return values;
+    let cachedCatalogues;
+    let cachePolicy = true;
+
+    const getCatalogues = () => {
+        return catalogues.find();
     }
 
     return {
+
+        setCachePolicy: val => {
+            cachePolicy = val;
+        },
 
         preCreate: async provided => {
             let catResult = await getCatalogues();
             let cats = catResult.rows;
             provided.NUMBERSORT = catalogueNumberHelper.serialize(provided, cats);
+            return Promise.resolve();
         },
 
-        preCommitUpdate: async (connection,merged,storedObj) => {
-            let catResult = await getCatalogues();
-            let cats = catResult.rows;
+        preCommitUpdate: async (connection, merged, storedObj) => {
+            let results = await getCatalogues();
+            let cats = results.rows;
             merged.NUMBERSORT = catalogueNumberHelper.serialize(merged, cats);
+            return Promise.resolve({
+                modified: true
+            });
         },
 
         /**

@@ -61,94 +61,92 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
         return select;
     }
 
-    let lastFetch = 0;
-    let cachedCatalogues;
+    let cachePolicy = true;
 
-    const getCatalogues = async () => {
-        let values = await catalogues.find();
-        return values;
+    const getCatalogues = () => {
+        return catalogues.find();
     }
 
     return {
+
+        setCachePolicy: val => {
+            cachePolicy = val;
+        },
+
         preCommitUpdate: async function (connection, merged, storedObj) {
-            let defer = q.defer();
-            let that = this;
-            let updateList = [], createList = [];
-            let t = (new Date()).getTime();
-            if(!cachedCatalogues || t - lastFetch > 1800000) {
-                let catResult = await getCatalogues();
-                cachedCatalogues = catResult.rows;
-                lastFetch = t;
-            }
-            let parseChildren = function (childName, fieldDef) {
-                if (merged[childName] && _.isArray(merged[childName])) {
-                    _.each(merged[childName], function (obj) {
-                        if (obj.ID) {
-                            let current = _.findWhere(storedObj[childName], {ID: obj.ID});
-                            if (childName === 'CATALOGUENUMBER') {
-                                obj.NUMBERSORT = catalogueNumberHelper.serialize(obj, cachedCatalogues);
-                            }
-                            let sql = dataTranslator.generateUpdateByFields(fieldDef, obj, current, true);
-                            if (sql !== null) {
-                                updateList.push(sql);
-                            }
-                        } else {
-                            obj.STAMP_ID = merged.ID;
-                            if (childName === 'CATALOGUENUMBER') {
-                                obj.NUMBERSORT = catalogueNumberHelper.serialize(obj, cats);
-                            }
-                            createList.push({fieldDefinition: fieldDef, object: obj});
-                        }
-                    });
-                }
-            };
-            parseChildren("CATALOGUENUMBER", catalogueNumber);
-            parseChildren("OWNERSHIP", ownership);
-
-            let total = updateList.length + createList.length;
-            let count = 0;
-            let resolveWhenFinished = function () {
-                if (count === total) {
-                    defer.resolve({
-                        modified: total > 0
-                    });
-                }
-            };
-            resolveWhenFinished();
-            _.each(updateList, function (sql) {
-                sqlTrace.debug(sql);
-                connection.query(sql, function (err, data) {
-                    if (err !== null) {
-                        defer.reject(dataTranslator.getErrorMessage(err));
-                    } else {
-                        count++;
-                        resolveWhenFinished();
-                    }
-
-                });
-            });
-            _.each(createList, function (obj) {
-                let creating = obj;
-                PersistentCollection.getNextSequence(creating.fieldDefinition, function (err, id) {
-                    if (err !== null) {
-                        defer.reject(dataTranslator.getErrorMessage(err));
-                    } else {
-                        creating.object.ID = id;
-                        let c_sql = dataTranslator.generateInsertByFields(creating.fieldDefinition, creating.object);
-                        sqlTrace.debug(c_sql);
-                        connection.query(c_sql, function (err, data) {
-                            if (err !== null) {
-                                defer.reject(dataTranslator.getErrorMessage(err));
+            let catalogues = (await getCatalogues()).rows;
+            return new Promise((resolve, reject) => {
+                let that = this;
+                let updateList = [], createList = [];
+                let parseChildren = function (childName, fieldDef) {
+                    if (merged[childName] && _.isArray(merged[childName])) {
+                        _.each(merged[childName], function (obj) {
+                            if (obj.ID) {
+                                let current = _.findWhere(storedObj[childName], {ID: obj.ID});
+                                if (childName === 'CATALOGUENUMBER') {
+                                    obj.NUMBERSORT = catalogueNumberHelper.serialize(obj, catalogues);
+                                }
+                                let sql = dataTranslator.generateUpdateByFields(fieldDef, obj, current, true);
+                                if (sql !== null) {
+                                    updateList.push(sql);
+                                }
                             } else {
-                                count++;
-                                resolveWhenFinished();
+                                obj.STAMP_ID = merged.ID;
+                                if (childName === 'CATALOGUENUMBER') {
+                                    obj.NUMBERSORT = catalogueNumberHelper.serialize(obj, cats);
+                                }
+                                createList.push({fieldDefinition: fieldDef, object: obj});
                             }
                         });
-                        PersistentCollection.updateSequence(id, creating.fieldDefinition);
                     }
+                };
+                parseChildren("CATALOGUENUMBER", catalogueNumber);
+                parseChildren("OWNERSHIP", ownership);
+
+                let total = updateList.length + createList.length;
+                let count = 0;
+                let resolveWhenFinished = function () {
+                    if (count === total) {
+                        resolve({
+                            modified: total > 0
+                        });
+                    }
+                };
+                resolveWhenFinished();
+                _.each(updateList, function (sql) {
+                    sqlTrace.debug(sql);
+                    connection.query(sql, function (err, data) {
+                        if (err !== null) {
+                            reject(dataTranslator.getErrorMessage(err));
+                        } else {
+                            count++;
+                            resolveWhenFinished();
+                        }
+
+                    });
+                });
+                _.each(createList, function (obj) {
+                    let creating = obj;
+                    PersistentCollection.getNextSequence(creating.fieldDefinition, function (err, id) {
+                        if (err !== null) {
+                            reject(dataTranslator.getErrorMessage(err));
+                        } else {
+                            creating.object.ID = id;
+                            let c_sql = dataTranslator.generateInsertByFields(creating.fieldDefinition, creating.object);
+                            sqlTrace.debug(c_sql);
+                            connection.query(c_sql, function (err, data) {
+                                if (err !== null) {
+                                    reject(dataTranslator.getErrorMessage(err));
+                                } else {
+                                    count++;
+                                    resolveWhenFinished();
+                                }
+                            });
+                            PersistentCollection.updateSequence(id, creating.fieldDefinition);
+                        }
+                    });
                 });
             });
-            return defer.promise;
         },
 
         preCreate: async provided => {

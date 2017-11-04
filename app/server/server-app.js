@@ -26,6 +26,10 @@ var BASEPATH = "/stamp-webservices/";
 if (nconf.get("basePath")) {
     BASEPATH = nconf.get("basePath");
 }
+var DISABLE_CACHE = false;
+if(nconf.get('disableCache')) {
+    DISABLE_CACHE = !!nconf.get('disableCache');
+}
 
 function configureLogger(aLogger, name) {
     aLogger.setLevel(nconf.get(name + "_level") ? nconf.get(name + "_level") : Level.INFO);

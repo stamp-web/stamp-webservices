@@ -61,6 +61,7 @@ module.exports = function () {
         var child = child_process.fork(__dirname + "/../../app/server/server", [], {
             cwd: "..",
             env: {
+                disableCache: true,
                 database: database,
                 basePath: "/",
                 port: server_port,
