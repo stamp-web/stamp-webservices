@@ -52,7 +52,7 @@ let catalogueNumberService = extend(true, {}, new PersistentCollection(), functi
          * @returns {Promise}
          */
         bulkUpdate: cns => {
-            let sql = 'INSERT INTO cataloguenumbers (ID,NUMBER,NUMBERSORT) VALUES ';
+            let sql = 'INSERT INTO CATALOGUENUMBERS (ID,NUMBER,NUMBERSORT) VALUES ';
             _.each(cns, (cn, i) => {
                 sql += '(' + cn.id + ', \'' + cn.number + '\', \'' + cn.numberSort + '\')' + (i < cns.length -1 ? ', ': '');
             });
