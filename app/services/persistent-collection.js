@@ -365,7 +365,11 @@ PersistentCollection.rollbackOnError = function(connection, defer, err) {
     if (err) {
         connection.rollback(function () {
             connection.release();
-            defer.reject(dataTranslator.getErrorMessage(err));
+            if(defer.reject) {
+                defer.reject(dataTranslator.getErrorMessage(err));
+            } else {
+                defer(dataTranslator.getErrorMessage(err));
+            }
         });
         return true;
     }

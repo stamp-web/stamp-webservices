@@ -46,6 +46,50 @@ let catalogueNumberService = extend(true, {}, new PersistentCollection(), functi
         },
 
         /**
+         * Bulk update the catalogue numbers based on a number sort change
+         *
+         * @param cns
+         * @returns {Promise}
+         */
+        bulkUpdate: cns => {
+            let sql = 'INSERT INTO cataloguenumbers (ID,NUMBER,NUMBERSORT) VALUES ';
+            _.each(cns, (cn, i) => {
+                sql += '(' + cn.id + ', \'' + cn.number + '\', \'' + cn.numberSort + '\')' + (i < cns.length -1 ? ', ': '');
+            });
+            sql += ' ON DUPLICATE KEY UPDATE ID=VALUES(ID), NUMBER=VALUES(NUMBER), NUMBERSORT=VALUES(NUMBERSORT)';
+            return new Promise((resolve, reject) => {
+                connectionManager.getConnection().then(connection => {
+                    connection.beginTransaction((err) => {
+                        connection.query(sql, (err, rows) => {
+                            if (!PersistentCollection.rollbackOnError(connection, reject, err)) {
+                                if (rows.changedRows === 0 && rows.affectedRows === 0) {
+                                    connection.rollback(() => {
+                                        connection.release();
+                                        reject({
+                                            message:   "No changes made during update.",
+                                            code:      "NO_CHANGES",
+                                            processed: true
+                                        });
+                                    });
+                                } else {
+                                    connection.commit(err => {
+                                        connection.release();
+                                        if (err) {
+                                            reject(dataTranslator.getErrorMessage(err));
+                                        } else {
+                                            resolve(rows.changedRows);
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                    });
+                });
+            });
+
+        },
+
+        /**
          * Set the catalogue number identified by id to be the active catalogue number.
          *
          * @param id The id to set as active

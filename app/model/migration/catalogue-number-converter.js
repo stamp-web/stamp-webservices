@@ -18,36 +18,21 @@ var converter = function() {
                 Promise.all([cnP, cP]).then(values => {
                     let numbers = values[0];
                     let catalogues = values[1];
-                    if(numbers && catalogues) {
-                            let updates = [];
-                            _.forEach(numbers.rows, number => {
-                                let val = catalogueNumberHelper.serialize(number, catalogues.rows);
-                                number.NUMBERSORT = val;
-                                let num = catalogueNumber.externalize(number);
-                                num.numberSort = val;
-                                updates.push(num);
-                            });
-                            let fn = (list, count, total) => {
-                                let pulled = _.take(list,10);
-                                let processing = [];
-                                _.each(pulled, num => {
-                                   processing.push(catalogueNumberService.update(num, num.id));
-                                   count++;
-                                });
-                                Promise.all(processing).then(()=> {
-                                    if( count >= updates.length ) {
-                                        console.log('\n');
-                                        resolve();
-                                    } else {
-                                        process.stdout.write('.');
-                                        if( count % 1000 === 0 ) {
-                                            console.log('\nprocessed', count, 'of', total, 'catalogue numbers');
-                                        }
-                                    }
-                                    fn(list, count, total);
-                                });
-                            };
-                            fn(updates, 0, updates.length);
+                    if (numbers && catalogues) {
+                        let updates = [];
+                        _.forEach(numbers.rows, number => {
+                            let val = catalogueNumberHelper.serialize(number, catalogues.rows);
+                            number.NUMBERSORT = val;
+                            let num = catalogueNumber.externalize(number);
+                            num.numberSort = val;
+                            updates.push(num);
+                        });
+                        catalogueNumberService.bulkUpdate(updates).then(result => {
+                            resolve(result);
+                        }).catch(ex => {
+                            console.log(ex);
+                            reject(ex);
+                        });
                     } else {
                         reject('Nothing to do');
                     }
