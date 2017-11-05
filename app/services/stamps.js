@@ -93,7 +93,7 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
                             } else {
                                 obj.STAMP_ID = merged.ID;
                                 if (childName === 'CATALOGUENUMBER') {
-                                    obj.NUMBERSORT = catalogueNumberHelper.serialize(obj, cats);
+                                    obj.NUMBERSORT = catalogueNumberHelper.serialize(obj, catalogues);
                                 }
                                 createList.push({fieldDefinition: fieldDef, object: obj});
                             }
