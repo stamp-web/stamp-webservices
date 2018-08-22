@@ -48,7 +48,15 @@ var report = function () {
                                 if( !cur || cur === '' ) {
                                     cur = 'USD';
                                 }
-                                sum += fx.convert(result.VALUE, { from: cur, to: currency });
+                                try {
+                                    sum += fx.convert(result.VALUE, { from: cur, to: currency });
+                                } catch( fxErr ) {
+                                    if (fxErr !== 'fx error') {
+                                        throw fxErr;
+                                    } else {
+                                        sqlTrace.error(fxErr + ':' + cur + ' to ' + currency);
+                                    }
+                                }
                             }
                         });
                         var value = accounting.toFixed(sum, 2);
@@ -86,9 +94,12 @@ var report = function () {
                                 try {
                                     sum += fx.convert(result.VALUE, { from: cur, to: currency });
                                 } catch( fxErr ) {
-                                    sqlTrace.error(fxErr);
+                                    if (fxErr !== 'fx error') {
+                                        throw fxErr;
+                                    } else {
+                                        sqlTrace.error(fxErr + ':' + cur + ' to ' + currency);
+                                    }
                                 }
-
                             }
                         });
                         var value = accounting.toFixed(sum, 2);
