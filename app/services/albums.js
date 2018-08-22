@@ -173,7 +173,7 @@ var albums = extend(true, {}, new EntityManagement(), new PersistentCollection()
                     defer.reject(dataTranslator.getErrorMessage(err));
                 } else {
                     for (var j = 0; j < r.length; j++) {
-                        var a = _.findWhere(result.rows, { ID: r[j].ALBUM_ID });
+                        var a = _.find(result.rows, { ID: r[j].ALBUM_ID });
                         a.COUNTRIES.push(r[j].COUNTRY_ID);
                     }
                     defer.resolve();

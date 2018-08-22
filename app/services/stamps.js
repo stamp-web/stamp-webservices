@@ -41,7 +41,7 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
     }
 
     function processRow(rows, row, fieldDef, key) {
-        let s = _.findWhere(rows, { ID: row.STAMP_ID });
+        let s = _.find(rows, { ID: row.STAMP_ID });
         if (!s) {
             sqlTrace.trace("No stamp found for " + row.STAMP_ID);
             return;
@@ -82,7 +82,7 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
                     if (merged[childName] && _.isArray(merged[childName])) {
                         _.each(merged[childName], function (obj) {
                             if (obj.ID) {
-                                let current = _.findWhere(storedObj[childName], {ID: obj.ID});
+                                let current = _.find(storedObj[childName], {ID: obj.ID});
                                 if (childName === 'CATALOGUENUMBER') {
                                     obj.NUMBERSORT = catalogueNumberHelper.serialize(obj, catalogues);
                                 }

@@ -70,8 +70,8 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
                     var body = res.body;
                     delete body.id;
                     superagent.post('http://' + hostname + ':' + server_port + '/rest/stampCollections')
-                        .send(body).end(function (e, res) {
-                            expect(e).to.eql(null);
+                        .send(body).end(function (msg, res) {
+                            expect(msg).to.not.eql(null);
                             expect(res.status).to.eql(409);
                             done();
                         });
@@ -81,8 +81,8 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
         it('POST missing name field with 400 status', function (done) {
             superagent.post('http://' + hostname + ':' + server_port + '/rest/stampCollections')
                 .send({ description: 'some description' })
-                .end(function (e, res) {
-                    expect(e).to.eql(null);
+                .end(function (msg, res) {
+                    expect(msg).to.not.eql(null);
                     expect(res.status).to.eql(400);
                     done();
                 });
@@ -127,8 +127,8 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
                             var id = res.body.id;
                             superagent.put('http://' + hostname + ':' + server_port + '/rest/stampCollections/' + id)
                                 .send({ name: conflict_name })
-                                .end(function (e, res) {
-                                    expect(e).to.eql(null);
+                                .end(function (msg, res) {
+                                    expect(msg).to.not.eql(null);
                                     expect(res.status).to.eql(409);
                                     done();
                                 });

@@ -42,7 +42,7 @@ var collections = extend(true, {},  new EntityManagement(), new PersistentCollec
             var defer = q.defer();
             var params = {
                 $filter : new Predicate({
-                        subject: _.findWhere(album.getFieldDefinitions(), { column: "COLLECTION_ID" }).field,
+                        subject: _.find(album.getFieldDefinitions(), { column: "COLLECTION_ID" }).field,
                         operator: Operators.EQUALS,
                         value: id
                     }),

@@ -55,13 +55,13 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
                     expect(e).to.eql(null);
                     expect(res.status).to.eql(201);
                     var catalogueNumbers = res.body.catalogueNumbers;
-                    var activate = _.findWhere(catalogueNumbers, {active: false});
+                    var activate = _.find(catalogueNumbers, {active: false});
                     expect(activate).to.not.be(undefined);
                     superagent.post('http://' + hostname + ':' + server_port + '/rest/catalogueNumbers/' + activate.id + '/makeActive')
                         .end(function (e, res) {
                             catalogueNumbers = res.body.catalogueNumbers;
-                            expect(_.findWhere(catalogueNumbers, {active: true}).id).to.be.eql(activate.id);
-                            expect(_.where(catalogueNumbers, {active: true}).length).to.be(1);
+                            expect(_.find(catalogueNumbers, {active: true}).id).to.be.eql(activate.id);
+                            expect(_.filter(catalogueNumbers, {active: true}).length).to.be(1);
                             done();
                         });
 
@@ -91,14 +91,14 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
                     expect(e).to.eql(null);
                     expect(res.status).to.eql(201);
                     var catalogueNumbers = res.body.catalogueNumbers;
-                    var activate = _.findWhere(catalogueNumbers, {active: true});
+                    var activate = _.find(catalogueNumbers, {active: true});
                     expect(activate).to.not.be(undefined);
                     superagent.post('http://' + hostname + ':' + server_port + '/rest/catalogueNumbers/' + activate.id + '/makeActive')
                         .end(function (e, res) {
                             expect(res.statusCode).to.be(200);
                             catalogueNumbers = res.body.catalogueNumbers;
-                            expect(_.findWhere(catalogueNumbers, {active: true}).id).to.be.eql(activate.id);
-                            expect(_.where(catalogueNumbers, {active: true}).length).to.be(1);
+                            expect(_.find(catalogueNumbers, {active: true}).id).to.be.eql(activate.id);
+                            expect(_.filter(catalogueNumbers, {active: true}).length).to.be(1);
                             done();
                         });
 
@@ -142,7 +142,7 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
                     expect(e).to.eql(null);
                     expect(res.status).to.eql(201);
                     var catalogueNumbers = res.body.catalogueNumbers;
-                    var nonActive = _.findWhere(catalogueNumbers, {active: false});
+                    var nonActive = _.find(catalogueNumbers, {active: false});
                     var stampId = res.body.id;
                     expect(nonActive).to.not.be(undefined);
                     superagent.del('http://' + hostname + ':' + server_port + '/rest/catalogueNumbers/' + nonActive.id)

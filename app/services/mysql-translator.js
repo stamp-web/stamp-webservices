@@ -45,7 +45,7 @@ function DataTranslator() {
         generateUpdateByFields: function(fieldDefinition, proposed, current, onlyWithFields) {
             var expr = "";
             _.each(Object.keys(proposed), function(key) {
-               var definition = _.findWhere(fieldDefinition.getFieldDefinitions(), { column: key});
+               var definition = _.find(fieldDefinition.getFieldDefinitions(), { column: key});
                if( proposed[key] !== current[key]) {
                    var val = fieldDefinition.formatValue(definition,proposed[key]);
                    if( val !== undefined ) {
@@ -54,7 +54,7 @@ function DataTranslator() {
                }
             });
             if( !onlyWithFields || (onlyWithFields && expr.length > 0) ) {
-                var modifyField = _.findWhere(fieldDefinition.getFieldDefinitions(), { field: 'modifyTimestamp' });
+                var modifyField = _.find(fieldDefinition.getFieldDefinitions(), { field: 'modifyTimestamp' });
                 if( modifyField && !proposed[modifyField.column] ) {
                     expr += ((expr.length > 0) ? ", " : "") + modifyField.column + "=CURDATE()";
                 }
@@ -68,7 +68,7 @@ function DataTranslator() {
         generateInsertByFields: function (fieldDefinition, obj) {
             var config = { DB_COLS: [], VALUES: [] };
             _.each(Object.keys(obj), function(col) {
-                var definition = _.findWhere(fieldDefinition.getFieldDefinitions(), { column: col });
+                var definition = _.find(fieldDefinition.getFieldDefinitions(), { column: col });
                 if( definition.type === 'id_array' || definition.type === 'obj_array') {
                     return;
                 }
@@ -99,7 +99,7 @@ function DataTranslator() {
 
         generateInsertStatement: function (fieldDefinition, obj) {
             var config = this.processFields(fieldDefinition, obj);
-            var creationField = _.findWhere(fieldDefinition.getFieldDefinitions(), { field: 'createTimestamp' });
+            var creationField = _.find(fieldDefinition.getFieldDefinitions(), { field: 'createTimestamp' });
             if (creationField && _.indexOf(config.DB_COLS, "CREATESTAMP") < 0) {
                 config.DB_COLS.push(creationField.column);
                 config.VALUES.push("CURDATE()");
@@ -129,7 +129,7 @@ function DataTranslator() {
             };
             var that = this;
             _.each(obj, function (value, key) {
-                var definition = _.findWhere(fieldDefinition.getFieldDefinitions(), { field : key });
+                var definition = _.find(fieldDefinition.getFieldDefinitions(), { field : key });
                 if (definition && definition.column) {
                     var val = fieldDefinition.formatValue(definition,value);
                     if( val === undefined ) {
@@ -214,7 +214,7 @@ function DataTranslator() {
                         var predicate = subject;
                         for (var i = 0; i < fieldDefinitions.length; i++) {
                             var definition = fieldDefinitions[i];
-                            var field = _.findWhere(definition.getFieldDefinitions(), { field: subject });
+                            var field = _.find(definition.getFieldDefinitions(), { field: subject });
                             if (field && field.column && !field.nonPersistent) {
                                 predicate = ((definition.getAlias()) ? definition.getAlias() + '.' : '') + field.column;
                                 if (field.type === 'date') {

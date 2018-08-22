@@ -70,8 +70,8 @@ var stampUtil= require('./util/stamp-utilities');
                     var body = res.body;
                     delete body.id;
                     superagent.post('http://' + hostname + ':' + server_port + '/rest/countries')
-                        .send(body).end(function (e, res) {
-                            expect(e).to.eql(null);
+                        .send(body).end(function (msg, res) {
+                            expect(msg).to.not.eql(null);
                             expect(res.status).to.eql(409);
                             done();
                         });
@@ -81,8 +81,8 @@ var stampUtil= require('./util/stamp-utilities');
         it('POST missing name field with 400 status', function (done) {
             superagent.post('http://' + hostname + ':' + server_port + '/rest/countries')
                 .send({ description: 'some description' })
-                .end(function (e, res) {
-                    expect(e).to.eql(null);
+                .end(function (msg, res) {
+                    expect(msg).to.not.eql(null);
                     expect(res.status).to.eql(400);
                     done();
                 });
@@ -168,8 +168,8 @@ var stampUtil= require('./util/stamp-utilities');
                             // Now verify it is not found.
                             superagent.put('http://' + hostname + ':' + server_port + '/rest/countries/' + id)
                                 .send({ name: conflict_name })
-                                .end(function (e, res) {
-                                    expect(e).to.be(null);
+                                .end(function (msg, res) {
+                                    expect(msg).to.not.be(null);
                                     expect(res.status).to.be(409);
                                     done();
                                 });

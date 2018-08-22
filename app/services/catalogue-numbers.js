@@ -100,8 +100,8 @@ let catalogueNumberService = extend(true, {}, new PersistentCollection(), functi
             let that = this;
             this.findById(id).then(function(catNum) {
                 stamps.findById(catNum.STAMP_ID).then(function(stamp) {
-                    catNum = _.findWhere(stamp.CATALOGUENUMBER, {ID: +id});
-                    let activeCN = _.findWhere(stamp.CATALOGUENUMBER, {ACTIVE:1});
+                    catNum = _.find(stamp.CATALOGUENUMBER, {ID: +id});
+                    let activeCN = _.find(stamp.CATALOGUENUMBER, {ACTIVE:1});
                     if( !activeCN || +activeCN.ID !== +id ) {
                         let count = 0;
                         let total = activeCN ? 2 : 1;

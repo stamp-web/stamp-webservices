@@ -70,13 +70,12 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
             superagent.post('http://' + hostname + ':' + server_port + '/rest/albums')
                 .send({ name: 'German States', stampCollectionRef: 1 })
                 .end(function (e, res) {
-                    expect(e).to.eql(null);
                     expect(res.status).to.eql(201);
                     var body = res.body;
                     delete body.id;
                     superagent.post('http://' + hostname + ':' + server_port + '/rest/albums')
                         .send(body).end(function (e, res) {
-                            expect(e).to.eql(null);
+                            expect(e).to.not.eql(null);
                             expect(res.status).to.eql(409);
                             done();
                         });
@@ -87,7 +86,7 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
             superagent.post('http://' + hostname + ':' + server_port + '/rest/albums')
                 .send({ description: 'some description' })
                 .end(function (e, res) {
-                    expect(e).to.eql(null);
+                    expect(e).to.not.eql(null);
                     expect(res.status).to.eql(400);
                     done();
                 });
@@ -97,7 +96,7 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
             superagent.post('http://' + hostname + ':' + server_port + '/rest/albums')
                 .send({ name: 'Some album' })
                 .end(function (e, res) {
-                    expect(e).to.eql(null);
+                    expect(e).to.not.eql(null);
                     expect(res.status).to.eql(400);
                     done();
                 });
@@ -108,11 +107,9 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
             superagent.post('http://' + hostname + ':' + server_port + '/rest/albums')
                 .send({ name: name, stampCollectionRef: 1 })
                 .end(function (e, res) {
-                    expect(e).to.eql(null);
                     expect(res.status).to.eql(201);
                     var id = res.body.id;
                     superagent.post('http://' + hostname + ':' + server_port + '/rest/albums/' + id + '/moveTo/2').end(function(e,res) {
-                        expect(e).to.eql(null);
                         expect(res.status).to.be(200);
                         var body = res.body;
                         expect(body.name).to.eql('Move Album');
@@ -155,19 +152,17 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
             superagent.post('http://' + hostname + ':' + server_port + '/rest/albums')
                 .send({ name: conflict_name, stampCollectionRef: 1 })
                 .end(function (e, res) {
-                    expect(e).to.eql(null);
                     expect(res.status).to.eql(201);
                     superagent.post('http://' + hostname + ':' + server_port + '/rest/albums')
                         .send({ name: 'PUT causing conflict', stampCollectionRef: 1 })
                         .end(function (e, res) {
-                            expect(e).to.eql(null);
                             expect(res.status).to.eql(201);
                             var id = res.body.id;
                             // Now verify it is not found.
                             superagent.put('http://' + hostname + ':' + server_port + '/rest/albums/' + id)
                                 .send({ name: conflict_name })
                                 .end(function (e, res) {
-                                    expect(e).to.eql(null);
+                                    expect(e).to.not.eql(null);
                                     expect(res.status).to.eql(409);
                                     done();
                                 });

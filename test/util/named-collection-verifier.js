@@ -62,7 +62,6 @@ var NamedCollectionVerifications = {
     verifyNotFound: function (collectionName, done) {
         superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + RANDOM_ID)
           .end(function (e, res) {
-            expect(e).to.be(null);
             expect(res.status).to.be(404);
             done();
         });
@@ -71,7 +70,7 @@ var NamedCollectionVerifications = {
         superagent.put('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + RANDOM_ID)
             .send(props)
           .end(function (e, res) {
-            expect(e).to.be(null);
+            expect(e).to.not.be(null);
             expect(res.status).to.be(404);
             done();
         });
@@ -99,8 +98,8 @@ var NamedCollectionVerifications = {
     },
     verifyDeleteNotFound: function (collectionName, done) {
         superagent.del('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + RANDOM_ID)
-          .end(function (e, res) {
-            expect(e).to.eql(null);
+          .end(function (msg, res) {
+            expect(msg).to.not.eql(null);
             expect(res.status).to.eql(404);
             done();
         })
@@ -121,7 +120,7 @@ var NamedCollectionVerifications = {
                 // Now verify it is not found.
                 superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + id)
                       .end(function (e, res) {
-                    expect(e).to.eql(null);
+                    expect(e).to.not.eql(null);
                     expect(res.status).to.eql(404);
                     if (fn) {
                         fn(done);

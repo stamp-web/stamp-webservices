@@ -9,7 +9,7 @@ var fieldDefinition = function () {
 
     return {
         toInternal: function (f) {
-            var val = _.findWhere(this.getFieldDefinitions(), { field: f });
+            var val = _.find(this.getFieldDefinitions(), { field: f });
             return (val) ? val.column: undefined;
         },
         /**
@@ -63,7 +63,7 @@ var fieldDefinition = function () {
             var obj = {};
             var that = this;
             _.each(_.keys(o), function (key) {
-                var field = _.findWhere(that.getFieldDefinitions(), { field: key });
+                var field = _.find(that.getFieldDefinitions(), { field: key });
                 if (field && !field.nonPersistent) {
                     if (field.type === 'obj_array' && field.model) {
                         var m = require('./' + field.model);
@@ -87,9 +87,9 @@ var fieldDefinition = function () {
         },
         getField: function (o, column) {
             if( column ) {
-                return _.findWhere(this.getFieldDefinitions(), { column: o });
+                return _.find(this.getFieldDefinitions(), { column: o });
             } else {
-                return _.findWhere(this.getFieldDefinitions(), { field: o });
+                return _.find(this.getFieldDefinitions(), { field: o });
             }
         },
         merge: function (cur, orig) {
@@ -102,7 +102,7 @@ var fieldDefinition = function () {
                     if (field.type === "obj_array" && field.model) {
                         for (var i = 0; i < orig[key].length; i++) {
                             var mergeSource = orig[key][i];
-                            var mergeChild = _.findWhere(cur[key], { ID: mergeSource.ID });
+                            var mergeChild = _.find(cur[key], { ID: mergeSource.ID });
                             if( mergeChild ) {
                                 require('./' + field.model).merge(mergeChild, mergeSource);
                             } else {
@@ -123,7 +123,7 @@ var fieldDefinition = function () {
 
                 var that = this;
                 _.each(_.keys(o), function (key) {
-                    var field = _.findWhere(that.getFieldDefinitions(), { column: key });
+                    var field = _.find(that.getFieldDefinitions(), { column: key });
                     if (!field || (field.internal) || (typeof field.externalizeOnEmpty !== 'undefined' && field.externalizeOnEmpty === false && o[key] === null)) {
                         delete obj[key];
                     } else if (field.type === "obj_array") {

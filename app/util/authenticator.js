@@ -21,7 +21,7 @@ var BasicValidation = {}
 
 BasicValidation.validator = function(username, password, done) {
     "use strict";
-    var user = _.findWhere(BasicValidation.getUserCache(), {username: username});
+    var user = _.find(BasicValidation.getUserCache(), {username: username});
     if(logger.isEnabled(Level.DEBUG)) {
         logger.debug("For username \'" + username + " found user : " + user);
     }
@@ -54,7 +54,7 @@ BasicValidation.serializeUser = function(user,done) {
 
 BasicValidation.deserializeUser = function(id,done) {
     "use strict";
-    done(null,_.findWhere(BasicValidation.getUserCache(), {id: id}));
+    done(null,_.find(BasicValidation.getUserCache(), {id: id}));
 };
 
 Authenticator.initialize = function(app) {

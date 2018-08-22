@@ -206,7 +206,7 @@ function PersistentCollection() {
             var found = false;
             _.each( definitions, function(definition) {
                 if( !found ) {
-                    var field = _.findWhere(definition.getFieldDefinitions(), { field: sortKeys[0] });
+                    var field = _.find(definition.getFieldDefinitions(), { field: sortKeys[0] });
                     if( field ) {
                         if( field.sortFn ) {
                             orderby = (field.sortFn.apply(definition));
