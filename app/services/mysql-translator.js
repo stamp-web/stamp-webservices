@@ -3,7 +3,6 @@ var Logger = require('../util/logger');
 var moment = require('moment');
 var Predicate = require('odata-filter-parser').Predicate;
 var Operators = require('odata-filter-parser').Operators;
-require("../util/string-utilities");
 var Constants = require("../util/constants");
 
 var logger = Logger.getLogger("server");

@@ -188,8 +188,6 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
                 });
         });
 
-        it.skip('DELETE successful removes all associated stamps', function (done) {
-        });
     });
 
 })(describe,it,after,before);
