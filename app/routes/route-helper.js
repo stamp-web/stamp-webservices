@@ -11,6 +11,7 @@ var routeHelper = function () {
             NO_CONTENT: 204,
             BAD_REQUEST: 400,
             NOT_FOUND: 404,
+            FORBIDDEN: 403,
             CONFLICT: 409,
             INTERNAL_ERROR: 500
         },
@@ -27,19 +28,21 @@ var routeHelper = function () {
         setErrorStatus : function (res, err) {
             var code = this.StatusCode.INTERNAL_ERROR;
             switch (err.code) {
-                case "UNIQUENESS_EXCEPTION":
+                case 'UNIQUENESS_EXCEPTION':
                     code = this.StatusCode.CONFLICT;
                     break;
-                case "REQUIRED_FIELD":
-                case "INVALID_OBJECT":
+                case 'REQUIRED_FIELD':
+                case 'INVALID_OBJECT':
                     code = this.StatusCode.BAD_REQUEST;
                     break;
-                case "NOT_FOUND":
+                case 'NOT_FOUND':
                     code = this.StatusCode.NOT_FOUND;
                     break;
-                case "CONFLICT":
+                case 'CONFLICT':
                     code = this.StatusCode.CONFLICT;
                     break;
+                case 'FORBIDDEN':
+                    code = this.StatusCode.FORBIDDEN;
             }
             res.status(code).send(err.message);
         },

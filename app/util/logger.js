@@ -25,7 +25,7 @@ function Logger(loggerName) {
                 message = JSON.stringify(message);
             }
             var msg = level.toUpperCase() + ': ' + message;
-            accessLogStream.write( msg );
+            accessLogStream.write( msg + '\n');
             var ordinal = Level.levels.indexOf(level);
             if( ordinal <= CONSOLE_LOGGING || ordinal === 5 ) {
                 console.log(message);

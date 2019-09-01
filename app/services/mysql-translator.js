@@ -21,18 +21,22 @@ function DataTranslator() {
             if (!err.processed) {
                 switch (err.code) {
                     case 'ER_NO_SUCH_TABLE':
-                        msg = { message: err.message, code: "INTERNAL_ERROR" };
+                        msg = { message: err.message, code: 'INTERNAL_ERROR' };
                         break;
                     case 'ER_NO_DEFAULT_FOR_FIELD':
-                        var m = err.message.substring(err.message.indexOf("'") + 1);
-                        m = m.substring(0, m.indexOf("'"));
-                        msg = { message: "A value for field '" + m + "' is required", code: "REQUIRED_FIELD" };
+                        var m = err.message.substring(err.message.indexOf(''') + 1);
+                        m = m.substring(0, m.indexOf('''));
+                        msg = { message: 'A value for field '' + m + '' is required', code: 'REQUIRED_FIELD' };
                         break;
                     case 'ER_DUP_ENTRY':
-                        msg = { message: "The object already exists", code: "UNIQUENESS_EXCEPTION" };
+                        msg = { message: 'The object already exists', code: 'UNIQUENESS_EXCEPTION' };
+                        break;
+                    case 'ER_TABLEACCESS_DENIED_ERROR':
+                        logger.error(err.message);
+                        msg = { message: 'Unauthorized to perform the action', code: 'FORBIDDEN'};
                         break;
                     default:
-                        msg = { message: err.message, code: "INTERNAL_ERROR" };
+                        msg = { message: err.message, code: 'INTERNAL_ERROR' };
                 }
             } else {
                 msg = err;
