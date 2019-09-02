@@ -6,7 +6,7 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
 (function (describe, it, after, before) {
     "use strict";
 
-    describe('REST Services for Albums', function (done) {
+    describe('REST Services for Albums', function () {
 
         var hostname, server_port, connection;
 
@@ -26,8 +26,9 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
         });
 
         it('GET Collection with 200 status', function (done) {
-            NamedCollectionVerifications.verifyCollection('albums', done, function (obj) {
+            NamedCollectionVerifications.verifyCollection('albums', undefined, function (obj) {
                 expect(obj.stampCollectionRef).to.be.greaterThan(0);
+                done();
             });
         });
 
@@ -35,8 +36,9 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
             NamedCollectionVerifications.verifySingleItem('albums', {
                 id: 1,
                 name: 'Australia'
-            }, done, function (obj) {
+            }, undefined, function (obj) {
                 expect(obj.stampCollectionRef).to.be.eql(1);
+                done();
             });
         });
 
@@ -61,8 +63,9 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
         it('POST valid creation with 201 status', function (done) {
             NamedCollectionVerifications.verifyPost('albums', {
                 name: 'British Europe', stampCollectionRef: 1, description: 'European countries'
-            }, done, function (obj) {
+            }, undefined, function (obj) {
                 expect(obj.stampCollectionRef).to.be.eql(1);
+                done();
             });
         });
 

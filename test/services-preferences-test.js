@@ -6,7 +6,7 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
 (function (describe, it, after, before) {
     "use strict";
 
-    describe('REST Services for Preferences', function (done) {
+    describe('REST Services for Preferences', function () {
 
         var hostname, server_port, connection;
 
@@ -26,18 +26,21 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
         });
 
         it('GET Collection with 200 status', function (done) {
-            NamedCollectionVerifications.verifyCollection('preferences', done, function (obj) {
+            NamedCollectionVerifications.verifyCollection('preferences', undefined, function (obj) {
                 expect(obj.category).to.not.be(undefined);
                 expect(obj.value).to.not.be(undefined);
+                done();
             });
         });
+
         it('GET by ID with 200 status', function (done) {
             NamedCollectionVerifications.verifySingleItem('preferences', {
                 id: 1,
                 name: 'imagePath'
-            }, done, function (obj) {
+            }, undefined, function (obj) {
                 expect(obj.category).to.be.eql('stamps');
                 expect(obj.value).to.be.eql('http://drake-server.dnsdynamic.com');
+                done();
             });
         });
         it('GET by invalid ID with 404 status', function (done) {
@@ -51,8 +54,9 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
         it('POST valid creation with 201 status', function (done) {
             NamedCollectionVerifications.verifyPost('preferences', {
                 name: 'somePref', category: 'stamps', value: 'someValue'
-            }, done, function (obj) {
+            }, undefined, function (obj) {
                 expect(obj.category).to.be.eql('stamps');
+                done();
             });
         });
 

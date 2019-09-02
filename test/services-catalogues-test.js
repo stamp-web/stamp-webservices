@@ -6,7 +6,7 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
 (function (describe, it, after, before) {
     "use strict";
 
-    describe('REST Services for Catalogues', function (done) {
+    describe('REST Services for Catalogues', function () {
 
         var hostname, server_port, connection;
 
@@ -26,9 +26,10 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
         });
 
         it('GET Collection with 200 status', function (done) {
-            NamedCollectionVerifications.verifyCollection('catalogues', done, function (obj) {
+            NamedCollectionVerifications.verifyCollection('catalogues', undefined, function (obj) {
                 expect(obj.issue).to.not.be(null);
                 expect(obj.type).to.not.be(null);
+                done();
             });
         });
         it('GET by ID with 200 status', function (done) {
@@ -37,9 +38,10 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
                 name: 'Stamps of the world',
                 issue: 2014,
                 type: 0
-            }, done, function (obj) {
+            }, undefined, function (obj) {
                 expect(obj.issue).to.be.eql(2014);
                 expect(obj.type).to.be.eql(0);
+                done();
             });
         });
         it('GET by invalid ID with 404 status', function (done) {
@@ -53,10 +55,11 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
         it('POST valid creation with 201 status', function (done) {
             NamedCollectionVerifications.verifyPost('catalogues', {
                 name: 'Scott Postage Specialized', issue: 2012, type: 1, code: 'USD', description: 'Detailed specialized'
-            }, done, function (obj) {
+            }, undefined, function (obj) {
                 expect(obj.issue).to.be.eql(2012);
                 expect(obj.type).to.be.eql(1);
                 expect(obj.code).to.be.eql('USD');
+                done();
             });
         });
 
@@ -69,7 +72,7 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
         it('DELETE vetoed for orphaned stamps', function (done) {
             NamedCollectionVerifications.verifyPost('catalogues', {
                 name: 'Unable to delete orphans', issue: 2014, type: 1
-            }, null, function (obj) {
+            }, undefined, function (obj) {
                 var id = obj.id;
                 var stamp = {
                     countryRef: 1,
@@ -102,7 +105,7 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
         it('DELETE ok for secondary catalogue numbers', function (done) {
             NamedCollectionVerifications.verifyPost('catalogues', {
                 name: 'ok to delete secondary CNs', issue: 2012, type: 2
-            }, null, function (obj) {
+            }, undefined, function (obj) {
                 var id = obj.id;
                 var stamp = {
                     countryRef: 1,

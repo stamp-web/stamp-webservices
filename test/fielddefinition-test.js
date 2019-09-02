@@ -3,7 +3,7 @@ var country = require("../app/model/country");
 var album = require("../app/model/album");
 var preference = require("../app/model/preference");
 
-describe('Field definition tests', function (done) {
+describe('Field definition tests', function () {
     describe('Country field definition tests', function () {
         it("Validate with all required specified", function () {
             var c = {

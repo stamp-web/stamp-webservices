@@ -8,7 +8,7 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
 (function (describe, it, after, before) {
     "use strict";
 
-    describe('REST Services for Stamps', function (done) {
+    describe('REST Services for Stamps', function () {
 
         var hostname, server_port, connection;
 

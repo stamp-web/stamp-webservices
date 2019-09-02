@@ -127,14 +127,12 @@ module.exports = function () {
                         connection.release();
                     }
                     if (!err) {
+                        logger.info('MySQL database pool created for database named \'' + dbName + '\'');
                         defer.resolve(dbPool);
                     } else {
                         defer.reject(err);
                     }
                 });
-                setTimeout(function() {
-                    logger.info("MySQL database pool created for database named \'" + dbName + "\'");
-                }, 1000);
             });
         } else {
             var msg = "The database " + dbName + " was not found in the configuration.";

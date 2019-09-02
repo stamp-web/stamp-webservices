@@ -35,7 +35,9 @@ var NamedCollectionVerifications = {
             } else {
                 expect().fail("No data present.");
             }
-            done();
+            if (done) {
+                done();
+            }
         });
     },
     
@@ -56,8 +58,10 @@ var NamedCollectionVerifications = {
             if (fn) {
                 fn(res.body);
             }
-            done();
-        })
+            if (done) {
+                done();
+            }
+        });
     },
     verifyNotFound: function (collectionName, done) {
         superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + RANDOM_ID)
@@ -91,7 +95,7 @@ var NamedCollectionVerifications = {
             if (fn) {
                 fn(body);
             }
-            if (done !== null) {
+            if (done) {
                 done();
             }
         });
@@ -124,7 +128,7 @@ var NamedCollectionVerifications = {
                     expect(res.status).to.eql(404);
                     if (fn) {
                         fn(done);
-                    } else {
+                    } else if (done) {
                         done();
                     }
                 });

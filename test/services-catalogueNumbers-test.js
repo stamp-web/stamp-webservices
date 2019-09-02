@@ -7,7 +7,7 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
 (function (describe, it, after, before) {
     "use strict";
 
-    describe('REST Services for Catalogue Numbers', function (done) {
+    describe('REST Services for Catalogue Numbers', function () {
 
         var hostname, server_port, connection;
 

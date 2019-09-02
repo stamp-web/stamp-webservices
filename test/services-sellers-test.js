@@ -6,7 +6,7 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
 (function (describe, it, after, before) {
     "use strict";
 
-    describe('REST Services for Sellers', function (done) {
+    describe('REST Services for Sellers', function () {
 
         var hostname, server_port, connection;
 
@@ -62,7 +62,7 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
         it('DELETE clears SELLER_ID of ownership and updates ModifyStamp of stamp and ownership', function (done) {
             NamedCollectionVerifications.verifyPost('sellers', {
                 name: 'Test of Delete Seller_ID'
-            }, null, function (seller) {
+            }, undefined, function (seller) {
                 // seller is now created and available for evaluation
                 connection.query('INSERT INTO STAMPS (ID,COUNTRY_ID,DENOMINATION) VALUES(80200,1,"1d")', function (err, data) {
                     if (err) {

@@ -13,7 +13,7 @@ var moment = require('moment');
 var Predicate = ODataParser.Predicate;
 var Operators = ODataParser.Operators;
 
-describe('MySQL Translator tests', function (done) {
+describe('MySQL Translator tests', function () {
 
     describe('Generate Update by Key test', function() {
         it("Generate same keys, new values", function() {

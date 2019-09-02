@@ -7,7 +7,7 @@ var stampUtil= require('./util/stamp-utilities');
 (function (describe, it, after, before) {
     "use strict";
 
-    describe('REST Services for Countries', function (done) {
+    describe('REST Services for Countries', function () {
 
         var hostname, server_port, connection;
 
@@ -188,10 +188,10 @@ var stampUtil= require('./util/stamp-utilities');
         it('DELETE cascade to ALBUMS_COUNTRIES', function (done) {
             NamedCollectionVerifications.verifyPost('countries', {
                 name: 'Test of Country Delete Cascade'
-            }, null, function (country) {
+            }, undefined, function (country) {
                 NamedCollectionVerifications.verifyPost('albums', {
                     name: 'Test of Country Delete Cascade', countries: [country.id], stampCollectionRef: 1
-                }, null, function (album) {
+                }, undefined, function (album) {
                     superagent.del('http://' + hostname + ':' + server_port + '/rest/countries/' + country.id)
                         .end(function (e, res) {
                             expect(e).to.eql(null);
@@ -211,7 +211,7 @@ var stampUtil= require('./util/stamp-utilities');
         it('DELETE successfully removes associated stamp(s).', function (done) {
             NamedCollectionVerifications.verifyPost('countries', {
                 name: 'Test of Delete Country_ID'
-            }, null, function (country) {
+            }, undefined, function (country) {
                 // seller is now created and available for evaluation
                 connection.query('INSERT INTO STAMPS (ID,COUNTRY_ID,DENOMINATION) VALUES(80201,' + country.id + ',"1d")', function (err, data) {
                     if (err) {
