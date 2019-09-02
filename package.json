@@ -38,7 +38,7 @@
     "zpad": "^0.5.0"
   },
   "scripts": {
-    "test-jenkins": "JUNIT_REPORT_PATH=/report.xml mocha --colors --timeout 6000 --reporter mocha-jenkins-reporter"
+    "test-jenkins": "JUNIT_REPORT_PATH=test-result/result.xml JUNIT_REPORT_STACK=1 mocha --colors --timeout 6000 --reporter mocha-jenkins-reporter || true"
   },
   "license": "Apache-2.0",
   "repository": {
