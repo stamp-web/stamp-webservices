@@ -37,7 +37,9 @@
     "stylus": "*",
     "zpad": "^0.5.0"
   },
-  "scripts": {},
+  "scripts": {
+    "test-jenkins": "JUNIT_REPORT_PATH=/report.xml mocha --colors --reporter mocha-jenkins-reporter --timeout 6000 --sql_level error --cpu 1"
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -45,6 +47,7 @@
   },
   "devDependencies": {
     "mocha": "^4.1.0",
+    "mocha-jenkins-reporter": "^0.4.2",
     "superagent": "3.8.3"
   },
   "keywords": [],
