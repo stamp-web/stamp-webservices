@@ -76,7 +76,7 @@ app.use(morgan('tiny', {stream: FileStreamRotator.getStream({
     frequency: 'daily',
     verbose: false })
 }));
-app.use(favicon(__dirname + '/../../public/favicon.ico'));
+app.use(favicon(__dirname + '/../../www/favicon.ico'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
