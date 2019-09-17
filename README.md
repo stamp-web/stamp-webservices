@@ -2,7 +2,7 @@
 
 ## Build Status
 
-![Build Status](http://drake-server.ddns.net:9001/build/stamp-webservices.svg)
+![Build Status](https://drake-server.ddns.net/build/stamp-webservices.svg)
 
 ## Configuring the system
 While many parameters can be passed on the command line to the server, it is recommended to utilize config/application.json to store 
