@@ -72,6 +72,15 @@ The following are the supported options:
   * --db_password xxx - the password to use for the database connection if not defined in the application.json and prompt is undesired.
   * --authentication xxx - the authentication scheme to use (currently supported as "none" or "basic")
   * --password_file xxx - the authentication users file (for basic authentication) (defaults to "config/users.json")
+  * --httpOnly - will run the server as HTTP even when HTTPS certificates are configurated
+
+### Configuring HTTPS
+
+Obtain a certificate for your application.  Edit the file config/application.json and add the section "Certificates" with
+child key values of "CertificateFile" and "CertificateKeyFile" both pointing to the location of the .crt and .key files 
+respectfully.  The server will automatically startup in HTTPS mode unless the flag "--httpOnly" has been set.
+
+See application-example.json for the configuration format.
 
 
 ## Code Coverage
