@@ -2,6 +2,10 @@
     "openexchangerates.org": {
         "app_id": "YOUR_APP_ID_HERE"
     },
+    "Certificates": {
+        "CertificateFile": "PATH_TO_CERT",
+        "CertificateKeyFile": "PATH_TO_KEY_FILE"
+    },
     "authentication": "none",
     "database": "mysql",
     "databases": {

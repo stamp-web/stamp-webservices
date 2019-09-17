@@ -1,25 +1,28 @@
 "use strict";
 
-var express = require("express");
-var helmet = require('helmet');
-var compression = require("compression");
-var serveStatic = require('serve-static');
-var morgan = require('morgan');
-var connectionMgr = require('../pom/connection-mysql');
-var favicon = require('serve-favicon');
-var bodyParser = require('body-parser');
-var nconf = require('nconf');
-var http = require('http');
-var connect = require('connect');
-var domainMiddleware = require('domain-middleware');
-var FileStreamRotator = require('file-stream-rotator');
-var Logger = require('../util/logger');
-var Level = require('../util/level');
-var Authenticator = require('../util/authenticator');
-var _ = require('lodash');
-var path = require('path');
+const express = require("express");
+const helmet = require('helmet');
+const compression = require("compression");
+const serveStatic = require('serve-static');
+const morgan = require('morgan');
+const connectionMgr = require('../pom/connection-mysql');
+const favicon = require('serve-favicon');
+const bodyParser = require('body-parser');
+const nconf = require('nconf');
+const https = require('https');
+const http = require('http');
+const connect = require('connect');
+const domainMiddleware = require('domain-middleware');
+const FileStreamRotator = require('file-stream-rotator');
+const Logger = require('../util/logger');
+const Level = require('../util/level');
+const Authenticator = require('../util/authenticator');
+const _ = require('lodash');
+const path = require('path');
+const fs = require('fs');
 
-nconf.argv().env();
+nconf.argv().env().file(__dirname + '/../../config/application.json');
+
 
 var SERVICES_PATH = "rest";
 var BASEPATH = "/stamp-webservices/";
@@ -65,7 +68,33 @@ function showLoggers(req,resp) {
     resp.status(200).send(html);
 }
 
-var server = http.createServer();
+
+var logger = Logger.getLogger("server");
+var sqlTrace = Logger.getLogger("sql");
+
+configureLogger(logger, "logger");
+configureLogger(sqlTrace, "sql");
+
+
+function createServer() {
+    let server;
+    const certificates = nconf.get('Certificates');
+    if (nconf.get('httpOnly') || !certificates) {
+        logger.warn('WARNING: Server is created with non-TLS protocol.');
+        server = http.createServer();
+    } else {
+        if(_.get(certificates, 'CertificateFile') && _.get(certificates, 'CertificateKeyFile')) {
+            server = https.createServer({
+                key: fs.readFileSync(certificates.CertificateKeyFile),
+                cert: fs.readFileSync(certificates.CertificateFile)
+            });
+        } else {
+            logger.error('Either CertificateKeyFile or CertificateFile was not defined');
+        }
+    }
+    return server;
+
+}
 
 var app = express();
 app.use(compression());
@@ -81,6 +110,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 Authenticator.initialize(app);
+
+const server = createServer();
 
 app.use(
     domainMiddleware({
@@ -110,11 +141,6 @@ require("../routes/rest-stamps").configure(app, BASEPATH + SERVICES_PATH);
 require("../routes/reports").configure(app, BASEPATH + SERVICES_PATH);
 
 
-var logger = Logger.getLogger("server");
-var sqlTrace = Logger.getLogger("sql");
-
-configureLogger(logger, "logger");
-configureLogger(sqlTrace, "sql");
 
 connectionMgr.startup().then(function () {
     process.on('exit', function () {

@@ -11,4 +11,5 @@ logs/output.log
 /test/transaction-example.js
 .idea
 stamp-web
+/certs
 /config/users.json

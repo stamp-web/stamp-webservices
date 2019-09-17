@@ -66,6 +66,7 @@ module.exports = function () {
                 database: database,
                 basePath: '/',
                 port: server_port,
+                httpOnly: true,
                 authentication: null,
                 sql_level: sql_level,
                 logger_target: 'file',
