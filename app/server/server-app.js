@@ -9,7 +9,7 @@ const connectionMgr = require('../pom/connection-mysql');
 const favicon = require('serve-favicon');
 const bodyParser = require('body-parser');
 const nconf = require('nconf');
-const https = require('https');
+const spdy = require('spdy');
 const http = require('http');
 const connect = require('connect');
 const domainMiddleware = require('domain-middleware');
@@ -81,10 +81,10 @@ function createServer() {
     const certificates = nconf.get('Certificates');
     if (nconf.get('httpOnly') || !certificates) {
         logger.warn('WARNING: Server is created with non-TLS protocol.');
-        server = http.createServer();
+        server = http.createServer({});
     } else {
         if(_.get(certificates, 'CertificateFile') && _.get(certificates, 'CertificateKeyFile')) {
-            server = https.createServer({
+            server = spdy.createServer({
                 key: fs.readFileSync(certificates.CertificateKeyFile),
                 cert: fs.readFileSync(certificates.CertificateFile)
             });
