@@ -207,6 +207,46 @@ var NamedCollectionVerifications = require('./util/named-collection-verifier');
             });
         });
 
+        it('POST purchase updates stamps (Issue #61)', done => {
+            let stamp = {
+                countryRef:       1,
+                rate:             "1d",
+                description:      "red",
+                wantList:         false,
+                catalogueNumbers: [
+                    {
+                        catalogueRef: 2,
+                        number:       "54a",
+                        value:        100.0,
+                        active:       true
+                    }
+                ],
+                stampOwnerships:  [
+                    {
+                        albumRef:  2,
+                        pricePaid: 25.0,
+                        code:      'AUD'
+                    }
+                ]
+            };
+            stampUtil.create(stamp, (e, res) => {
+                let result = res.body;
+                let id = result.id;
+                superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps/purchase')
+                    .send({stamps: [id], pricePaid: 50, currencyCode: 'USD'})
+                    .end((e, res) => {
+                        expect(res.status).to.eql(200);
+                        superagent.get(`http://${hostname}:${server_port}/rest/stamps/${id}`).send()
+                            .end((e, res) => {
+                                expect(res.body.stampOwnerships[0].pricePaid).to.eql(50.0);
+                                expect(res.body.stampOwnerships[0].code).to.eql('USD');
+                                done();
+                            });
+
+                    });
+            });
+        });
+
         it('POST Create a wantlist stamp with 201 status', function (done) {
             var stamp = {
                 countryRef: 1,
