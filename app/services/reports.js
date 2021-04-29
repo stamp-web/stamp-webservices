@@ -70,14 +70,13 @@ var report = function () {
         getCostBasis: function ($filter, currency) {
             var defer = q.defer();
             connectionManager.getConnection("reports").then(function (connection) {
-                var sql = "SELECT " + ownership.getAlias() + ".CURRENCY, SUM(" + ownership.getAlias() + ".PRICE) AS VALUE ";
+                var sql = "SELECT DISTINCT " + stamp.getAlias()  +".ID," + ownership.getAlias() + ".CURRENCY," + ownership.getAlias() + ".PRICE AS VALUE ";
                 sql += generateFromTables();
                 sql += "WHERE " + stamp.getAlias() + ".WANTLIST=0 ";
                 var whereClause = ($filter) ? dataTranslator.toWhereClause($filter, [stamp, catalogueNumber, catalogue, ownership]) : '';
                 if (whereClause.length > 0) {
                     sql += "AND " + whereClause + " ";
                 }
-                sql += "GROUP BY " + ownership.getAlias() + ".CURRENCY";
                 sqlTrace.debug(sql);
                 var query = connection.query(sql, function (err, results) {
                     if (err) {

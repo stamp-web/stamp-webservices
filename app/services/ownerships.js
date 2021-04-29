@@ -44,7 +44,8 @@ var ownershipService = extend(true, {}, new PersistentCollection(), function () 
      * @returns {string}
      */
     function buildUpdateQuery(result, currencyCode, ratio) {
-        let price = accounting.toFixed(Math.max(result.CATALOGUEVALUE * ratio, 0.01), 2);
+        let value = fx.convert(result.CATALOGUEVALUE, {from: result.CURRENCY, to: currencyCode});
+        let price = accounting.toFixed(Math.max(value * ratio, 0.01), 2);
         let oA = ownership.getAlias();
         let sA = stamp.getAlias();
         let qs = `UPDATE ${ownership.getTableClause()} INNER JOIN ${stamp.getTableClause()} SET ` +
