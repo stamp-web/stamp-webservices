@@ -9,6 +9,7 @@ logs/output.log
 /config/application.json
 /config/exchange-rates.json
 /test/transaction-example.js
+/test/junit
 .idea
 stamp-web
 /certs
