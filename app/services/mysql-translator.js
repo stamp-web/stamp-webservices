@@ -5,9 +5,12 @@ var Predicate = require('odata-filter-parser').Predicate;
 var Operators = require('odata-filter-parser').Operators;
 var Constants = require("../util/constants");
 
-var logger = Logger.getLogger("server");
+
 
 function DataTranslator() {
+
+    var logger = Logger.getLogger("sql");
+
     "use strict";
     function validateBinaryOperation(el) {
         if (typeof el.subject === 'undefined' || typeof el.value === 'undefined') {

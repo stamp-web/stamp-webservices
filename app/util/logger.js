@@ -5,14 +5,14 @@ var Level = require('./level');
 var q = require('q');
 
 function Logger(loggerName) {
-    var name = loggerName;
-    var debugLevel = Level.INFO;
-    var target = "console";
-    var targetPath;
+    let name = loggerName;
+    let debugLevel = Level.INFO;
+    let target = "console";
+    let targetPath;
 
-    var CONSOLE_LOGGING = Level.levels.indexOf(Level.INFO); // 2
+    let CONSOLE_LOGGING = Level.levels.indexOf(Level.INFO); // 2
 
-    var accessLogStream = FileStreamRotator.getStream({
+    let accessLogStream = FileStreamRotator.getStream({
         date_format: 'YYYYMMDD',
         filename: __dirname + '/../../logs/' + loggerName + '-%DATE%.log',
         frequency: 'daily',
@@ -62,7 +62,7 @@ function Logger(loggerName) {
     };
     
     this.setTarget = function (type, item) {
-        var defer = q.defer();
+        let defer = q.defer();
         target = type;
         targetPath = item;
         if( target === 'file') {
