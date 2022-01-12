@@ -39,8 +39,7 @@
     "zpad": "^0.5.0"
   },
   "scripts": {
-    "test-jenkins": "JUNIT_REPORT_PATH=test-result/result.xml jest --runInBand || true",
-    "test": "jest --runInBand --server_port=9008 --sql_level=error"
+    "test": "jest --runInBand"
   },
   "license": "Apache-2.0",
   "repository": {
