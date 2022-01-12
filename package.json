@@ -40,7 +40,7 @@
   },
   "scripts": {
     "test-jenkins": "JUNIT_REPORT_PATH=test-result/result.xml jest --runInBand || true",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand --server_port=9008 --sql_level=error"
   },
   "license": "Apache-2.0",
   "repository": {
@@ -52,8 +52,6 @@
     "jest-cli": "^27.4.7",
     "jest-createspyobj": "^2.0.0",
     "jest-junit": "^13.0.0",
-    "mocha": "^9.1.3",
-    "mocha-jenkins-reporter": "^0.4.3",
     "superagent": "3.8.3"
   },
   "keywords": [],
