@@ -30,6 +30,7 @@ module.exports = {
     "coverageReporters": [
         "json",
         "lcov",
-        "html"
+        "html",
+        "cobertura"
     ]
 }
