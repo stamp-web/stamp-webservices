@@ -14,6 +14,8 @@ module.exports = function () {
     var childFork;
     var logger = Logger.getLogger('server');
 
+    Logger.silenceConsole();
+
     nconf.argv().env().file(__dirname + '/../../config/application.json');
 
     var database = (nconf.get('test_database') ? nconf.get('test_database') : 'test');
@@ -46,9 +48,8 @@ module.exports = function () {
             connection.query(line, function (err, rows) {
                 if (err) {
                     console.log(err);
-                    process.exit(1);
                 }
-                callback();
+                callback(err);
             });
         });
         return count;
@@ -68,6 +69,7 @@ module.exports = function () {
                 port: server_port,
                 httpOnly: true,
                 authentication: null,
+                silenceConsole: true,
                 sql_level: sql_level,
                 logger_target: 'file',
                 logger_file: __dirname + '/../../logs/output.log'
@@ -91,7 +93,7 @@ module.exports = function () {
             }
         });
         child.on('disconnect', () => {
-           console.log('process was disconnected');
+           logger.info('process was disconnected');
         });
         return child;
     }
@@ -128,7 +130,11 @@ module.exports = function () {
                     var file = ((process.cwd().indexOf('\\test') > 0) ? '../' : '') + 'test/dbscript/initial-data.sql';
                     var contents = fs.readFileSync(file, { encoding: 'utf-8' }).toString();
                     var count = 0;
-                    var totalCount = loadFromFile(this.getConnection(), contents, function () {
+                    var totalCount = loadFromFile(this.getConnection(), contents, (err) => {
+                        if(err) {
+                            callback(err);
+                            return;
+                        }
                         if( ++count === totalCount ) {
                             notifyStatementsComplete();
                             childFork = forkProcess(callback);
@@ -147,7 +153,7 @@ module.exports = function () {
 
 
         },
-        cleanup: function(callback) {
+        cleanup: callback => {
             connection.end();
             connection = undefined;
             if (childFork) {
@@ -155,7 +161,7 @@ module.exports = function () {
                     executed = false;
                     childFork.kill();
                     callback();
-                }, 50);
+                }, 500);
             } else {
                 callback();
             }

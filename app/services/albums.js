@@ -9,13 +9,14 @@ var stamp = require('../model/stamp');
 var _ = require('lodash');
 var q = require('q');
 
-var Logger = require('../util/logger');
 
-var sqlTrace = Logger.getLogger('sql');
 
 var albums = extend(true, {}, new EntityManagement(), new PersistentCollection(), function () {
 
     "use strict";
+
+    var Logger = require('../util/logger');
+    var sqlTrace = Logger.getLogger('sql');
 
     function mergeCountries(connection, obj) {
 

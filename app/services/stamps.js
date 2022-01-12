@@ -13,11 +13,11 @@ let _ = require('lodash');
 let q = require('q');
 let Logger = require('../util/logger');
 
-let sqlTrace = Logger.getLogger("sql");
 
 let stamps = extend(true, {}, new PersistentCollection(), function () {
-
     "use strict";
+
+    let sqlTrace = Logger.getLogger("sql");
 
     function generateColumnExpression(fields, tableRef,distinct) {
         let s = "";

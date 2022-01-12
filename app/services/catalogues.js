@@ -10,10 +10,12 @@ var _ = require('lodash');
 var q = require('q');
 var Logger = require('../util/logger');
 
-var sqlTrace = Logger.getLogger('sql');
+
 
 var catalogueService = extend(true, {}, new EntityManagement(), new PersistentCollection(), function () {
     "use strict";
+    var sqlTrace = Logger.getLogger('sql');
+
     return {
         getCountStampWhereStatement: function() {
             return catalogueNumber.getAlias() + '.ACTIVE=1 AND ' + stamp.getAlias() + '.ID=' + catalogueNumber.getAlias() + '.STAMP_ID AND ' + catalogueNumber.getAlias() + '.CATALOGUE_REF=' + catalogue.getAlias() + '.ID';

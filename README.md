@@ -1,9 +1,5 @@
 ﻿# stamp-webservices
 
-## Build Status
-
-![Build Status](https://drake-server.ddns.net:9443/build/stamp-webservices.svg)
-
 ## Configuring the system
 While many parameters can be passed on the command line to the server, it is recommended to utilize config/application.json to store 
 the properties of the system.  An example file config/application-example.json is provided to give an idea of the flavor of configuration.
@@ -25,23 +21,42 @@ The following are the logger names supports by stamp-webservices
 
 The logging levels can be set for both the tests and server at execution time with a command line argument.  The format is as follows:
 
-  * --[loggerName]_level=[all|error|warn|info|debug|trace]
-  
+```shell
+--[loggerName]_level=[all|error|warn|info|debug|trace]
+```
+
 As well, a small web-service is available to toggle this on the fly under the path /config/loggers/[loggerName]?level=debug
+
+You can disable any console logging using the parameter
+
+```shell
+ --silenceConsole
+```
 
 ## Executing Tests
 
-The tests will require mocha to be installed.  It is recommended to install mocha globally with the -g flag
+The tests use jest to execute.  The tests are designed to exercise the REST API end point so must be run in a serial fashion.  
+Since stamp models can be dependent on other models and create foreign key references in the database, we can only run 
+one test at a time. This can be done with jest with the --runInBand flag.  To execute the tests run
 
-  * npm install -g mocha
+```shell
+npm test
+```
 
-Some of the tests (especially the web-service tests) may take longer than the 2000ms maximum time that mocha imposes by default to execute a test and commit done.  The following settings have worked reasonable well on my development system:
+Or if create a Jest runner in your IDE be sure to add the --runInBand flag.
 
-  * mocha test --timeout 6000 --sql_level error
+Some of the tests (especially the web-service tests) may take longer than the 5000ms maximum time that jest imposes by default 
+to execute a test and commit done.  The test timeout is set in the jest.config.js file to 10000 (10s) by default. This
+can be set on the command line with 
 
-by changing the sql_level you can quickly toggle the tests to use a different logging level.
+```shell
+jest --runInBand --testTimeout 25000 --sql_level error
+```
 
-By default, the integration tests will look for a database in application.json called "test".  This can be overridden using the test_database parameter.  The parameters recognized by the integration tests include:
+In the above example we also set the sql logger to error instead of info level.
+
+By default, the integration tests will look for a database in application.json called "test".  
+This can be overridden using the test_database parameter.  The parameters recognized by the integration tests include:
 
   * --port xxxx (default is 9002) - the port to execute the forked NodeJS server.
   * --hostname xxxx (default is localhost) - the hostname to connect to the server 
@@ -85,8 +100,6 @@ See application-example.json for the configuration format.
 
 ## Code Coverage
 
-Istanbul should be installed globally via "npm install -g istanbul".
-If mocha is installed locally you can execute the mocha tests with istanbul code coverage.
-
-  * istanbul cover node_modules/mocha/bin/_mocha -- --ui bdd -R spec -t 6000
-
+The code coverage will be reported in the coverage folder in the project root.  These values will be unreliable due to the
+nature of the tests execute rest APIs against a forked server process initialized for each test.  Since the server process
+is not running in the jest process stack it does not get picked up for code coverage purposes.

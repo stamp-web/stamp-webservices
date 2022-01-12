@@ -11,10 +11,10 @@ var ExchangeRates = require('../util/exchange-rates');
 var fx = require('money');
 var accounting = require('accounting');
 
-var sqlTrace = Logger.getLogger("sql");
-
 var report = function () {
     "use strict";
+
+    var sqlTrace = Logger.getLogger("sql");
 
     function generateFromTables() {
         var sql = "FROM " + stamp.getTableName() + ' AS ' + stamp.getAlias() + ' ';

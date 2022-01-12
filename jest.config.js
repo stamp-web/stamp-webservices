@@ -1,14 +1,15 @@
 module.exports = {
     "modulePaths": [
-        "<rootDir>/src",
+        "<rootDir>/app",
         "<rootDir>/node_modules"
     ],
     "moduleFileExtensions": [
         "js",
         "json"
     ],
-    "testRegex": "\\.spec\\.js$",
+    "testRegex": "/test/*/.*-test.js$",
     "testEnvironment": "node",
+    "testTimeout": 10000,
     "collectCoverage": true,
     "reporters": [
         "default",
@@ -21,7 +22,7 @@ module.exports = {
         ]
     ],
     "collectCoverageFrom": [
-        "src/**/*.js",
+        "app/**/*.js",
         "!**/node_modules/**",
         "!**/test/**"
     ],

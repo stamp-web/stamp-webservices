@@ -27,7 +27,7 @@ function Logger(loggerName) {
             var msg = level.toUpperCase() + ': ' + message;
             accessLogStream.write( msg + '\n');
             var ordinal = Level.levels.indexOf(level);
-            if( ordinal <= CONSOLE_LOGGING || ordinal === 5 ) {
+            if( !Logger.silentLogging && (ordinal <= CONSOLE_LOGGING || ordinal === 5)) {
                 console.log(message);
             }
         }
@@ -92,6 +92,7 @@ function Logger(loggerName) {
 }
 
 Logger.loggers = {};
+Logger.silentLogging = false;
 
 Logger.getLogger = function(loggerName) {
     if (!Logger.loggers[loggerName]) {
@@ -104,5 +105,8 @@ Logger.getRegisteredLoggerNames = function () {
     return Object.keys(Logger.loggers);
 };
 
+Logger.silenceConsole = () => {
+    Logger.silentLogging = true;
+}
 
 module.exports = Logger;

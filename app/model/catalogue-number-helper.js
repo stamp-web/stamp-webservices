@@ -1,10 +1,11 @@
 let _ = require('lodash');
 let zpad = require('zpad');
-
+let Logger = require('../util/logger');
 let PREFIX = require('./prefix.json');
 
 module.exports = function () {
 
+    let logger = Logger.getLogger("server");
 
     function generatePrefix(prefix, catalogueType) {
         let lookup = 'STANLEY_GIBBONS';
@@ -41,7 +42,7 @@ module.exports = function () {
             if(val) {
                 result = '' + val;
             } else {
-                console.log('Unknown prefix for type ', catalogueType, '-->', prefix);
+                logger.warn('Unknown prefix for type ', catalogueType, '-->', prefix);
                 result = new String(999);
             }
         }

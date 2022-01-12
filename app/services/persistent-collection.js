@@ -8,25 +8,26 @@ var Operators = odata.Operators;
 var Predicate = odata.Predicate;
 var Logger = require('../util/logger');
 
-var sqlTrace = Logger.getLogger("sql");
-var logger = Logger.getLogger("server");
 
 function PersistentCollection() {
     "use strict";
 
+    let sqlTrace = Logger.getLogger("sql");
+    let logger = Logger.getLogger("server");
+
     return {
-        generateId : function (fieldDefinition, obj) {
-            var defer = q.defer();
+        generateId : (fieldDefinition, obj) => {
+            let defer = q.defer();
             if (obj.ID) {
                 defer.resolve(obj.ID);
             } else {
-                PersistentCollection.getNextSequence(fieldDefinition, function (err, new_id) {
+                PersistentCollection.getNextSequence(fieldDefinition, (err, new_id) => {
                     if (err) {
                         defer.reject(dataTranslator.getErrorMessage(err));
                     } else {
-                        PersistentCollection.updateSequence(new_id, fieldDefinition).then(function () {
+                        PersistentCollection.updateSequence(new_id, fieldDefinition).then(() => {
                             defer.resolve(new_id);
-                        }, function (s_err) {
+                        }, (s_err) => {
                             defer.reject(dataTranslator.getErrorMessage(s_err));
                         });
                     }
@@ -36,20 +37,20 @@ function PersistentCollection() {
         },
 
         update: function (obj, id, params) {
-            var defer = q.defer();
-            var provided = this.fieldDefinition.internalize(obj);
-            var that = this;
-            this.findById(id).then(function (storedObj) {
+            let defer = q.defer();
+            let provided = this.fieldDefinition.internalize(obj);
+            let that = this;
+            this.findById(id).then(storedObj => {
                 if(storedObj === null ) {
                     defer.reject({ message: "The object was not found", code: "NOT_FOUND", processed: true });
                 }
                 else {
-                    connectionManager.getConnection().then(function (connection) {
-                        var qs = dataTranslator.generateUpdateByFields(that.fieldDefinition, provided, storedObj);
+                    connectionManager.getConnection().then(connection => {
+                        let qs = dataTranslator.generateUpdateByFields(that.fieldDefinition, provided, storedObj);
                         if( qs !== null ) {
                             sqlTrace.debug(qs);
-                            connection.beginTransaction(function (err) {
-                                connection.query(qs, function (err, rows) {
+                            connection.beginTransaction(err => {
+                                connection.query(qs, (err, rows) => {
                                     if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
                                         if (rows.changedRows === 0 && rows.affectedRows === 0) {
                                             connection.rollback(function () {
@@ -57,25 +58,25 @@ function PersistentCollection() {
                                                 defer.reject({ message: "No changes made during update.", code: "NO_CHANGES", processed: true });
                                             });
                                         } else {
-                                            var merged = that.fieldDefinition.merge(provided, storedObj);
-                                            that.preCommitUpdate(connection, merged, storedObj, params).then(function (output) {
+                                            let merged = that.fieldDefinition.merge(provided, storedObj);
+                                            that.preCommitUpdate(connection, merged, storedObj, params).then(output => {
                                                 connection.commit(function (err) {
                                                     connection.release();
                                                     if (err) {
                                                         defer.reject(dataTranslator.getErrorMessage(err));
                                                     }
                                                     else if (output.modified) {
-                                                        that.findById(id).then(function (findResult) {
+                                                        that.findById(id).then(findResult => {
                                                             defer.resolve(findResult);
-                                                        }, function (err) {
+                                                        }, err => {
                                                             defer.reject(dataTranslator.getErrorMessage(err));
                                                         });
                                                     } else {
                                                         defer.resolve(merged);
                                                     }
                                                 });
-                                            }, function (err) {
-                                                connection.rollback(function () {
+                                            }, err => {
+                                                connection.rollback(() => {
                                                     connection.release();
                                                     defer.reject(err);
                                                 });
@@ -86,12 +87,12 @@ function PersistentCollection() {
                             });
                         }
 
-                    }, function (err) {
+                    }, err => {
                         defer.reject(dataTranslator.getErrorMessage(err));
                     });
                 }
 
-            }, function (err) {
+            }, err => {
                 defer.reject(dataTranslator.getErrorMessage(err));
             });
             return defer.promise;
@@ -360,10 +361,10 @@ function PersistentCollection() {
 
 PersistentCollection.last_id = {};
 
-PersistentCollection.rollbackOnError = function(connection, defer, err) {
+PersistentCollection.rollbackOnError = (connection, defer, err) => {
     "use strict";
     if (err) {
-        connection.rollback(function () {
+        connection.rollback(() => {
             connection.release();
             if(defer.reject) {
                 defer.reject(dataTranslator.getErrorMessage(err));
@@ -376,21 +377,21 @@ PersistentCollection.rollbackOnError = function(connection, defer, err) {
     return false;
 };
 
-PersistentCollection.getNextSequence = function(fieldDefinition, callback) {
+PersistentCollection.getNextSequence = (fieldDefinition, callback) => {
     "use strict";
-    connectionManager.getConnection().then(function (connection) {
-        connection.query("SELECT ID_VAL FROM SEQUENCE_GEN WHERE ID_NAME='" + fieldDefinition.getSequenceColumn() + "'", function (err, result) {
+    connectionManager.getConnection().then(connection => {
+        connection.query("SELECT ID_VAL FROM SEQUENCE_GEN WHERE ID_NAME='" + fieldDefinition.getSequenceColumn() + "'", (err, result) => {
             connection.release();
             if (err) {
                 callback(err, null);
             } else if (result.length > 0) {
-                var id_val = result[0].ID_VAL;
-                var last_id = PersistentCollection.last_id[fieldDefinition.getTableName()];
+                let id_val = result[0].ID_VAL;
+                let last_id = PersistentCollection.last_id[fieldDefinition.getTableName()];
                 id_val = Math.max(id_val, (!last_id) ? 0 : last_id) + 1;
                 PersistentCollection.last_id[fieldDefinition.getTableName()] = id_val;
                 callback(null, id_val);
             } else {
-                var l_id = PersistentCollection.last_id[fieldDefinition.getTableName()];
+                let l_id = PersistentCollection.last_id[fieldDefinition.getTableName()];
                 if( !l_id ) {
                     l_id = 0;
                 }
@@ -401,21 +402,22 @@ PersistentCollection.getNextSequence = function(fieldDefinition, callback) {
     });
 };
 
-PersistentCollection.updateSequence = function(_id, fieldDefinition) {
+PersistentCollection.updateSequence = (_id, fieldDefinition) => {
     "use strict";
-    var defer = q.defer();
-    var qs = "UPDATE SEQUENCE_GEN SET ID_VAL=? WHERE ID_NAME='" + fieldDefinition.getSequenceColumn() + "'";
+    let sqlTrace = Logger.getLogger("sql");
+    let defer = q.defer();
+    let qs = "UPDATE SEQUENCE_GEN SET ID_VAL=? WHERE ID_NAME='" + fieldDefinition.getSequenceColumn() + "'";
     sqlTrace.debug(qs + " Bind params: [" + _id + "]");
-    connectionManager.getConnection().then(function (connection) {
-        connection.beginTransaction(function (err) {
-            connection.query(qs, [_id], function (err, rows) {
+    connectionManager.getConnection().then(connection => {
+        connection.beginTransaction(err => {
+            connection.query(qs, [_id], (err, rows) => {
                 if (err) {
-                    connection.rollback(function () {
+                    connection.rollback(() => {
                         connection.release();
                         defer.reject(dataTranslator.getErrorMessage(err));
                     });
                 } else {
-                    connection.commit(function (c_err) {
+                    connection.commit(c_err => {
                         connection.release();
                         defer.resolve();
                     });

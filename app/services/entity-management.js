@@ -3,12 +3,14 @@ var dataTranslator = require('./mysql-translator');
 var stamp = require('../model/stamp');
 
 var Logger = require('../util/logger');
-var sqlTrace = Logger.getLogger('sql');
+
 
 var q = require('q');
 
 function EntityManagement() {
     "use strict";
+
+    var sqlTrace = Logger.getLogger('sql');
 
     return {
         getCountStampWhereStatement: function() {

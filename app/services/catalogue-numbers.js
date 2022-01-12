@@ -10,11 +10,11 @@ let q = require('q');
 let Logger = require('../util/logger');
 let connectionManager = require('../pom/connection-mysql');
 
-let logger = Logger.getLogger("server");
-let sqlTrace = Logger.getLogger("sql");
-
 let catalogueNumberService = extend(true, {}, new PersistentCollection(), function () {
     "use strict";
+
+    let logger = Logger.getLogger("server");
+    let sqlTrace = Logger.getLogger("sql");
 
     let cachedCatalogues;
     let cachePolicy = true;

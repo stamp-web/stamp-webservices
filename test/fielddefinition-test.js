@@ -1,55 +1,54 @@
-var expect = require('expect.js')
 var country = require("../app/model/country");
 var album = require("../app/model/album");
 var preference = require("../app/model/preference");
 
-describe('Field definition tests', function () {
-    describe('Country field definition tests', function () {
-        it("Validate with all required specified", function () {
+describe('Field definition tests', () => {
+    describe('Country field definition tests', () => {
+        it("Validate with all required specified", () => {
             var c = {
                 NAME: "Australia",
                 ID: 500
             };
-            expect(country.validate(c)).to.be(null);
+            expect(country.validate(c)).toBe(null);
         });
 
-        it("Validate missing required parameters", function () {
+        it("Validate missing required parameters", () => {
             var c = {
                 NAME: "Australia",
                 DESCRIPTION: "other stuff"
             };
             var validate = country.validate(c);
-            expect(validate).to.not.be(null);
-            expect(validate.code).to.be.eql('REQUIRED_FIELD');
+            expect(validate).not.toBe(null);
+            expect(validate.code).toEqual('REQUIRED_FIELD');
             delete c.NAME;
             c.ID = 250;
             validate = country.validate(c);
-            expect(validate).to.not.be(null);
-            expect(validate.code).to.be.eql('REQUIRED_FIELD');
+            expect(validate).not.toBe(null);
+            expect(validate.code).toEqual('REQUIRED_FIELD');
         });
 
     });
     
-    describe('Album field definition tests', function () {
-        it("Validate merge of countries", function () {
+    describe('Album field definition tests', () => {
+        it("Validate merge of countries", () => {
             var c = { NAME: "test", COUNTRIES: [1,2] };
             var c2 = { NAME: "updated", DESCRIPTION: "descriptions" };
             var m = album.merge(c2, c);
-            expect(m.NAME).to.be.eql("updated");
-            expect(m.DESCRIPTION).to.be.eql("descriptions");
-            expect(m.COUNTRIES).to.be.eql([1,2]);
+            expect(m.NAME).toEqual("updated");
+            expect(m.DESCRIPTION).toEqual("descriptions");
+            expect(m.COUNTRIES).toEqual([1,2]);
         });
     });
 
-    describe('Preference field definition tests', function () {
-        it("Validate with all required specified", function () {
+    describe('Preference field definition tests', () => {
+        it("Validate with all required specified", () => {
             var c = {
                 NAME: "imagePath",
                 ID: 25670,
                 CATEGORY: "stamps",
                 VALUE: "some path"
             };
-            expect(preference.validate(c)).to.be(null);
+            expect(preference.validate(c)).toBe(null);
         });
     });
 });

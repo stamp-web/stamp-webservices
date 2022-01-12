@@ -1,6 +1,6 @@
 {
   "name": "stamp_webservices",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "stamp-webservices",
   "main": "./app/server.js",
   "author": {
@@ -39,7 +39,8 @@
     "zpad": "^0.5.0"
   },
   "scripts": {
-    "test-jenkins": "JUNIT_REPORT_PATH=test-result/result.xml JUNIT_REPORT_STACK=1 mocha --colors --timeout 6000 --reporter mocha-jenkins-reporter || true"
+    "test-jenkins": "JUNIT_REPORT_PATH=test-result/result.xml jest --runInBand || true",
+    "test": "jest --runInBand"
   },
   "license": "Apache-2.0",
   "repository": {
@@ -57,40 +58,6 @@
   },
   "keywords": [],
   "bugs": {
-    "url": "null"
-  },
-  "jest": {
-    "modulePaths": [
-      "<rootDir>/src",
-      "<rootDir>/node_modules"
-    ],
-    "moduleFileExtensions": [
-      "js",
-      "json"
-    ],
-    "testRegex": "/test/*/.*-test.js$",
-    "testEnvironment": "node",
-    "collectCoverage": true,
-    "reporters": [
-      "default",
-      [
-        "jest-junit",
-        {
-          "outputDirectory": "test/junit",
-          "outputName": "TESTS.xml"
-        }
-      ]
-    ],
-    "collectCoverageFrom": [
-      "src/**/*.js",
-      "!**/node_modules/**",
-      "!**/test/**"
-    ],
-    "coverageDirectory": "<rootDir>/coverage",
-    "coverageReporters": [
-      "json",
-      "lcov",
-      "html"
-    ]
+    "url": "https://github.com/stamp-web/stamp-webservices/issues"
   }
 }

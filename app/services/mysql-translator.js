@@ -5,13 +5,10 @@ var Predicate = require('odata-filter-parser').Predicate;
 var Operators = require('odata-filter-parser').Operators;
 var Constants = require("../util/constants");
 
-
-
 function DataTranslator() {
-
+    "use strict";
     var logger = Logger.getLogger("sql");
 
-    "use strict";
     function validateBinaryOperation(el) {
         if (typeof el.subject === 'undefined' || typeof el.value === 'undefined') {
             throw new Error("left and right sides of expression are required.");

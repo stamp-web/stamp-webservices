@@ -13,11 +13,11 @@ var accounting = require('accounting');
 
 var _ = require('lodash');
 
-var sqlTrace = Logger.getLogger("sql");
-var serverLog = Logger.getLogger("server");
-
 var ownershipService = extend(true, {}, new PersistentCollection(), function () {
     "use strict";
+    var sqlTrace = Logger.getLogger("sql");
+    var serverLog = Logger.getLogger("server");
+
     ExchangeRates.checkRates(() => {
         serverLog.info('rates are retrieved for ownership.');
     });

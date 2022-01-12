@@ -1,5 +1,4 @@
 var superagent = require('superagent')
-var expect = require('expect.js')
 var extend = require('node.extend');
 var nconf = require('nconf');
 nconf.argv().env();
@@ -54,8 +53,8 @@ var StampUtilities = {
         superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
             .send(stamp)
             .end(function (e, res) {
-                expect(e).to.eql(null);
-                expect(res.status).to.eql(201);
+                expect(e).toEqual(null);
+                expect(res.status).toEqual(201);
                 fn(e, res);
             });
         return stamp;

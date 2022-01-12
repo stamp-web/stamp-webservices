@@ -35,6 +35,10 @@ if(nconf.get('disableCache')) {
 }
 
 function configureLogger(aLogger, name) {
+    let silenceConsole = nconf.get('silenceConsole');
+    if(silenceConsole) {
+        Logger.silenceConsole();
+    }
     aLogger.setLevel(nconf.get(name + "_level") ? nconf.get(name + "_level") : Level.INFO);
     if (nconf.get(name + "_target") === "file" && nconf.get(name + "_file")) {
         logger.setTarget(nconf.get(name + "_target"), nconf.get(name + "_file"));
