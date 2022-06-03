@@ -103,3 +103,8 @@ See application-example.json for the configuration format.
 The code coverage will be reported in the coverage folder in the project root.  These values will be unreliable due to the
 nature of the tests execute rest APIs against a forked server process initialized for each test.  Since the server process
 is not running in the jest process stack it does not get picked up for code coverage purposes.
+
+## Execution in CI and Jenkins
+
+To run the tests in CI, the server must be accessible to the Jenkins process.  If an environment variable is set for ``port`` this will
+be used to connect to the server with HTTP API requests.  
