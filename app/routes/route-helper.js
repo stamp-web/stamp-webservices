@@ -23,7 +23,8 @@ var routeHelper = function () {
             TEXT: "text/plain"
         }, 
         Headers : {
-            CONTENT_TYPE: "Content-Type"
+            CONTENT_TYPE: "Content-Type",
+            CONTENT_LENGTH: "Content-Length"
         },
         setErrorStatus : function (res, err) {
             var code = this.StatusCode.INTERNAL_ERROR;

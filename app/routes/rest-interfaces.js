@@ -114,6 +114,7 @@ function restInterfaces() {
                     result[collection.collectionName].push(field.externalize(row));
                 });
                 res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
+                res.set(routeHelper.Headers.CONTENT_LENGTH, JSON.stringify(result).length+1);
                 res.status(routeHelper.StatusCode.OK);
                 res.json(result);
             }, function (err) {
