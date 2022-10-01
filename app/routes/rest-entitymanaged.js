@@ -11,10 +11,10 @@ var entityManaged = function (collect) {
             collection.countStamps().then(function (result) {
                 res.format({
                     'text/plain': function () {
-                        res.send('' + result);
+                        return res.send('' + result);
                     },
                     'application/json': function () {
-                        res.send(routeHelper.convertMap(result));
+                        return res.send(routeHelper.convertMap(result));
                     }
                 });
             }, function (err) {

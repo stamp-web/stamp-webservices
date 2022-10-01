@@ -35,7 +35,7 @@ function restInterfaces() {
                     var data = field.externalize(row);
                     res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                     res.status(routeHelper.StatusCode.OK);
-                    res.json(data);
+                    return res.json(data);
                 } else {
                     res.status(routeHelper.StatusCode.NOT_FOUND).end();
                 }
@@ -53,7 +53,7 @@ function restInterfaces() {
                 if(logger.isEnabled(Level.DEBUG)) {
                     logger.debug(data);
                 }
-                res.json(data);
+                return res.json(data);
             }, function (err) {
                 logger.error(err);
                 routeHelper.setErrorStatus(res, err);
@@ -68,7 +68,7 @@ function restInterfaces() {
                 if(logger.isEnabled(Level.DEBUG)) {
                     logger.debug(data);
                 }
-                res.json(data);
+                return res.json(data);
             }, function (err) {
                 logger.error(err);
                 routeHelper.setErrorStatus(res, err);
@@ -86,10 +86,10 @@ function restInterfaces() {
             collection.count(params).then(function (result) {
                 res.format({
                     'text/plain': function () {
-                        res.send('' + result);
+                        return res.send('' + result);
                     },
                     'application/json': function () {
-                        res.json({ count: result });
+                        return res.json({ count: result });
                     }
                 });
             }, function (err) {
@@ -114,9 +114,8 @@ function restInterfaces() {
                     result[collection.collectionName].push(field.externalize(row));
                 });
                 res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
-                res.set(routeHelper.Headers.CONTENT_LENGTH, JSON.stringify(result).length+1);
                 res.status(routeHelper.StatusCode.OK);
-                res.json(result);
+                return res.json(result);
             }, function (err) {
                 logger.error(err);
                 res.status(routeHelper.StatusCode.INTERNAL_ERROR).send(routeHelper.ClientMessages.INTERNAL_ERROR).end();

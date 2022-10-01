@@ -36,7 +36,7 @@ exports.configure = function (app, basePath) {
 
         ownerships.purchase(content.stamps, content.pricePaid, content.currencyCode).then(() => {
             res.status(routeHelper.StatusCode.OK);
-            res.send();
+            return res.send();
         }, function (err) {
             res.status(routeHelper.StatusCode.INTERNAL_ERROR).send(routeHelper.ClientMessages.INTERNAL_ERROR);
         });

@@ -37,7 +37,7 @@ function reports() {
             promise.then(function (data) {
                 result.value = data;
                 res.status(routeHelper.StatusCode.OK);
-                res.json(result);
+                return res.json(result);
             }, function (err) {
                 routeHelper.setErrorStatus(res, err);
             });
