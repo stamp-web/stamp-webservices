@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var Parser = require('odata-filter-parser').Parser;
 var Logger = require('../util/logger');
+var Level = require('../util/level');
 var Authenticator = require('../util/authenticator');
 var routeHelper = require('./route-helper');
 var logger = Logger.getLogger("server");
@@ -49,6 +50,9 @@ function restInterfaces() {
                 res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                 res.status(routeHelper.StatusCode.OK);
                 var data = field.externalize(obj);
+                if(logger.isEnabled(Level.DEBUG)) {
+                    logger.debug(data);
+                }
                 res.json(data);
             }, function (err) {
                 logger.error(err);
@@ -61,6 +65,9 @@ function restInterfaces() {
                 res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                 res.status(routeHelper.StatusCode.CREATED);
                 var data = field.externalize(obj);
+                if(logger.isEnabled(Level.DEBUG)) {
+                    logger.debug(data);
+                }
                 res.json(data);
             }, function (err) {
                 logger.error(err);
