@@ -100,7 +100,7 @@ function createServer() {
 }
 
 var app = express();
-app.use(compression());
+//app.use(compression());
 app.use(helmet());
 app.use(morgan('tiny', {stream: FileStreamRotator.getStream({
     date_format: 'YYYYMMDD',
