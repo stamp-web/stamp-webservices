@@ -34,7 +34,7 @@ function restInterfaces() {
                     var data = field.externalize(row);
                     res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                     res.status(routeHelper.StatusCode.OK);
-                    res.send(JSON.stringify(data));
+                    res.json(data);
                 } else {
                     res.status(routeHelper.StatusCode.NOT_FOUND).end();
                 }
@@ -49,7 +49,7 @@ function restInterfaces() {
                 res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                 res.status(routeHelper.StatusCode.OK);
                 var data = field.externalize(obj);
-                res.send(JSON.stringify(data));
+                res.json(data);
             }, function (err) {
                 logger.error(err);
                 routeHelper.setErrorStatus(res, err);
@@ -61,7 +61,7 @@ function restInterfaces() {
                 res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                 res.status(routeHelper.StatusCode.CREATED);
                 var data = field.externalize(obj);
-                res.send(JSON.stringify(data));
+                res.json(data);
             }, function (err) {
                 logger.error(err);
                 routeHelper.setErrorStatus(res, err);

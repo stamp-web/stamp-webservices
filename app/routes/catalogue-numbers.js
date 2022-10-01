@@ -18,7 +18,7 @@ exports.configure = function (app, basePath) {
                 var data = stamp.externalize(row);
                 res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                 res.status(routeHelper.StatusCode.OK);
-                res.send(JSON.stringify(data));
+                res.json(data);
             } else {
                 res.status(routeHelper.StatusCode.NOT_FOUND).end();
             }

@@ -24,7 +24,7 @@ exports.configure = function (app, basePath) {
             res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
             res.status(routeHelper.StatusCode.OK);
             var data = album.externalize(obj);
-            res.send(JSON.stringify(data));
+            res.json(data);
         }, function (err) {
             logger.error(err);
             routeHelper.setErrorStatus(res, err);
