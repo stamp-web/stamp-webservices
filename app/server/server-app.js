@@ -88,6 +88,9 @@ function createServer() {
     } else {
         if(_.get(certificates, 'CertificateFile') && _.get(certificates, 'CertificateKeyFile')) {
             server = spdy.createServer({
+                spdy: {
+                    protocols: ['http/1.1']
+                },
                 key: fs.readFileSync(certificates.CertificateKeyFile),
                 cert: fs.readFileSync(certificates.CertificateFile)
             });
@@ -109,7 +112,7 @@ app.use(morgan('tiny', {stream: FileStreamRotator.getStream({
     verbose: false })
 }));
 app.use(favicon(__dirname + '/../../www/favicon.ico'));
-app.use(express.json());
+app.use(express.json({strict: false}));
 app.use(express.urlencoded({ extended: true }));
 Authenticator.initialize(app);
 
