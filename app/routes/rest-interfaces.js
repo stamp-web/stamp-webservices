@@ -52,7 +52,6 @@ function restInterfaces() {
                     logger.debug(data);
                 }
                 res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
-                res.set(routeHelper.Headers.CONTENT_LENGTH, JSON.stringify(data).length + 1);
                 res.status(routeHelper.StatusCode.OK);
                 return res.json(data);
             }, function (err) {
