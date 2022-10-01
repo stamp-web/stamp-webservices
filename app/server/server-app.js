@@ -7,7 +7,6 @@ const serveStatic = require('serve-static');
 const morgan = require('morgan');
 const connectionMgr = require('../pom/connection-mysql');
 const favicon = require('serve-favicon');
-const bodyParser = require('body-parser');
 const nconf = require('nconf');
 const spdy = require('spdy');
 const http = require('http');
@@ -110,9 +109,8 @@ app.use(morgan('tiny', {stream: FileStreamRotator.getStream({
     verbose: false })
 }));
 app.use(favicon(__dirname + '/../../www/favicon.ico'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 Authenticator.initialize(app);
 
 const server = createServer();
