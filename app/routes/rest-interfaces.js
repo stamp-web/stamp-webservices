@@ -46,14 +46,14 @@ function restInterfaces() {
         update: function (req, res) {
             var that = this;
             var id = req.params.id;
-            return collection.update(req.body, id, req.query).then(function (obj) {
-                res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
-                res.status(routeHelper.StatusCode.OK);
-                var data = field.externalize(obj);
+            collection.update(req.body, id, req.query).then(function (obj) {
+                let data = field.externalize(obj);
                 if(logger.isEnabled(Level.DEBUG)) {
                     logger.debug(data);
                 }
-                res.set(routerHelper.Headers.CONTENT_LENGTH, JSON.stringify(data).length+1);
+                res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
+                res.set(routeHelper.Headers.CONTENT_LENGTH, JSON.stringify(data).length + 1);
+                res.status(routeHelper.StatusCode.OK);
                 return res.json(data);
             }, function (err) {
                 logger.error(err);
