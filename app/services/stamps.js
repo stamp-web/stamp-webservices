@@ -233,9 +233,12 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
             return clause;
         },
 
-        find: function (params) {
+        find: async function (params) {
+            let count = await this.count({});
+            if (count === 0) {
+                return Promise.resolve({total:0, rows:[]});
+            }
             return new Promise((resolve, reject) => {
-
                 let rejectFn = function (field) {
                     return (field.internal && field.internal === true && field.required !== true || field.model);
                 };

@@ -22,6 +22,18 @@ describe('REST Services for Stamps', () => {
             done();
         });
     });
+
+    it('GET works with no stamps', done => {
+        superagent.get('http://' + hostname + ':' + server_port + '/rest/stamps')
+            .end(function (e, res) {
+                expect(e).toEqual(null);
+                expect(res.status).toEqual(200);
+                expect(res.body.total).toEqual(0);
+                expect(res.body.stamps).toStrictEqual([]);
+                done();
+            });
+    });
+
     it('POST valid creation with 201 status', done => {
         var stamp = {
             countryRef:       1,
