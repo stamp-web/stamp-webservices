@@ -45,6 +45,7 @@ module.exports = function () {
                 callback();
                 return;
             }
+            connection.query(line, (err, rows) => {
                 if (err) {
                     console.log(err);
                 }
