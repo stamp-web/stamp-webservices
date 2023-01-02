@@ -9,13 +9,13 @@ describe('REST Services for Stamps', () => {
     var hostname, server_port, connection;
 
     afterAll(done => {
-        session.cleanup(function () {
+        session.cleanup( () => {
             done();
         });
     });
 
     beforeAll(done => {
-        session.initialize(function () {
+        session.initialize(() => {
             hostname = session.getHostname();
             server_port = session.getPort();
             connection = session.getConnection();

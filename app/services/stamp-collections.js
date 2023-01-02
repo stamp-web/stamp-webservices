@@ -9,7 +9,7 @@ var album = require('../model/album');
 var stamp = require('../model/stamp');
 var ownership = require('../model/ownership');
 var albums = require('./albums');
-var q = require('q');
+
 var _ = require('lodash');
 
 var collections = extend(true, {},  new EntityManagement(), new PersistentCollection(), function() {
@@ -39,43 +39,43 @@ var collections = extend(true, {},  new EntityManagement(), new PersistentCollec
          * @return promise of success
          */
         preDelete: function (connection, id) {
-            var defer = q.defer();
-            var params = {
-                $filter : new Predicate({
+            return new Promise((resolve, reject) => {
+                var params = {
+                    $filter : new Predicate({
                         subject: _.find(album.getFieldDefinitions(), { column: "COLLECTION_ID" }).field,
                         operator: Operators.EQUALS,
                         value: id
                     }),
-                $limit: 1000,
-                $offset: 0,
-                $orderby: null
-            };
-            var albumCollection = albums.find(params).then(function (results) {
-                var deleteCount = 0;
-                var len = results.rows.length;
-                if (len === 0) {
-                    defer.resolve();   
-                } else {
-                    var processRemoved = function(affected) {
-                        if (affected > 0) {
-                            deleteCount++;
-                            if (deleteCount === len) {
-                                defer.resolve();
+                    $limit: 1000,
+                    $offset: 0,
+                    $orderby: null
+                };
+                albums.find(params).then(results => {
+                    let deleteCount = 0;
+                    let len = results.rows.length;
+                    if (len === 0) {
+                        resolve();
+                    } else {
+                        let processRemoved = affected => {
+                            if (affected > 0) {
+                                deleteCount++;
+                                if (deleteCount === len) {
+                                    resolve();
+                                }
                             }
+                        };
+                        let processError = err => {
+                            reject(dataTranslator.getErrorMessage(err));
+                        };
+                        for (var i = 0; i < len; i++) {
+                            let row = results.rows[i];
+                            albums.remove(row.ID).then(processRemoved, processError);
                         }
-                    };
-                    var processError = function(err) {
-                        defer.reject(dataTranslator.getErrorMessage(err));
-                    };
-                    for (var i = 0; i < len; i++) {
-                        var row = results.rows[i];
-                        albums.remove(row.ID).then(processRemoved, processError);
                     }
-                }
-            }, function (err) {
-                defer.reject(dataTranslator.getErrorMessage(err));
+                }, err => {
+                    reject(dataTranslator.getErrorMessage(err));
+                });
             });
-            return defer.promise;
         }
     };
 }());

@@ -2,7 +2,6 @@
 var fs = require('fs');
 var FileStreamRotator = require('file-stream-rotator');
 var Level = require('./level');
-var q = require('q');
 
 function Logger(loggerName) {
     let name = loggerName;
@@ -62,27 +61,27 @@ function Logger(loggerName) {
     };
     
     this.setTarget = function (type, item) {
-        let defer = q.defer();
-        target = type;
-        targetPath = item;
-        if( target === 'file') {
-            var path = item;
-            if( item.endsWith('.log')) {
-                path = item.substring(0, item.lastIndexOf('/'));
-            }
-            fs.access( path, fs.R_OK | fs.W_OK, function (err) {
-                if( err !== null ) {
-                    fs.mkdir(path, function(err) {
-                        defer.resolve();
-                    });
-                } else {
-                    defer.resolve();
+        return new Promise(resolve => {
+            target = type;
+            targetPath = item;
+            if( target === 'file') {
+                var path = item;
+                if( item.endsWith('.log')) {
+                    path = item.substring(0, item.lastIndexOf('/'));
                 }
-            });
-        } else {
-            defer.resolve();
-        }
-        return defer.promise;
+                fs.access( path, fs.R_OK | fs.W_OK,  (err) => {
+                    if( err !== null ) {
+                        fs.mkdir(path, (err) => {
+                            resolve();
+                        });
+                    } else {
+                        resolve();
+                    }
+                });
+            } else {
+                resolve();
+            }
+        });
     };
 
     this.isEnabled = function (level) {

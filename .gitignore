@@ -14,3 +14,4 @@ logs/output.log
 stamp-web
 /certs
 /config/users.json
+audit.json

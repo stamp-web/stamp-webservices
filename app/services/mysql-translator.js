@@ -130,8 +130,7 @@ function DataTranslator() {
                 DB_COLS: [],
                 VALUES: []
             };
-            var that = this;
-            _.each(obj, function (value, key) {
+            _.each(obj, (value, key) => {
                 var definition = _.find(fieldDefinition.getFieldDefinitions(), { field : key });
                 if (definition && definition.column) {
                     var val = fieldDefinition.formatValue(definition,value);
@@ -167,11 +166,10 @@ function DataTranslator() {
         
         toWhereClause: function ($filter, fieldDefinitions) {
             var expression = '';
-            var that = this;
             if (!fieldDefinitions) {
                 logger.warn("The fieldDefinition parameter was not defined.");
             }
-            var processExpression = function (el) {
+            var processExpression = el => {
                 if (typeof el === 'string') {
                     return;
                 } else if (el instanceof Predicate) {
@@ -199,8 +197,8 @@ function DataTranslator() {
                         case Operators.OR:
                             binaryOp = false;
                             var or = el.operator === Operators.OR;
-                            var left = that.toWhereClause(el.subject, fieldDefinitions);
-                            var right = that.toWhereClause(el.value, fieldDefinitions);
+                            var left = this.toWhereClause(el.subject, fieldDefinitions);
+                            var right = this.toWhereClause(el.value, fieldDefinitions);
                             expression += (or ? '(' : '') + left + ' ' + el.operator.toUpperCase() + ' ' + right + (or ? ')' : '');
                             break;
                         default:

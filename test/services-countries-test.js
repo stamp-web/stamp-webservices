@@ -153,19 +153,19 @@ describe('REST Services for Countries', () => {
         var conflict_name = 'PUT with conflict (orignial)';
         superagent.post('http://' + hostname + ':' + server_port + '/rest/countries')
             .send({name: conflict_name})
-            .end(function (e, res) {
+            .end((e, res) => {
                 expect(e).toBe(null);
                 expect(res.status).toBe(201);
                 superagent.post('http://' + hostname + ':' + server_port + '/rest/countries')
                     .send({name: 'PUT causing conflict'})
-                    .end(function (e, res) {
+                    .end((e, res) =>{
                         expect(e).toBe(null);
                         expect(res.status).toBe(201);
-                        var id = res.body.id;
+                        let id = res.body.id;
                         // Now verify it is not found.
                         superagent.put('http://' + hostname + ':' + server_port + '/rest/countries/' + id)
                             .send({name: conflict_name})
-                            .end(function (msg, res) {
+                            .end((msg, res) => {
                                 expect(msg).not.toBe(null);
                                 expect(res.status).toBe(409);
                                 done();

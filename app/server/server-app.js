@@ -147,18 +147,18 @@ require("../routes/reports").configure(app, BASEPATH + SERVICES_PATH);
 
 
 
-connectionMgr.startup().then(function () {
-    process.on('exit', function () {
+connectionMgr.startup().then(() => {
+    process.on('exit', () => {
         connectionMgr.shutdown();
     });
-    process.on('uncaughtException', function(err) {
+    process.on('uncaughtException', err => {
         console.log(err.stack); // should update to use domains/clusters
     });
     // See if the server is running as a child process and if so signal completion of startup
     if (process.send) {
         process.send("SERVER_STARTED");
     }
-}, function (err) {
+}, err => {
     logger.error(err);
     process.exit(1);
 });

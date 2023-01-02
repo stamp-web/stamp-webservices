@@ -7,9 +7,6 @@ var countries = require('./countries');
 var ownership = require('../model//ownership');
 var stamp = require('../model/stamp');
 var _ = require('lodash');
-var q = require('q');
-
-
 
 var albums = extend(true, {}, new EntityManagement(), new PersistentCollection(), function () {
 
@@ -19,82 +16,82 @@ var albums = extend(true, {}, new EntityManagement(), new PersistentCollection()
     var sqlTrace = Logger.getLogger('sql');
 
     function mergeCountries(connection, obj) {
-
-        var defer = q.defer();
-        if (obj.COUNTRIES && obj.COUNTRIES.length === 0) {
-            var clear_link = "DELETE FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=?";
-            connection.query(clear_link, [obj.ID], function (err, results) {
-                if (err) {
-                    defer.reject(dataTranslator.getErrorMessage(err));
-                } else {
-                    defer.resolve(obj);
-                }
-            });
-        } else {
-            var existing_links = "SELECT COUNTRY_ID AS id FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=?";
-            connection.query(existing_links, [obj.ID], function (err, results) {
-                if (err) {
-                    defer.reject(dataTranslator.getErrorMessage(err));
-                } else {
-                    var remove_ids = [];
-                    var current = _.clone(obj.COUNTRIES);
-                    for (var i = 0; i < results.length; i++) {
-                        var result = results[i];
-                        var indx = _.indexOf(current, result.id);
-                        if (indx < 0) {
-                            remove_ids.push(result.id);
-                        } else {
-                            current.splice(indx, 1);
-                        }  
+        return new Promise((resolve, reject) => {
+            if (obj.COUNTRIES && obj.COUNTRIES.length === 0) {
+                let clear_link = "DELETE FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=?";
+                connection.query(clear_link, [obj.ID], (err, results) => {
+                    if (err) {
+                        reject(dataTranslator.getErrorMessage(err));
+                    } else {
+                        resolve(obj);
                     }
-                    var totalUpdates = remove_ids.length + current.length;
-                    if( totalUpdates === 0 ) {
-                        defer.resolve(obj);
-                    }
-                    var updates = 0;
-
-                    if (remove_ids.length > 0) {
-                        var qs = "DELETE FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=? AND COUNTRY_ID IN (";
-                        for (var i = 0; i < remove_ids.length; i++) {
-                            qs += remove_ids[i];
-                            if (i < remove_ids.length - 1) {
-                                qs += ",";
+                });
+            } else {
+                let existing_links = "SELECT COUNTRY_ID AS id FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=?";
+                connection.query(existing_links, [obj.ID], (err, results) => {
+                    if (err) {
+                        reject(dataTranslator.getErrorMessage(err));
+                    } else {
+                        let remove_ids = [];
+                        let current = _.clone(obj.COUNTRIES);
+                        for (let i = 0; i < results.length; i++) {
+                            let result = results[i];
+                            let indx = _.indexOf(current, result.id);
+                            if (indx < 0) {
+                                remove_ids.push(result.id);
+                            } else {
+                                current.splice(indx, 1);
                             }
                         }
-                        qs += ")";
-                        connection.query(qs, [obj.ID], function (err, results) {
-                            if (err) {
-                                defer.reject(dataTranslator.getErrorMessage(err));   
-                            } else {
-                                updates += remove_ids.length;
-                                if (totalUpdates === updates) {
-                                    defer.resolve(obj);
+                        let totalUpdates = remove_ids.length + current.length;
+                        if( totalUpdates === 0 ) {
+                            resolve(obj);
+                        }
+                        let updates = 0;
+
+                        if (remove_ids.length > 0) {
+                            let qs = "DELETE FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=? AND COUNTRY_ID IN (";
+                            for (let i = 0; i < remove_ids.length; i++) {
+                                qs += remove_ids[i];
+                                if (i < remove_ids.length - 1) {
+                                    qs += ",";
                                 }
                             }
-
-                        });
-                    }
-                    if (current.length > 0) {
-                        var qs = "INSERT INTO ALBUMS_COUNTRIES (ALBUM_ID,COUNTRY_ID) VALUES(?,?)";
-                        for (var i = 0; i < current.length; i++) {
-                            connection.query(qs, [obj.ID, current[i]], function (err, results) {
+                            qs += ")";
+                            connection.query(qs, [obj.ID], (err, results) => {
                                 if (err) {
-                                    defer.reject(dataTranslator.getErrorMessage(err));
+                                    reject(dataTranslator.getErrorMessage(err));
                                 } else {
-                                    updates++;
+                                    updates += remove_ids.length;
                                     if (totalUpdates === updates) {
-                                        defer.resolve(obj);
+                                        resolve(obj);
                                     }
                                 }
 
                             });
-                        }   
-                    }
+                        }
+                        if (current.length > 0) {
+                            let qs = "INSERT INTO ALBUMS_COUNTRIES (ALBUM_ID,COUNTRY_ID) VALUES(?,?)";
+                            for (let i = 0; i < current.length; i++) {
+                                connection.query(qs, [obj.ID, current[i]], (err, results) => {
+                                    if (err) {
+                                        reject(dataTranslator.getErrorMessage(err));
+                                    } else {
+                                        updates++;
+                                        if (totalUpdates === updates) {
+                                            resolve(obj);
+                                        }
+                                    }
 
-                }
-            });
-        }
-        return defer.promise;
+                                });
+                            }
+                        }
+
+                    }
+                });
+            }
+        });
+
     }
 
     return {
@@ -110,77 +107,76 @@ var albums = extend(true, {}, new EntityManagement(), new PersistentCollection()
         },
 
         preDelete: function (connection, id) {
-            var defer = q.defer();
-            // TODO: Should no longer be needed with CASCADE rule
-            var delete_link = "DELETE FROM ALBUMS_COUNTRIES WHERE ALBUM_ID= ?";
-            connection.query(delete_link, [id], function (err, results) {
-                if (err) {
-                    defer.reject(dataTranslator.getErrorMessage(err));
-                } else {
-                    // should we delete stamps?
-                    defer.resolve();
-                }
+            return new Promise((resolve, reject) => {
+                // TODO: Should no longer be needed with CASCADE rule
+                let delete_link = "DELETE FROM ALBUMS_COUNTRIES WHERE ALBUM_ID= ?";
+                connection.query(delete_link, [id], (err, results) => {
+                    if (err) {
+                        reject(dataTranslator.getErrorMessage(err));
+                    } else {
+                        // should we delete stamps?
+                        resolve();
+                    }
+                });
             });
-            return defer.promise;
         },
 
         postCreate: function (connection, obj) {
-            var defer = q.defer();
-            if (obj.countries && obj.countries.length > 0) {
-                _.each(obj.COUNTRIES, function (countryId) {
-                    var insert_link = "INSERT INTO ALBUMS_COUNTRIES (ALBUM_ID,COUNTRY_ID) VALUES(?,?)";
-                    sqlTrace.debug(insert_link);
-                    connection.query(insert_link, [obj.ID,countryId], function (err, results) {
-                        if (err) {
-                            defer.reject(dataTranslator.getErrorMessage(err));
-                        } else {
-                            defer.resolve();
-                        }
+            return new Promise((resolve, reject) => {
+                if (obj.countries && obj.countries.length > 0) {
+                    _.each(obj.COUNTRIES, countryId => {
+                        let insert_link = "INSERT INTO ALBUMS_COUNTRIES (ALBUM_ID,COUNTRY_ID) VALUES(?,?)";
+                        sqlTrace.debug(insert_link);
+                        connection.query(insert_link, [obj.ID,countryId], (err, results) => {
+                            if (err) {
+                                reject(dataTranslator.getErrorMessage(err));
+                            } else {
+                                resolve();
+                            }
+                        });
                     });
-                });
-            } else {
-                defer.resolve(obj);
-            }
-            return defer.promise;
+                } else {
+                    resolve(obj);
+                }
+            });
+
         },
 
         preCommitUpdate: function(connection,merged,storedObj) {
-            var defer = q.defer();
-            mergeCountries(connection,merged).then(function(result) {
-                defer.resolve({
-                    modified: true
+            return new Promise((resolve, reject) => {
+                mergeCountries(connection,merged).then(result => {
+                    resolve({
+                        modified: true
+                    });
+                }).catch(err => {
+                    reject(dataTranslator.getErrorMessage(err));
                 });
-            }).catch(function(err) {
-                defer.reject(dataTranslator.getErrorMessage(err));
             });
-            return defer.promise;
         },
 
         postFind: function (connection, result) {
-            var that = this;
-            var defer = q.defer();
-
-            var qs = "SELECT ALBUM_ID, COUNTRY_ID FROM ALBUMS_COUNTRIES WHERE ALBUM_ID IN (";
-            for (var i = 0; i < result.rows.length; i++) {
-                result.rows[i].COUNTRIES = [];
-                qs += result.rows[i].ID;
-                if (i < result.rows.length - 1) {
-                    qs += ",";
-                }
-            }
-            qs += ")";
-            connection.query(qs, function (err, r) {
-                if (err) {
-                    defer.reject(dataTranslator.getErrorMessage(err));
-                } else {
-                    for (var j = 0; j < r.length; j++) {
-                        var a = _.find(result.rows, { ID: r[j].ALBUM_ID });
-                        a.COUNTRIES.push(r[j].COUNTRY_ID);
+            return new Promise((resolve, reject) => {
+                let qs = "SELECT ALBUM_ID, COUNTRY_ID FROM ALBUMS_COUNTRIES WHERE ALBUM_ID IN (";
+                for (let i = 0; i < result.rows.length; i++) {
+                    result.rows[i].COUNTRIES = [];
+                    qs += result.rows[i].ID;
+                    if (i < result.rows.length - 1) {
+                        qs += ",";
                     }
-                    defer.resolve();
                 }
+                qs += ")";
+                connection.query(qs, (err, r) => {
+                    if (err) {
+                        reject(dataTranslator.getErrorMessage(err));
+                    } else {
+                        for (let j = 0; j < r.length; j++) {
+                            let a = _.find(result.rows, { ID: r[j].ALBUM_ID });
+                            a.COUNTRIES.push(r[j].COUNTRY_ID);
+                        }
+                        resolve();
+                    }
+                });
             });
-            return defer.promise;
         }
     };
 }());

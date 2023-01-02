@@ -6,7 +6,7 @@ let dataTranslator = require('./mysql-translator');
 let catalogueNumber = require('../model/catalogue-number');
 let catalogueNumberHelper = require('../model/catalogue-number-helper');
 let _ = require('lodash');
-let q = require('q');
+
 let Logger = require('../util/logger');
 let connectionManager = require('../pom/connection-mysql');
 
@@ -93,55 +93,55 @@ let catalogueNumberService = extend(true, {}, new PersistentCollection(), functi
          * Set the catalogue number identified by id to be the active catalogue number.
          *
          * @param id The id to set as active
-         * @returns {defer.promise|*}
+         * @returns {Promise|*}
          */
         makeActive: function(id) {
-            let defer = q.defer();
-            let that = this;
-            this.findById(id).then(function(catNum) {
-                stamps.findById(catNum.STAMP_ID).then(function(stamp) {
-                    catNum = _.find(stamp.CATALOGUENUMBER, {ID: +id});
-                    let activeCN = _.find(stamp.CATALOGUENUMBER, {ACTIVE:1});
-                    if( !activeCN || +activeCN.ID !== +id ) {
-                        let count = 0;
-                        let total = activeCN ? 2 : 1;
-                        connectionManager.getConnection().then(function (connection) {
-                            connection.beginTransaction(function (err) {
-                                let updateFn = function(connection,id,isActive) {
-                                    let sql = "UPDATE " + catalogueNumber.getTableName() + " SET ACTIVE=" + (isActive ? 1 : 0) + ",MODIFYSTAMP=CURDATE() WHERE ID=" + id;
-                                    sqlTrace.debug(sql);
-                                    connection.query(sql, function(err,result) {
-                                        if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
-                                            count++;
-                                            if( count === total ) {
-                                                connection.commit(function (err) {
-                                                    connection.release();
-                                                    if (err) {
-                                                        defer.reject(dataTranslator.getErrorMessage(err));
-                                                    }
-                                                    defer.resolve(stamp);
-                                                });
+            return new Promise((resolve, reject) => {
+                this.findById(id).then(catNum => {
+                    stamps.findById(catNum.STAMP_ID).then(stamp => {
+                        catNum = _.find(stamp.CATALOGUENUMBER, {ID: +id});
+                        let activeCN = _.find(stamp.CATALOGUENUMBER, {ACTIVE:1});
+                        if( !activeCN || +activeCN.ID !== +id ) {
+                            let count = 0;
+                            let total = activeCN ? 2 : 1;
+                            connectionManager.getConnection().then(connection => {
+                                connection.beginTransaction(err => {
+                                    let updateFn = (connection,id,isActive) => {
+                                        let sql = "UPDATE " + catalogueNumber.getTableName() + " SET ACTIVE=" + (isActive ? 1 : 0) + ",MODIFYSTAMP=CURDATE() WHERE ID=" + id;
+                                        sqlTrace.debug(sql);
+                                        connection.query(sql, (err,result) => {
+                                            if (!PersistentCollection.rollbackOnError(connection, reject, err)) {
+                                                count++;
+                                                if( count === total ) {
+                                                    connection.commit(err => {
+                                                        connection.release();
+                                                        if (err) {
+                                                            reject(dataTranslator.getErrorMessage(err));
+                                                        }
+                                                        resolve(stamp);
+                                                    });
+                                                }
                                             }
-                                        }
-                                    });
-                                };
-                                catNum.ACTIVE = 1;
-                                updateFn(connection,+id,true);
-                                if( activeCN) {
-                                    activeCN.ACTIVE = 0;
-                                    updateFn(connection,+activeCN.ID,false);
-                                }
+                                        });
+                                    };
+                                    catNum.ACTIVE = 1;
+                                    updateFn(connection,+id,true);
+                                    if( activeCN) {
+                                        activeCN.ACTIVE = 0;
+                                        updateFn(connection,+activeCN.ID,false);
+                                    }
+                                });
                             });
-                        });
-                    } else {
-                        logger.warn("The catalogue number with ID " + id + " was already active.");
-                        defer.resolve(stamp);
-                    }
+                        } else {
+                            logger.warn("The catalogue number with ID " + id + " was already active.");
+                            resolve(stamp);
+                        }
+                    });
+                }).catch(err => {
+                    reject(dataTranslator.getErrorMessage(err));
                 });
-            }).catch(function(err) {
-                defer.reject(dataTranslator.getErrorMessage(err));
             });
-            return defer.promise;
+
         },
         collectionName: 'catalogueNumbers',
         fieldDefinition: catalogueNumber

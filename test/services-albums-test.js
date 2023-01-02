@@ -1,6 +1,7 @@
 var superagent = require('superagent');
 var session = require('./util/integration-session');
 var NamedCollectionVerifications = require('./util/named-collection-verifier');
+var _ = require('lodash');
 
 describe('REST Services for Albums', () => {
 
@@ -143,28 +144,34 @@ describe('REST Services for Albums', () => {
     });
 
     it('PUT with invalid non-existing ID', done => {
-        NamedCollectionVerifications.verifyPutNotFound('albums', {description: 'some description'}, done);
+        NamedCollectionVerifications.verifyPutNotFound('albums', {
+            name: 'mystery album',
+            description: 'some description',
+            stampCollectionRef: 1
+        }, done);
     });
 
     it('PUT causing a conflict', done => {
         var conflict_name = 'PUT with conflict (orignial)';
         superagent.post('http://' + hostname + ':' + server_port + '/rest/albums')
             .send({name: conflict_name, stampCollectionRef: 1})
-            .end(function (e, res) {
+            .end((e, res) => {
                 expect(res.status).toEqual(201);
                 superagent.post('http://' + hostname + ':' + server_port + '/rest/albums')
                     .send({name: 'PUT causing conflict', stampCollectionRef: 1})
-                    .end(function (e, res) {
+                    .end((e, res) => {
                         expect(res.status).toEqual(201);
                         var id = res.body.id;
-                        // Now verify it is not found.
-                        superagent.put('http://' + hostname + ':' + server_port + '/rest/albums/' + id)
-                            .send({name: conflict_name})
-                            .end(function (e, res) {
-                                expect(e).not.toEqual(null);
-                                expect(res.status).toEqual(409);
-                                done();
-                            });
+                        _.delay(() => {
+                            // Now verify it is not found.
+                            superagent.put('http://' + hostname + ':' + server_port + '/rest/albums/' + id)
+                                .send({name: conflict_name})
+                                .end((e, res) => {
+                                    expect(e).not.toEqual(null);
+                                    expect(res.status).toEqual(409);
+                                    done();
+                                });
+                        }, 500);
                     });
             });
     });

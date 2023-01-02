@@ -1,5 +1,5 @@
 ﻿var _ = require('lodash');
-var q = require('q');
+
 var Logger = require('./logger');
 var fx = require('money');
 var accounting = require('accounting');
@@ -32,33 +32,33 @@ ExchangeRates.initialize = function (callback) {
 
 
     function retrieveExchangeData() {
-        var defer = q.defer();
-        var exchangeData = {};
-        var chunks = "";
-        var appId = nconf.get("openexchangerates.org").app_id;
-        if (!appId) {
-            defer.reject("No app_id found for openexchangerates.org so no new rates can be obtained.");
-        } else {
-            logger.info("Fetching rates from openexchangerates.org");
-            http.get('http://openexchangerates.org/api/latest.json?app_id=' + appId, function (res) {
-                if (res.statusCode === 200) {
-                    res.on('data', function (chunk) {
-                        chunks += chunk;
-                    });
-                    res.on('end', function () {
-                        exchangeData = JSON.parse(chunks);
-                        exchangeData.lastUpdated = new Date().getTime();
-                        fs.writeFile(filename, JSON.stringify(exchangeData), function (err) {
-                            defer.resolve(exchangeData);
+        return new Promise((resolve, reject) => {
+            var exchangeData = {};
+            var chunks = "";
+            var appId = nconf.get("openexchangerates.org").app_id;
+            if (!appId) {
+                reject("No app_id found for openexchangerates.org so no new rates can be obtained.");
+            } else {
+                logger.info("Fetching rates from openexchangerates.org");
+                http.get('http://openexchangerates.org/api/latest.json?app_id=' + appId, function (res) {
+                    if (res.statusCode === 200) {
+                        res.on('data', function (chunk) {
+                            chunks += chunk;
                         });
-                        logger.info("Completed updating exchange rates data file.");
-                    });
-                } else {
-                    defer.reject("Open Exchange responded with status code " + res.statusCode);
-                }
-            });
-        }
-        return defer.promise;
+                        res.on('end', function () {
+                            exchangeData = JSON.parse(chunks);
+                            exchangeData.lastUpdated = new Date().getTime();
+                            fs.writeFile(filename, JSON.stringify(exchangeData), function (err) {
+                                resolve(exchangeData);
+                            });
+                            logger.info("Completed updating exchange rates data file.");
+                        });
+                    } else {
+                        reject("Open Exchange responded with status code " + res.statusCode);
+                    }
+                });
+            }
+        });
     }
 
     fs.exists(filename, function (exists) {

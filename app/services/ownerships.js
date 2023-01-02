@@ -1,7 +1,7 @@
 var extend = require('node.extend');
 var PersistentCollection = require('./persistent-collection');
 var connectionManager = require('../pom/connection-mysql');
-var q = require('q');
+
 var ownership = require('../model/ownership');
 var stamp = require('../model/stamp');
 var catalogue = require('../model/catalogue');
@@ -69,39 +69,40 @@ var ownershipService = extend(true, {}, new PersistentCollection(), function () 
         fieldDefinition: ownership,
 
         purchase: (stamps, pricePaid, currencyCode) => {
-            let defer = q.defer();
-            connectionManager.getConnection().then((connection) => {
-                let query = buildCatalogueValueQuery(stamps);
-                connection.query(query, (err, queryResult) => {
-                    let sum = sumCatalogueValue(queryResult, currencyCode);
-                    let ratio = pricePaid / sum;
-                    let total = _.size(queryResult);
-                    let processed = 0
+            return new Promise((resolve, reject) => {
+                connectionManager.getConnection().then(connection => {
+                    let query = buildCatalogueValueQuery(stamps);
+                    connection.query(query, (err, queryResult) => {
+                        let sum = sumCatalogueValue(queryResult, currencyCode);
+                        let ratio = pricePaid / sum;
+                        let total = _.size(queryResult);
+                        let processed = 0
 
-                    connection.beginTransaction(trxErr => {
-                        _.forEach(queryResult, (result, idx) => {
-                            let sql = buildUpdateQuery(result, currencyCode, ratio);
-                            connection.query(sql, err => {
-                                if (!PersistentCollection.rollbackOnError(connection, defer, err)) {
-                                    processed++;
-                                    if (processed === total) {
-                                        connection.commit((err) => {
-                                            connection.release();
-                                            if (err) {
-                                                defer.reject(dataTranslator.getErrorMessage(err));
-                                            }
-                                            defer.resolve();
-                                        });
+                        connection.beginTransaction(trxErr => {
+                            _.forEach(queryResult, (result, idx) => {
+                                let sql = buildUpdateQuery(result, currencyCode, ratio);
+                                connection.query(sql, err => {
+                                    if (!PersistentCollection.rollbackOnError(connection, reject, err)) {
+                                        processed++;
+                                        if (processed === total) {
+                                            connection.commit(err => {
+                                                connection.release();
+                                                if (err) {
+                                                    reject(dataTranslator.getErrorMessage(err));
+                                                }
+                                                resolve();
+                                            });
+                                        }
                                     }
-                                }
+                                });
                             });
-                        });
-                    }); // end beginTranscation
+                        }); // end beginTranscation
+                    });
+                }, err => {
+                    reject(dataTranslator.getErrorMessage(err));
                 });
-            }, (err) => {
-                defer.reject(dataTranslator.getErrorMessage(err));
             });
-            return defer.promise;
+
         }
 
     };

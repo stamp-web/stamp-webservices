@@ -5,7 +5,6 @@ var albumService = require('../../services/albums');
 var catalogueNumberHelper = require('../catalogue-number-helper');
 var catalogueNumber = require('../catalogue-number');
 var _ = require('lodash');
-var q = require('q');
 
 var converter = function() {
     return {

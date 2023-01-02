@@ -13,7 +13,9 @@ if (nconf.get("hostname")) {
     hostname = nconf.get("hostname");
 }
 
-var RANDOM_ID = (new Date()).getTime() % (2048 * 2048);
+var randomId = () => {
+  return Math.floor(Math.random() * 100000);
+};
 
 
 var NamedCollectionVerifications = {
@@ -63,14 +65,14 @@ var NamedCollectionVerifications = {
         });
     },
     verifyNotFound: function (collectionName, done) {
-        superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + RANDOM_ID)
+        superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + randomId())
           .end(function (e, res) {
             expect(res.status).toBe(404);
             done();
         });
     },
     verifyPutNotFound: function (collectionName, props, done) {
-        superagent.put('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + RANDOM_ID)
+        superagent.put('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + randomId())
             .send(props)
           .end(function (e, res) {
             expect(e).not.toBe(null);
@@ -100,8 +102,8 @@ var NamedCollectionVerifications = {
         });
     },
     verifyDeleteNotFound: function (collectionName, done) {
-        superagent.del('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + RANDOM_ID)
-          .end(function (msg, res) {
+        superagent.del('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + randomId())
+          .end((msg, res) => {
             expect(msg).not.toEqual(null);
             expect(res.status).toEqual(404);
             done();

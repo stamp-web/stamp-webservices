@@ -45,7 +45,6 @@ module.exports = function () {
                 callback();
                 return;
             }
-            connection.query(line, function (err, rows) {
                 if (err) {
                     console.log(err);
                 }
@@ -91,6 +90,9 @@ module.exports = function () {
                 };
                 f();
             }
+        });
+        child.on('error', err => {
+            logger.error(err);
         });
         child.on('disconnect', () => {
            logger.info('process was disconnected');

@@ -1,5 +1,10 @@
 ﻿# stamp-webservices
 
+## Required Tools
+* NodeJS - (2023-01-02) updated to use promises so version 8.0+ is required
+* MySQL Database (or MariaDB) - If using MySQL 8+ and there are problems logging in see troubleshooting below
+ 
+
 ## Configuring the system
 While many parameters can be passed on the command line to the server, it is recommended to utilize config/application.json to store 
 the properties of the system.  An example file config/application-example.json is provided to give an idea of the flavor of configuration.
@@ -107,4 +112,9 @@ is not running in the jest process stack it does not get picked up for code cove
 ## Execution in CI and Jenkins
 
 To run the tests in CI, the server must be accessible to the Jenkins process.  If an environment variable is set for ``port`` this will
-be used to connect to the server with HTTP API requests.  
+be used to connect to the server with HTTP API requests.
+
+## Troubleshooting
+
+* Prior to MySQL 8+, the users had passwords using mysql_native_password.  Starting in MySQL 8+ they will be created using "caching_sha2_password".  In order to modify the user password to the compatible "mysql_native_password" use the following:
+ ```ALTER USER myuser IDENTIFIED WITH mysql_native_password BY 'mypassword';```

@@ -12,7 +12,6 @@ if (!port) {
 }
 
 var logger = Logger.getLogger("server");
-
 var server = require('./server-app');
 server.listen(port);
 logger.info("Server listening on port " + port + ", process=" + process.pid);

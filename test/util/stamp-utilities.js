@@ -52,7 +52,7 @@ var StampUtilities = {
 
         superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
             .send(stamp)
-            .end(function (e, res) {
+            .end((e, res) => {
                 expect(e).toEqual(null);
                 expect(res.status).toEqual(201);
                 fn(e, res);
