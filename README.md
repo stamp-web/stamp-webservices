@@ -27,7 +27,7 @@ The following are the logger names supports by stamp-webservices
 The logging levels can be set for both the tests and server at execution time with a command line argument.  The format is as follows:
 
 ```shell
---[loggerName]_level=[all|error|warn|info|debug|trace]
+--[loggerName]_level [all|error|warn|info|debug|trace]
 ```
 
 As well, a small web-service is available to toggle this on the fly under the path /config/loggers/[loggerName]?level=debug
@@ -116,5 +116,7 @@ be used to connect to the server with HTTP API requests.
 
 ## Troubleshooting
 
-* Prior to MySQL 8+, the users had passwords using mysql_native_password.  Starting in MySQL 8+ they will be created using "caching_sha2_password".  In order to modify the user password to the compatible "mysql_native_password" use the following:
+### MySQL 8+ Changes and Impacts
+* Prior to MySQL 8+, the users had passwords using mysql_native_password.  Starting in MySQL 8+ they will be created using "caching_sha2_password".  In order to modify the user password to the compatible "mysql_native_password" use the following (see [Issue 64](https://github.com/stamp-web/stamp-webservices/issues/65)):
  ```ALTER USER myuser IDENTIFIED WITH mysql_native_password BY 'mypassword';```
+* In MySQL 8+, the default sql_mode is now set to ``ONLY_FULL_GROUP_BY`` which means any ORDER BY requires all referenced columns need to be included see [Issue 64](https://github.com/stamp-web/stamp-webservices/issues/64) 

@@ -250,8 +250,11 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
                 let stampDef = _.reject(stamp.getFieldDefinitions(), rejectFn);
                 let catDef = _.reject(catalogueNumber.getFieldDefinitions(), rejectFn);
                 let ownerDef = _.reject(ownership.getFieldDefinitions(), rejectFn);
-
-                let select = 'SELECT SQL_CALC_FOUND_ROWS ' + generateColumnExpression(stampDef, stamp.getAlias(),true) + ' FROM ' + this.getFromTables(params);
+                // with MySQL 8+ we need to add NUMBERSORT to the select if used by an ORDER BY statement.
+                let select = `SELECT SQL_CALC_FOUND_ROWS ${generateColumnExpression(stampDef, stamp.getAlias(),true)},` +
+                    `${generateColumnExpression([catalogueNumber.getField('NUMBERSORT', true), catalogueNumber.getField('CATALOGUEVALUE', true)], catalogueNumber.getAlias(), false)},` +
+                    `${generateColumnExpression([ownership.getField('PRICE', true)], ownership.getAlias(), false)} ` +
+                    `FROM ${this.getFromTables(params)}`;
                 let whereClause = this.getWhereClause(params);
                 let orderby = this.getOrderByClause(params, [stamp, ownership, catalogueNumber]);
                 select += ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' ' + orderby + ' LIMIT ' + params.$offset + ',' + params.$limit;
