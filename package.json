@@ -26,7 +26,7 @@
     "mysql": "^2.16.0",
     "nconf": "^0.12.0",
     "node.extend": "^2.0.2",
-    "odata-filter-parser": "^0.4.0",
+    "odata-filter-parser": "^0.5.0",
     "passport": "^0.6.0",
     "passport-http": "^0.3.0",
     "pw": "0.0.4",

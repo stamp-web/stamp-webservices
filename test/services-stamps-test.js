@@ -172,6 +172,67 @@ describe('REST Services for Stamps', () => {
 
     });
 
+    it('GET collection with compound conditions', done => {
+        NamedCollectionVerifications.verifyPost('countries', {
+            name: 'test-compound-conditions'
+        }, null, country => {
+            var stamp = {
+                countryRef:       country.id,
+                rate:             '1d',
+                description:      'orange-red',
+                wantList:         true,
+                catalogueNumbers: [
+                    {
+                        catalogueRef: 1,
+                        number:       '1d-orange',
+                        value:        100.0,
+                        condition:    1,
+                        active:       true
+                    }
+                ]
+            };
+            stampUtil.create(stamp, (e, res) => {
+                stamp = {
+                    countryRef:       country.id,
+                    rate:             "2d",
+                    description:      "green and orange",
+                    wantList:         true,
+                    catalogueNumbers: [
+                        {
+                            catalogueRef: 1,
+                            number:       "2d-green",
+                            value:        1.25,
+                            condition:    2, // set to a condition not included in test
+                            active:       true
+                        }
+                    ]
+                };
+                stampUtil.create(stamp, async (e, res) => {
+
+
+                    let checkForStamp = async (filter, isDone) => {
+                        superagent.get('http://' + hostname + ':' + server_port + '/rest/stamps?$filter=' + filter)
+                            .end((e, res) => {
+                                expect(e).toEqual(null);
+                                expect(res.status).toEqual(200);
+                                expect(res.body.total).toEqual(1);
+                                expect(res.body.stamps).not.toBe(undefined);
+                                done();
+                            });
+                    };
+
+                    let filter = `((countryRef eq ${country.id}) and (startswith(rate,'2d') and endswith(description,'orange')))`;
+                    await checkForStamp(filter, false);
+                    filter = `((countryRef eq ${country.id}) and ((contains(rate,'1d')) and (contains(description,'orange'))))`;
+                    await checkForStamp(filter, true);
+
+                });
+            });
+        });
+
+    });
+
+
 
     it('POST with apostrophe is valid creation with 201 status (Issue #36)', done => {
         var stamp = {
