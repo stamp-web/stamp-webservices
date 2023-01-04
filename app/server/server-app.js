@@ -113,7 +113,7 @@ app.use(
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
-            imgSrc: ["'self'", "http://*", "http://localhost:*", "data:"],
+            imgSrc: ["'self'", "http://*", "data:"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: [],
         },
