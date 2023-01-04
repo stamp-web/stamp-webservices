@@ -2,6 +2,7 @@
 
 const express = require("express");
 const helmet = require('helmet');
+const contentSecurityPolicy = require("helmet-csp");
 const compression = require("compression");
 const serveStatic = require('serve-static');
 const morgan = require('morgan');
@@ -105,6 +106,20 @@ function createServer() {
 var app = express();
 app.use(compression());
 app.use(helmet());
+app.use(
+    contentSecurityPolicy({
+        useDefaults: true,
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "http://*", "http://localhost:*", "data:"],
+            objectSrc: ["'none'"],
+            upgradeInsecureRequests: [],
+        },
+        reportOnly: false,
+    })
+);
 app.use(morgan('tiny', {stream: FileStreamRotator.getStream({
     date_format: 'YYYYMMDD',
     filename: __dirname + '/../../logs/access-%DATE%.log',
