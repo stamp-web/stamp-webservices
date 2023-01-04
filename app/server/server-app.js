@@ -30,13 +30,13 @@ if (nconf.get("basePath")) {
     BASEPATH = nconf.get("basePath");
 }
 var DISABLE_CACHE = false;
-if(nconf.get('disableCache')) {
+if (nconf.get('disableCache')) {
     DISABLE_CACHE = !!nconf.get('disableCache');
 }
 
 function configureLogger(aLogger, name) {
     let silenceConsole = nconf.get('silenceConsole');
-    if(silenceConsole) {
+    if (silenceConsole) {
         Logger.silenceConsole();
     }
     aLogger.setLevel(nconf.get(name + "_level") ? nconf.get(name + "_level") : Level.INFO);
@@ -62,9 +62,9 @@ function configureLoggerRemotely(req, resp) {
     }
 }
 
-function showLoggers(req,resp) {
+function showLoggers(req, resp) {
     var html = "<html><body><table><tr><th>Logger name</th><th>Level</th><th>Enable Debug</th></tr>";
-    _.each(Logger.loggers, function(logger,key) {
+    _.each(Logger.loggers, function (logger, key) {
         var _logger = Logger.getLogger(key);
         html += "<tr><td>" + key + "</td><td>" + _logger.getLevel() + "</td><td><a href=\"logger/" + key + "?level=debug\"><button>Set</button></a></td></tr>";
     });
@@ -87,7 +87,7 @@ function createServer() {
         logger.warn('WARNING: Server is created with non-TLS protocol.');
         server = http.createServer({});
     } else {
-        if(_.get(certificates, 'CertificateFile') && _.get(certificates, 'CertificateKeyFile')) {
+        if (_.get(certificates, 'CertificateFile') && _.get(certificates, 'CertificateKeyFile')) {
             server = spdy.createServer({
                 spdy: {
                     protocols: ['http/1.1']
@@ -105,30 +105,33 @@ function createServer() {
 
 var app = express();
 app.use(compression());
-app.use(helmet());
-app.use(
-    contentSecurityPolicy({
-        useDefaults: true,
+app.use(helmet({
+    crossOriginEmbedderPolicy: false
+}));
+app.use(contentSecurityPolicy({
+        useDefaults: false,
         directives: {
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
-            imgSrc: ["'self'", "http://*", "data:"],
+            imgSrc: ["https:", "'self'", "data:"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: [],
         },
         reportOnly: false,
     })
 );
-app.use(morgan('tiny', {stream: FileStreamRotator.getStream({
-    date_format: 'YYYYMMDD',
-    filename: __dirname + '/../../logs/access-%DATE%.log',
-    frequency: 'daily',
-    verbose: false })
+app.use(morgan('tiny', {
+    stream: FileStreamRotator.getStream({
+        date_format: 'YYYYMMDD',
+        filename: __dirname + '/../../logs/access-%DATE%.log',
+        frequency: 'daily',
+        verbose: false
+    })
 }));
 app.use(favicon(__dirname + '/../../www/favicon.ico'));
 app.use(express.json({strict: false}));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({extended: true}));
 Authenticator.initialize(app);
 
 const server = createServer();
@@ -161,7 +164,6 @@ require("../routes/rest-stamps").configure(app, BASEPATH + SERVICES_PATH);
 require("../routes/reports").configure(app, BASEPATH + SERVICES_PATH);
 
 
-
 connectionMgr.startup().then(() => {
     process.on('exit', () => {
         connectionMgr.shutdown();
@@ -181,5 +183,3 @@ connectionMgr.startup().then(() => {
 server.on('request', app);
 
 module.exports = server;
-
-
