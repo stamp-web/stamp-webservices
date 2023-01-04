@@ -2,7 +2,7 @@ var superagent = require('superagent');
 var session = require('./util/integration-session');
 var NamedCollectionVerifications = require('./util/named-collection-verifier');
 var stampUtil = require('./util/stamp-utilities');
-
+var _ = require('lodash');
 
 describe('REST Services for Countries', () => {
 
@@ -21,6 +21,17 @@ describe('REST Services for Countries', () => {
             connection = session.getConnection();
             done();
         });
+    });
+
+    it('countStamps will execute with no stamps in system', done => {
+        superagent.get('http://' + hostname + ':' + server_port + '/rest/countries/!countStamps')
+            .end(function (e, res) {
+                expect(e).toBe(null);
+                expect(res.status).toEqual(200);
+                let result = res.body;
+                expect(_.isEmpty(result)).toBe(true);
+                done();
+            });
     });
 
     it('GET Collection with 200 status', done => {

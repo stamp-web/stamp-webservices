@@ -1,14 +1,13 @@
 var connectionManager = require('../pom/connection-mysql');
 var dataTranslator = require('./mysql-translator');
 var stamp = require('../model/stamp');
-
 var Logger = require('../util/logger');
-
 
 function EntityManagement() {
     "use strict";
 
-    var sqlTrace = Logger.getLogger('sql');
+    let sqlTrace = Logger.getLogger('sql');
+    let foundStamps = false;
 
     return {
         getCountStampWhereStatement: function() {
@@ -18,7 +17,16 @@ function EntityManagement() {
             return this.fieldDefinition.getTableName() +
                 ' AS ' + this.fieldDefinition.getAlias() + ',' + stamp.getTableName() + ' AS ' + stamp.getAlias();
         },
-        countStamps: function() {
+        countStamps: async function() {
+            if(!foundStamps) {
+                // Need to require this here since Stamps uses collections that are EntityManagement classed
+                let count = await require('./stamps').count({});
+                foundStamps = count > 0;
+                if (count === 0) {
+                    return Promise.resolve([]);
+                }
+            }
+
             return new Promise((resolve, reject) => {
                 var qs = 'SELECT ' + this.fieldDefinition.getAlias() + '.ID AS ID, COUNT(' + stamp.getAlias() + '.ID) AS COUNT FROM ' + this.getCountStampFromTables() + ' WHERE ' +
                     this.getCountStampWhereStatement() + ' GROUP BY ' + this.fieldDefinition.getAlias() + '.ID';

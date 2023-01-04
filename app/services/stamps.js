@@ -62,13 +62,13 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
     }
 
     let cachePolicy = true;
+    let foundStamps = false;
 
     const getCatalogues = () => {
         return catalogues.find();
     }
 
     return {
-
         setCachePolicy: val => {
             cachePolicy = val;
         },
@@ -234,9 +234,14 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
         },
 
         find: async function (params) {
-            let count = await this.count({});
-            if (count === 0) {
-                return Promise.resolve({total:0, rows:[]});
+            if(!foundStamps) {
+                // since we can't resolve column expressions when there are no stamps we need to bypass this if the
+                // STAMPS table is empty.  Cache the result, so we don't need to calculate each time.
+                let count = await this.count({});
+                foundStamps = count > 0;
+                if (count === 0) {
+                    return Promise.resolve({total:0, rows:[]});
+                }
             }
             return new Promise((resolve, reject) => {
                 let rejectFn = function (field) {
