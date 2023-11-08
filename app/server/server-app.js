@@ -132,6 +132,7 @@ app.use(contentSecurityPolicy({
             scriptSrc: ["'self'", "'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'"],
             imgSrc: ["https:", "'self'", "data:"],
+            fontSrc: ["'self'", "data:"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: [],
         },
