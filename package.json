@@ -15,7 +15,7 @@
     "domain-middleware": "^0.1.0",
     "expect.js": "^0.3.1",
     "express": "^4.16.3",
-    "express-session": "^1.15.6",
+    "express-session": "^1.17.3",
     "file-stream-rotator": "^1.0.0",
     "helmet": "^6.0.1",
     "helmet-csp": "^3.4.0",

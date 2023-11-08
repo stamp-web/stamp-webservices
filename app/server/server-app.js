@@ -4,6 +4,7 @@ const express = require("express");
 const helmet = require('helmet');
 const contentSecurityPolicy = require("helmet-csp");
 const compression = require("compression");
+const session = require('express-session');
 const serveStatic = require('serve-static');
 const morgan = require('morgan');
 const connectionMgr = require('../pom/connection-mysql');
@@ -100,10 +101,26 @@ function createServer() {
         }
     }
     return server;
+}
 
+function createSessionConfig() {
+    const secret = nconf.get('session_secret') || 'STAMPWEB';
+    const sessionConfig = {
+        resave: false,
+        name: 'stamp-webservices',
+        saveUninitialized: false,
+        secret: secret,
+        cookie: {
+            sameSite: 'strict',
+            secure: true
+        }
+    };
+    return sessionConfig;
 }
 
 var app = express();
+
+app.use(session(createSessionConfig()));
 app.use(compression());
 app.use(helmet({
     crossOriginEmbedderPolicy: false
