@@ -164,8 +164,9 @@ app.get(BASEPATH + "config/logger/:logger", configureLoggerRemotely);
 
 var aurelia_path = path.resolve(__dirname, '..' + path.sep + '..' + path.sep + 'www/aurelia/');
 var www_path = path.resolve(__dirname, '..' + path.sep + '..' + path.sep + 'www/');
+var vue_path = path.resolve(__dirname, '..' + path.sep + '..' + path.sep + 'www/stamp-web/');
 
-app.use('/stamp-web', serveStatic(www_path));
+app.use('/stamp-web', serveStatic(vue_path));
 app.use('/stamp-webservices', serveStatic(www_path));
 app.use('/stamp-aurelia', serveStatic(aurelia_path));
 app.use(serveStatic(www_path));
