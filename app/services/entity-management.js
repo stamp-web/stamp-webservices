@@ -34,12 +34,11 @@ function EntityManagement() {
                 connectionManager.getConnection().then(connection => {
                     connection.query(qs, (err, result) => {
                         connection.release();
+                        console.log(result);
                         if (err !== null) {
                             reject(dataTranslator.getErrorMessage(err));
-                        } else if (result.length > 0) {
-                            resolve(result);
                         } else {
-                            reject({ message: "No object found", code: "NOT_FOUND", processed: true });
+                            resolve(result);
                         }
                     });
                 }, (err) => {
