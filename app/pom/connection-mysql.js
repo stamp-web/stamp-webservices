@@ -178,9 +178,12 @@ module.exports = function () {
         },
         shutdown: function () {
             if (dbPool !== null) {
-                dbPool.end();
+                dbPool.end(err => {
+                    logger.warn('Error seen closing connection pool', err)
+                    dbPool = null;
+                });
             }
-            dbPool = null;
+
         },
         getConnection: function () {
             return new Promise((resolve, reject) => {

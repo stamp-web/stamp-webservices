@@ -37,6 +37,7 @@ var report = function () {
                     sql += "GROUP BY " + catalogueNumber.getAlias() + ".CATALOGUE_REF";
                     sqlTrace.debug(sql);
                     let query = connection.query(sql, (err, results) => {
+                        connection.release()
                         if (err) {
                             reject(dataTranslator.getErrorMessage(err));
                         }
@@ -80,6 +81,7 @@ var report = function () {
                     }
                     sqlTrace.debug(sql);
                     let query = connection.query(sql, (err, results) => {
+                        connection.release()
                         if (err) {
                             reject(dataTranslator.getErrorMessage(err));
                         }
