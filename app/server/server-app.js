@@ -10,7 +10,7 @@ const morgan = require('morgan');
 const connectionMgr = require('../pom/connection-mysql');
 const favicon = require('serve-favicon');
 const nconf = require('nconf');
-const spdy = require('spdy');
+const spdy = require('node:http2');
 const http = require('http');
 const connect = require('connect');
 const domainMiddleware = require('domain-middleware');
@@ -89,12 +89,10 @@ function createServer() {
         server = http.createServer({});
     } else {
         if (_.get(certificates, 'CertificateFile') && _.get(certificates, 'CertificateKeyFile')) {
-            server = spdy.createServer({
-                spdy: {
-                    protocols: ['http/1.1']
-                },
+            server = spdy.createSecureServer({
                 key: fs.readFileSync(certificates.CertificateKeyFile),
-                cert: fs.readFileSync(certificates.CertificateFile)
+                cert: fs.readFileSync(certificates.CertificateFile),
+                allowHTTP1: true
             });
         } else {
             logger.error('Either CertificateKeyFile or CertificateFile was not defined');
