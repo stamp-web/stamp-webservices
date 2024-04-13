@@ -36,7 +36,7 @@ function configureLogger(aLogger, name) {
     }
     aLogger.setLevel(nconf.get(name + "_level") ? nconf.get(name + "_level") : Level.INFO);
     if (nconf.get(name + "_target") === "file" && nconf.get(name + "_file")) {
-        logger.setTarget(nconf.get(name + "_target"), nconf.get(name + "_file"));
+        aLogger.setTarget(nconf.get(name + "_target"), nconf.get(name + "_file"));
     }
 }
 
