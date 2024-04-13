@@ -1,10 +1,9 @@
 "use strict";
 
-const express = require("express");
-const http2Express = require('http2-express-bridge')
+const express = require('express');
 const helmet = require('helmet');
-const contentSecurityPolicy = require("helmet-csp");
-const compression = require("compression");
+const contentSecurityPolicy = require('helmet-csp');
+const compression = require('compression');
 const session = require('express-session');
 const serveStatic = require('serve-static');
 const morgan = require('morgan');
@@ -12,7 +11,7 @@ const connectionMgr = require('../pom/connection-mysql');
 const favicon = require('serve-favicon');
 const nconf = require('nconf');
 const http = require('http');
-const http2 = require('http2')
+const https = require('https')
 const connect = require('connect');
 const domainMiddleware = require('domain-middleware');
 const FileStreamRotator = require('file-stream-rotator');
@@ -25,8 +24,8 @@ const fs = require('fs');
 
 nconf.argv().env().file(__dirname + '/../../config/application.json');
 
-const SERVICES_PATH = "rest";
-const BASEPATH = nconf.get("basePath") ? nconf.get("basePath") : '/stamp-webservices/';
+const SERVICES_PATH = 'rest';
+const BASEPATH = nconf.get('basePath') ? nconf.get('basePath') : '/stamp-webservices/';
 const CERT_CONFIG = nconf.get('Certificates');
 
 function configureLogger(aLogger, name) {
@@ -34,9 +33,9 @@ function configureLogger(aLogger, name) {
     if (silenceConsole) {
         Logger.silenceConsole();
     }
-    aLogger.setLevel(nconf.get(name + "_level") ? nconf.get(name + "_level") : Level.INFO);
-    if (nconf.get(name + "_target") === "file" && nconf.get(name + "_file")) {
-        aLogger.setTarget(nconf.get(name + "_target"), nconf.get(name + "_file"));
+    aLogger.setLevel(nconf.get(name + '_level') ? nconf.get(name + '_level') : Level.INFO);
+    if (nconf.get(name + '_target') === 'file' && nconf.get(name + '_file')) {
+        aLogger.setTarget(nconf.get(name + '_target'), nconf.get(name + '_file'));
     }
 }
 
@@ -63,7 +62,7 @@ function showLoggers(req, resp) {
         let _logger = Logger.getLogger(key);
         html += `<tr><td>${key}</td><td>${_logger.getLevel()}</td><td><a href="logger/${key}?level=debug"><button>Set</button></a></td></tr>`;
     });
-    html += "</table></body></html>";
+    html += '</table></body></html>';
     resp.status(200).send(html);
 }
 const logger = Logger.getLogger('server')
@@ -82,10 +81,9 @@ function createServer() {
         logger.warn('WARNING: Server is created with non-TLS protocol.');
     } else {
         if (_.get(CERT_CONFIG, 'CertificateFile') && _.get(CERT_CONFIG, 'CertificateKeyFile')) {
-            server = http2.createSecureServer({
+            server = https.createServer({
                 key: fs.readFileSync(CERT_CONFIG.CertificateKeyFile),
-                cert: fs.readFileSync(CERT_CONFIG.CertificateFile),
-                allowHTTP1: true
+                cert: fs.readFileSync(CERT_CONFIG.CertificateFile)
             });
         } else {
             logger.error('Either CertificateKeyFile or CertificateFile was not defined');
@@ -109,7 +107,7 @@ function createSessionConfig() {
     return sessionConfig;
 }
 
-const app = isSecure(CERT_CONFIG) ? http2Express(express) : express();
+const app = express();
 
 app.use(session(createSessionConfig()));
 app.use(compression());
@@ -151,9 +149,9 @@ app.use(
         killTimeout: 3000
     }));
 
-app.get(BASEPATH + "config/logger", showLoggers);
-app.get(BASEPATH + "config/logger/:logger", configureLoggerRemotely);
-app.get(BASEPATH + "config/logger/:logger", configureLoggerRemotely);
+app.get(`${BASEPATH}config/logger`, showLoggers);
+app.get(`${BASEPATH}config/logger/:logger`, configureLoggerRemotely);
+app.get(`${BASEPATH}config/logger/:logger`, configureLoggerRemotely);
 
 const aurelia_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/aurelia/`);
 const www_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/`);
@@ -164,15 +162,15 @@ app.use('/stamp-webservices', serveStatic(www_path));
 app.use('/stamp-aurelia', serveStatic(aurelia_path));
 app.use(serveStatic(www_path));
 
-require("../routes/rest-preferences").configure(app, BASEPATH + SERVICES_PATH);
-require("../routes/rest-countries").configure(app, BASEPATH + SERVICES_PATH);
-require("../routes/rest-albums").configure(app, BASEPATH + SERVICES_PATH);
-require("../routes/rest-stampCollections").configure(app, BASEPATH + SERVICES_PATH);
-require("../routes/rest-catalogues").configure(app, BASEPATH + SERVICES_PATH);
-require("../routes/catalogue-numbers").configure(app, BASEPATH + SERVICES_PATH);
-require("../routes/rest-sellers").configure(app, BASEPATH + SERVICES_PATH);
-require("../routes/rest-stamps").configure(app, BASEPATH + SERVICES_PATH);
-require("../routes/reports").configure(app, BASEPATH + SERVICES_PATH);
+require('../routes/rest-preferences').configure(app, BASEPATH + SERVICES_PATH);
+require('../routes/rest-countries').configure(app, BASEPATH + SERVICES_PATH);
+require('../routes/rest-albums').configure(app, BASEPATH + SERVICES_PATH);
+require('../routes/rest-stampCollections').configure(app, BASEPATH + SERVICES_PATH);
+require('../routes/rest-catalogues').configure(app, BASEPATH + SERVICES_PATH);
+require('../routes/catalogue-numbers').configure(app, BASEPATH + SERVICES_PATH);
+require('../routes/rest-sellers').configure(app, BASEPATH + SERVICES_PATH);
+require('../routes/rest-stamps').configure(app, BASEPATH + SERVICES_PATH);
+require('../routes/reports').configure(app, BASEPATH + SERVICES_PATH);
 
 
 connectionMgr.startup().then(() => {
@@ -184,7 +182,7 @@ connectionMgr.startup().then(() => {
     });
     // See if the server is running as a child process and if so signal completion of startup
     if (process.send) {
-        process.send("SERVER_STARTED");
+        process.send('SERVER_STARTED');
     }
 }, err => {
     logger.error(err);
