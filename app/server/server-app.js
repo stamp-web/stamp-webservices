@@ -66,8 +66,8 @@ function showLoggers(req, resp) {
     html += "</table></body></html>";
     resp.status(200).send(html);
 }
-
-configureLogger(Logger.getLogger('server'), 'logger');
+const logger = Logger.getLogger('server')
+configureLogger(logger, 'logger');
 configureLogger(Logger.getLogger('sql'), 'sql');
 
 function isSecure(certProps) {
