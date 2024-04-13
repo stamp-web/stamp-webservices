@@ -1,6 +1,7 @@
 "use strict";
 
 const express = require("express");
+const http2Express = require('http2-express-bridge')
 const helmet = require('helmet');
 const contentSecurityPolicy = require("helmet-csp");
 const compression = require("compression");
@@ -10,8 +11,8 @@ const morgan = require('morgan');
 const connectionMgr = require('../pom/connection-mysql');
 const favicon = require('serve-favicon');
 const nconf = require('nconf');
-const spdy = require('node:http2');
 const http = require('http');
+const http2 = require('http2')
 const connect = require('connect');
 const domainMiddleware = require('domain-middleware');
 const FileStreamRotator = require('file-stream-rotator');
@@ -24,16 +25,9 @@ const fs = require('fs');
 
 nconf.argv().env().file(__dirname + '/../../config/application.json');
 
-
-var SERVICES_PATH = "rest";
-var BASEPATH = "/stamp-webservices/";
-if (nconf.get("basePath")) {
-    BASEPATH = nconf.get("basePath");
-}
-var DISABLE_CACHE = false;
-if (nconf.get('disableCache')) {
-    DISABLE_CACHE = !!nconf.get('disableCache');
-}
+const SERVICES_PATH = "rest";
+const BASEPATH = nconf.get("basePath") ? nconf.get("basePath") : '/stamp-webservices/';
+const CERT_CONFIG = nconf.get('Certificates');
 
 function configureLogger(aLogger, name) {
     let silenceConsole = nconf.get('silenceConsole');
@@ -47,51 +41,50 @@ function configureLogger(aLogger, name) {
 }
 
 function configureLoggerRemotely(req, resp) {
-    var loggerName = req.params.logger;
-    var level = req.query.level;
-    var log = Logger.getLogger(loggerName);
-    var msg = "";
+    let loggerName = req.params.logger;
+    let level = req.query.level;
+    let log = Logger.getLogger(loggerName);
+    let msg = '';
     if (level) {
         log.setLevel(level);
-        msg = "Logger \"" + loggerName + "\" successful set to " + level;
+        msg = `Logger "${loggerName}" successful set to ${level}`;
         console.log(msg);
         resp.status(200).send(msg);
     } else {
-        msg = "Logger \"" + loggerName + "\" is set to " + log.getLevel();
+        msg = `Logger "${loggerName}" is set to ${log.getLevel()}`;
         console.log(msg);
         resp.status(200).send(msg);
     }
 }
 
 function showLoggers(req, resp) {
-    var html = "<html><body><table><tr><th>Logger name</th><th>Level</th><th>Enable Debug</th></tr>";
+    let html = "<html><body><table><tr><th>Logger name</th><th>Level</th><th>Enable Debug</th></tr>";
     _.each(Logger.loggers, function (logger, key) {
-        var _logger = Logger.getLogger(key);
-        html += "<tr><td>" + key + "</td><td>" + _logger.getLevel() + "</td><td><a href=\"logger/" + key + "?level=debug\"><button>Set</button></a></td></tr>";
+        let _logger = Logger.getLogger(key);
+        html += `<tr><td>${key}</td><td>${_logger.getLevel()}</td><td><a href="logger/${key}?level=debug"><button>Set</button></a></td></tr>`;
     });
     html += "</table></body></html>";
     resp.status(200).send(html);
 }
 
+configureLogger(Logger.getLogger('server'), 'logger');
+configureLogger(Logger.getLogger('sql'), 'sql');
 
-var logger = Logger.getLogger("server");
-var sqlTrace = Logger.getLogger("sql");
-
-configureLogger(logger, "logger");
-configureLogger(sqlTrace, "sql");
-
+function isSecure(certProps) {
+    const httpOnly = (nconf.get('httpOnly') || !certProps)
+    return !httpOnly
+}
 
 function createServer() {
     let server;
-    const certificates = nconf.get('Certificates');
-    if (nconf.get('httpOnly') || !certificates) {
-        logger.warn('WARNING: Server is created with non-TLS protocol.');
+    if (!isSecure(CERT_CONFIG)) {
         server = http.createServer({});
+        logger.warn('WARNING: Server is created with non-TLS protocol.');
     } else {
-        if (_.get(certificates, 'CertificateFile') && _.get(certificates, 'CertificateKeyFile')) {
-            server = spdy.createSecureServer({
-                key: fs.readFileSync(certificates.CertificateKeyFile),
-                cert: fs.readFileSync(certificates.CertificateFile),
+        if (_.get(CERT_CONFIG, 'CertificateFile') && _.get(CERT_CONFIG, 'CertificateKeyFile')) {
+            server = http2.createSecureServer({
+                key: fs.readFileSync(CERT_CONFIG.CertificateKeyFile),
+                cert: fs.readFileSync(CERT_CONFIG.CertificateFile),
                 allowHTTP1: true
             });
         } else {
@@ -116,7 +109,7 @@ function createSessionConfig() {
     return sessionConfig;
 }
 
-var app = express();
+const app = isSecure(CERT_CONFIG) ? http2Express(express) : express();
 
 app.use(session(createSessionConfig()));
 app.use(compression());
@@ -160,10 +153,11 @@ app.use(
 
 app.get(BASEPATH + "config/logger", showLoggers);
 app.get(BASEPATH + "config/logger/:logger", configureLoggerRemotely);
+app.get(BASEPATH + "config/logger/:logger", configureLoggerRemotely);
 
-var aurelia_path = path.resolve(__dirname, '..' + path.sep + '..' + path.sep + 'www/aurelia/');
-var www_path = path.resolve(__dirname, '..' + path.sep + '..' + path.sep + 'www/');
-var vue_path = path.resolve(__dirname, '..' + path.sep + '..' + path.sep + 'www/stamp-web/');
+const aurelia_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/aurelia/`);
+const www_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/`);
+const vue_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/stamp-web/`);
 
 app.use('/stamp-web', serveStatic(vue_path));
 app.use('/stamp-webservices', serveStatic(www_path));
