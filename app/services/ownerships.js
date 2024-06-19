@@ -58,7 +58,9 @@ var ownershipService = extend(true, {}, new PersistentCollection(), function () 
     function sumCatalogueValue(queryResult, targetCurrency) {
         let sum = 0.0;
         _.forEach(queryResult, result => {
-            sum += fx.convert(result.CATALOGUEVALUE, { from: result.CURRENCY, to: targetCurrency });
+            if(result.CATALOGUEVALUE > 0) {
+                sum += fx.convert(result.CATALOGUEVALUE, { from: result.CURRENCY, to: targetCurrency });
+            }
         });
         sum = accounting.toFixed(sum, 2);
         return sum;
@@ -80,21 +82,30 @@ var ownershipService = extend(true, {}, new PersistentCollection(), function () 
 
                         connection.beginTransaction(trxErr => {
                             _.forEach(queryResult, (result, idx) => {
-                                let sql = buildUpdateQuery(result, currencyCode, ratio);
-                                connection.query(sql, err => {
-                                    if (!PersistentCollection.rollbackOnError(connection, reject, err)) {
-                                        processed++;
-                                        if (processed === total) {
-                                            connection.commit(err => {
-                                                connection.release();
-                                                if (err) {
-                                                    reject(dataTranslator.getErrorMessage(err));
-                                                }
-                                                resolve();
-                                            });
-                                        }
+                                const handleProcessing = () => {
+                                    if (processed === total) {
+                                        connection.commit(err => {
+                                            connection.release();
+                                            if (err) {
+                                                reject(dataTranslator.getErrorMessage(err));
+                                            }
+                                            resolve();
+                                        });
                                     }
-                                });
+                                }
+                                if(result.CATALOGUEVALUE > 0) {
+                                    let sql = buildUpdateQuery(result, currencyCode, ratio);
+                                    connection.query(sql, err => {
+                                        if (!PersistentCollection.rollbackOnError(connection, reject, err)) {
+                                            processed++;
+                                            handleProcessing()
+                                        }
+                                    });
+
+                                } else {
+                                    processed++
+                                    handleProcessing()
+                                }
                             });
                         }); // end beginTranscation
                     });

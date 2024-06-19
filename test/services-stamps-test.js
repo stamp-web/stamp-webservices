@@ -316,6 +316,47 @@ describe('REST Services for Stamps', () => {
         });
     });
 
+
+    it('POST purchase updates stamps unless null catalogue values (Issue #71)', done => {
+        let stamp = {
+            countryRef:       1,
+            rate:             "1d",
+            description:      "red",
+            wantList:         false,
+            catalogueNumbers: [
+                {
+                    catalogueRef: 2,
+                    number:       "54a",
+                    value:        null,
+                    active:       true
+                }
+            ],
+            stampOwnerships:  [
+                {
+                    albumRef:  2,
+                    code:      'AUD'
+                }
+            ]
+        };
+        stampUtil.create(stamp, (e, res) => {
+            let result = res.body;
+            let id = result.id;
+            superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps/purchase')
+                .send({stamps: [id], pricePaid: 50, currencyCode: 'USD'})
+                .end((e, res) => {
+                    expect(res.status).toEqual(200);
+                    superagent.get(`http://${hostname}:${server_port}/rest/stamps/${id}`).send()
+                        .end((e, res) => {
+                            expect(res.body.stampOwnerships[0].pricePaid).toBeNull()
+                            expect(res.body.stampOwnerships[0].code).toEqual('AUD');
+                            done();
+                        });
+
+                });
+        });
+    });
+
+
     it('POST Create a wantlist stamp with 201 status', done => {
         var stamp = {
             countryRef:       1,
