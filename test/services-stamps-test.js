@@ -380,6 +380,30 @@ describe('REST Services for Stamps', () => {
         });
     });
 
+    xit('POST Create a wantlist stamp with polish characters (Issue #72)', done => {
+        var stamp = {
+            countryRef:       1,
+            //ł
+            rate:             "1z\u0142 + 1z\u0142".replace(/[\u0800-\uFFFF]/g, ''),
+            description:      "purple and black",
+            wantList:         true,
+            catalogueNumbers: [
+                {
+                    catalogueRef: 1,
+                    number:       "12",
+                    value:        2.0,
+                    condition:    1,
+                    active:       true
+                }
+            ]
+        };
+        stampUtil.create(stamp, function (e, res) {
+            expect(res.status).toEqual(201);
+            done();
+        });
+    });
+
+
     it('Verify trigger behavior on INSERT/DELETE catalogue numbers', done => {
         var stamp = {
             countryRef:       1,
