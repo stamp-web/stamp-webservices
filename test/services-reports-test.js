@@ -94,4 +94,44 @@ describe('REST Services for Reports', () => {
                 });
         });
     });
+
+    it('Cash Value is calculated', done => {
+        NamedCollectionVerifications.verifyPost('countries', {
+            name: `Test-${new Date().getTime()}`
+        }, undefined, (country) => {
+            var stamp = {
+                countryRef: country.id,
+                rate: "1d",
+                description: "red",
+                wantList: false,
+                catalogueNumbers: [
+                    {
+                        catalogueRef: 2,
+                        number: "23a",
+                        value: 100.0,
+                        condition: 1,
+                        active: true
+                    }
+                ],
+                stampOwnerships: [{
+                    albumRef: 3,
+                    grade: 2,
+                    defects: 128,
+                    pricePaid: 22.50
+                }]
+            };
+            superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
+                .send(stamp)
+                .end(function (e, res) {
+                    expect(res.status).toEqual(201);
+                    superagent.get(`http://${hostname}:${server_port}/rest/reports?$filter=(${encodeURI('countryRef eq ' + country.id)})&$reportType=CashValue`)
+                        .end(function (e, res) {
+                            expect(res.status).toEqual(200);
+                            expect(res.body.value).toBe('3.75')
+                            expect(res.body.code).toBe('USD')
+                            done()
+                        });
+                });
+        });
+    });
 });

@@ -114,7 +114,52 @@ var report = function () {
 
         },
         getCashValue: function ($filter, currency) {
-            return Promise.resolve(10.0);
+            return new Promise((resolve, reject) => {
+                const owner = ownership.getAlias()
+                const cv = catalogueNumber.getAlias()
+                connectionManager.getConnection("reports").then(connection => {
+                    let sql = `SELECT ${catalogue.getAlias()}.CURRENCY, SUM(${cv}.CATALOGUEVALUE) AS VALUE, `;
+                    sql += `${owner}.DEFECTS, ${owner}.DECEPTION, ${owner}.GRADE `;
+                    sql += generateFromTables();
+                    sql += `WHERE ${cv}.ACTIVE=1 AND ${stamp.getAlias()}.WANTLIST=0 `;
+                    const whereClause = ($filter) ? dataTranslator.toWhereClause($filter, [stamp, catalogueNumber, catalogue, ownership]) : '';
+                    if (whereClause.length > 0) {
+                        sql += `AND ${whereClause} `;
+                    }
+                    sql += `GROUP BY ${cv}.CATALOGUE_REF, ${owner}.DEFECTS, ${owner}.DECEPTION, ${owner}.GRADE`;
+                    sqlTrace.debug(sql);
+                    let query = connection.query(sql, (err, results) => {
+                        connection.release()
+                        if (err) {
+                            reject(dataTranslator.getErrorMessage(err));
+                        }
+                        let processResults = () => {
+                            let sum = 0.0;
+                            _.each(results, result => {
+                                if( result.VALUE && result.VALUE > 0 ) {
+                                    let cur = result.CURRENCY;
+                                    if( !cur || cur === '' ) {
+                                        cur = 'USD';
+                                    }
+                                    try {
+                                        let v = fx.convert(result.VALUE, { from: cur, to: currency });
+                                        sum += ownership.getCalculatedValue(v, result.GRADE, result.DECEPTION, result.DEFECTS);
+                                    } catch( fxErr ) {
+                                        if (fxErr !== 'fx error') {
+                                            throw fxErr;
+                                        } else {
+                                            sqlTrace.error(fxErr + ':' + cur + ' to ' + currency);
+                                        }
+                                    }
+                                }
+                            });
+                            let value = accounting.toFixed(sum, 2);
+                            resolve(value);
+                        };
+                        ExchangeRates.checkRates(processResults);
+                    });
+                });
+            });
         }
     };
 }();

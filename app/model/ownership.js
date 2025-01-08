@@ -1,7 +1,8 @@
-var extend = require('node.extend');
-var fieldDefinition = require('./field-definition');
+const extend = require('node.extend');
+const fieldDefinition = require('./field-definition');
+const NumericUtilities = require('../util/numeric-utilities');
 
-var ownership = extend({}, fieldDefinition, function() {
+const ownership = extend({}, fieldDefinition, function() {
     "use strict";
     return {
         getFieldDefinitions: function () {
@@ -43,8 +44,55 @@ var ownership = extend({}, fieldDefinition, function() {
         },
         getAlias: function () {
             return "o";
-        }
+        },
+        getCalculatedValue: (v, grade, deception, defects) => {
+            let value = v;
+            switch(grade) {
+                case 0:
+                case 1:
+                    value *= 0.35;
+                    break;
+                case 2:
+                    value *= 0.25;
+                    break;
+                case 3:
+                    value *= 0.15;
+                    break;
+                case 4:
+                    value *= 0.10;
+                    break;
+                default:
+                    value = 0.0;
+            }
+            if(deception > 0) {
+                /**
+                 * Any deception will be evaluated at 1% unless it is a possible forgery or a reprint in which case we will use 25%
+                 */
+                const dc = NumericUtilities.determineShiftedValues(deception)
+                if(dc.includes(32) || dc.includes(128)) {
+                    value = v * 0.25
+                } else {
+                    value = v * 0.01
+                }
+            } else if (defects > 0) {
+                const d = NumericUtilities.determineShiftedValues(defects)
+                /*
+                    The following is the value table that will be used:
 
+                      * 0% - Torn, Soiled
+                      * 5% - Thin, Pinhole, Scuffed, Clipped, Ink Stain or Changeling
+                      * 15% - all other minor flaws (like short perforation)
+                 */
+                if(d.includes(4) || d.includes(524288)) {
+                    value = 0;
+                } else if (d.includes(2) || d.includes(64) || d.includes(32) || d.includes(512) || d.includes(4096) || d.includes(8192)) {
+                    value *= 0.05
+                } else {
+                    value *= 0.15
+                }
+            }
+            return value;
+        }
     };
 }());
 
