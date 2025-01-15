@@ -1,13 +1,12 @@
-var _ = require('lodash');
-var Logger = require('../util/logger');
-var moment = require('moment');
-var Predicate = require('odata-filter-parser').Predicate;
-var Operators = require('odata-filter-parser').Operators;
-var Constants = require("../util/constants");
+const _ = require('lodash');
+const Logger = require('../util/logger');
+const moment = require('moment');
+const Predicate = require('odata-filter-parser').Predicate;
+const Operators = require('odata-filter-parser').Operators;
+const Constants = require("../util/constants");
 
 function DataTranslator() {
-    "use strict";
-    var logger = Logger.getLogger("sql");
+    const logger = Logger.getLogger("sql");
 
     function validateBinaryOperation(el) {
         if (typeof el.subject === 'undefined' || typeof el.value === 'undefined') {
@@ -17,14 +16,14 @@ function DataTranslator() {
     
     return {
         getErrorMessage: function (err) {
-            var msg;
+            let msg, m;
             if (!err.processed) {
                 switch (err.code) {
                     case 'ER_NO_SUCH_TABLE':
                         msg = { message: err.message, code: 'INTERNAL_ERROR' };
                         break;
                     case 'ER_NO_DEFAULT_FOR_FIELD':
-                        var m = err.message.substring(err.message.indexOf('\'') + 1);
+                        m = err.message.substring(err.message.indexOf('\'') + 1);
                         m = m.substring(0, m.indexOf('\''));
                         msg = { message: 'A value for field \'' + m + '\' is required', code: 'REQUIRED_FIELD' };
                         break;
@@ -46,18 +45,18 @@ function DataTranslator() {
         },
 
         generateUpdateByFields: function(fieldDefinition, proposed, current, onlyWithFields) {
-            var expr = "";
-            _.each(Object.keys(proposed), function(key) {
-               var definition = _.find(fieldDefinition.getFieldDefinitions(), { column: key});
-               if( proposed[key] !== current[key]) {
-                   var val = fieldDefinition.formatValue(definition,proposed[key]);
-                   if( val !== undefined ) {
+            let expr = "";
+            _.each(Object.keys(proposed), (key) => {
+                const definition = _.find(fieldDefinition.getFieldDefinitions(), {column: key});
+                if( proposed[key] !== current[key]) {
+                    const val = fieldDefinition.formatValue(definition, proposed[key]);
+                    if( val !== undefined ) {
                        expr += ((expr.length > 0 ) ? ", " : "") + key + "=" + val;
                    }
                }
             });
             if( !onlyWithFields || (onlyWithFields && expr.length > 0) ) {
-                var modifyField = _.find(fieldDefinition.getFieldDefinitions(), { field: 'modifyTimestamp' });
+                const modifyField = _.find(fieldDefinition.getFieldDefinitions(), {field: 'modifyTimestamp'});
                 if( modifyField && !proposed[modifyField.column] ) {
                     expr += ((expr.length > 0) ? ", " : "") + modifyField.column + "=CURDATE()";
                 }
@@ -69,9 +68,9 @@ function DataTranslator() {
             return expr;
         },
         generateInsertByFields: function (fieldDefinition, obj) {
-            var config = { DB_COLS: [], VALUES: [] };
+            const config = {DB_COLS: [], VALUES: []};
             _.each(Object.keys(obj), function(col) {
-                var definition = _.find(fieldDefinition.getFieldDefinitions(), { column: col });
+                const definition = _.find(fieldDefinition.getFieldDefinitions(), {column: col});
                 if( definition.type === 'id_array' || definition.type === 'obj_array') {
                     return;
                 }
@@ -82,15 +81,15 @@ function DataTranslator() {
                 config.DB_COLS.push("CREATESTAMP");
                 config.VALUES.push("CURDATE()");
             }
-            var expr = "INSERT INTO " + fieldDefinition.getTableName() + " (";
-            for (var i = 0; i < config.DB_COLS.length; i++) {
+            let expr = "INSERT INTO " + fieldDefinition.getTableName() + " (";
+            for (let i = 0; i < config.DB_COLS.length; i++) {
                 expr += config.DB_COLS[i];
                 if (i < config.DB_COLS.length - 1) {
                     expr += ",";
                 }
             }
             expr += ") VALUES(";
-            for (var j = 0; j < config.VALUES.length; j++) {
+            for (let j = 0; j < config.VALUES.length; j++) {
                 expr += "" + config.VALUES[j];
                 if (j < config.VALUES.length - 1) {
                     expr += ",";
@@ -101,21 +100,21 @@ function DataTranslator() {
         },
 
         generateInsertStatement: function (fieldDefinition, obj) {
-            var config = this.processFields(fieldDefinition, obj);
-            var creationField = _.find(fieldDefinition.getFieldDefinitions(), { field: 'createTimestamp' });
+            const config = this.processFields(fieldDefinition, obj);
+            const creationField = _.find(fieldDefinition.getFieldDefinitions(), {field: 'createTimestamp'});
             if (creationField && _.indexOf(config.DB_COLS, "CREATESTAMP") < 0) {
                 config.DB_COLS.push(creationField.column);
                 config.VALUES.push("CURDATE()");
             }
-            var expr = "INSERT INTO " + fieldDefinition.getTableName() + " (";
-            for (var i = 0; i < config.DB_COLS.length; i++) {
+            let expr = "INSERT INTO " + fieldDefinition.getTableName() + " (";
+            for (let i = 0; i < config.DB_COLS.length; i++) {
                 expr += config.DB_COLS[i];
                 if (i < config.DB_COLS.length - 1) {
                     expr += ",";
                 }
             }
             expr += ") VALUES(";
-            for (var j = 0; j < config.VALUES.length; j++) {
+            for (let j = 0; j < config.VALUES.length; j++) {
                 expr += "" + config.VALUES[j];
                 if (j < config.VALUES.length - 1) {
                     expr += ",";
@@ -126,14 +125,14 @@ function DataTranslator() {
         },
         // TODO: delete once generateInsertStatement is no longer used
         processFields: function (fieldDefinition, obj) {
-            var config = {
+            const config = {
                 DB_COLS: [],
                 VALUES: []
             };
             _.each(obj, (value, key) => {
-                var definition = _.find(fieldDefinition.getFieldDefinitions(), { field : key });
+                const definition = _.find(fieldDefinition.getFieldDefinitions(), {field: key});
                 if (definition && definition.column) {
-                    var val = fieldDefinition.formatValue(definition,value);
+                    const val = fieldDefinition.formatValue(definition, value);
                     if( val === undefined ) {
                         return;
                     }
@@ -150,10 +149,10 @@ function DataTranslator() {
          * @returns {string}
          */
         generateInValueStatement: function (ids) {
-            var id_vals = '';
-            var len = ids.length;
+            let id_vals = '';
+            const len = ids.length;
             if (len > 0) {
-                for (var i = 0; i < len; i++) {
+                for (let i = 0; i < len; i++) {
                     id_vals += ids[i];
                     if (i < len - 1) {
                         id_vals += ',';
@@ -165,16 +164,17 @@ function DataTranslator() {
         },
         
         toWhereClause: function ($filter, fieldDefinitions) {
-            var expression = '';
+            let expression = '';
             if (!fieldDefinitions) {
                 logger.warn("The fieldDefinition parameter was not defined.");
             }
-            var processExpression = el => {
+            const processExpression = el => {
                 if (typeof el === 'string') {
                     return;
                 } else if (el instanceof Predicate) {
-                    var op = '=';
-                    var binaryOp = true;
+                    let op = '=';
+                    let binaryOp = true;
+                    let or,left,right;
                     switch (el.operator) {
                         case Operators.EQUALS:
                             break;
@@ -196,9 +196,9 @@ function DataTranslator() {
                         case Operators.AND:
                         case Operators.OR:
                             binaryOp = false;
-                            var or = el.operator === Operators.OR;
-                            var left = this.toWhereClause(el.subject, fieldDefinitions);
-                            var right = this.toWhereClause(el.value, fieldDefinitions);
+                            or = el.operator === Operators.OR;
+                            left = this.toWhereClause(el.subject, fieldDefinitions);
+                            right = this.toWhereClause(el.value, fieldDefinitions);
                             expression += (or ? '(' : '') + left + ' ' + el.operator.toUpperCase() + ' ' + right + (or ? ')' : '');
                             break;
                         default:
@@ -206,16 +206,16 @@ function DataTranslator() {
                     }
                     if (binaryOp) {
                         validateBinaryOperation(el);
-                        var subject = el.subject;
-                        var value;
+                        const subject = el.subject;
+                        let value;
                         if (typeof el.value !== 'undefined') {
-                            var val = el.value;
-                            value = (_.isNumber(val)) ? +val : _.isString(val) ? '\'' + val.replace(/\*/g,'%') + '\'' : '' + val;
+                            const val = el.value;
+                            value = (_.isNumber(val)) ? +val : _.isString(val) ? '\'' + val.replace(/\*/g, '%') + '\'' : '' + val;
                         }
-                        var predicate = subject;
-                        for (var i = 0; i < fieldDefinitions.length; i++) {
-                            var definition = fieldDefinitions[i];
-                            var field = _.find(definition.getFieldDefinitions(), { field: subject });
+                        let predicate = subject;
+                        for (let i = 0; i < fieldDefinitions.length; i++) {
+                            const definition = fieldDefinitions[i];
+                            const field = _.find(definition.getFieldDefinitions(), {field: subject});
                             if (field && field.column && !field.nonPersistent) {
                                 predicate = ((definition.getAlias()) ? definition.getAlias() + '.' : '') + field.column;
                                 if (field.type === 'date') {
@@ -223,15 +223,15 @@ function DataTranslator() {
                                         value = value.substring(Constants.DATEOFFSET_STARTING.length + 1, value.length - 2);
                                     }
                                     value = (_.isDate(value)) ? value.toISOString() : new Date(Date.parse(value)).toISOString();
-                                    value = "\'" + new moment(value).format(Constants.MYSQL_DATEFORMAT)  + "\'";
+                                    value = "'" + new moment(value).format(Constants.MYSQL_DATEFORMAT) + "'";
                                 }
                                 expression += predicate + op + value;
                                 break;
                             } else {
-                                var expr = definition.getSpecialExpression(subject, op, value);
-                                if( expr !== null ) {
-                                   expression += expr;
-                                   break;
+                                const expr = definition.getSpecialExpression(subject, op, value);
+                                if (expr !== null) {
+                                    expression += expr;
+                                    break;
                                 }
                             }
                         }

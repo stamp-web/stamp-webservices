@@ -1,8 +1,7 @@
-var extend = require('node.extend');
-var fieldDefinition = require('./field-definition');
+const extend = require('node.extend');
+const fieldDefinition = require('./field-definition');
 
-var catalogue = extend({}, fieldDefinition, function() {
-    "use strict";
+const catalogue = extend({}, fieldDefinition, function() {
     return {
         getFieldDefinitions: function () {
             return [

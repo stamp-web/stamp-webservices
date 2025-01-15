@@ -1,61 +1,54 @@
-﻿var mysql = require('mysql');
-var PoolConnection = require('mysql/lib/PoolConnection');
-var fs = require('fs');
-var Logger = require('../util/logger');
-var Level = require('../util/level');
-var nconf = require('nconf');
-var path = require('path');
-var _ = require('lodash');
+﻿const mysql = require('mysql');
+const PoolConnection = require('mysql/lib/PoolConnection');
+const Logger = require('../util/logger');
+const Level = require('../util/level');
+const nconf = require('nconf');
 const pw = require("pw");
 
 nconf.argv().env().file(__dirname + '/../../config/application.json');
 
-var logger = Logger.getLogger("connection");
+const logger = Logger.getLogger("connection");
 logger.setLevel(Level.INFO);
 
-var releaseCount = 0;
+let releaseCount = 0;
 /**
  * OVERRIDDEN FROM node-mysql to allow the release count to be incremented.
  *
  * @returns {*}
  */
 PoolConnection.prototype.release = function release() {
-    "use strict";
-    var pool = this._pool;
+    const pool = this._pool;
 
     if (!pool || pool._closed) {
         return;
     }
     releaseCount++;
-    logger.trace( "release connection: < " + releaseCount );
+    logger.trace("release connection: < " + releaseCount);
     return pool.releaseConnection(this);
 };
 
 module.exports = function () {
-    "use strict";
+    let connectionCount, dbPool, config, dbName;
 
-    var dbPool;
-    var config;
-    var dbName;
-
-    var ConnectionCodes = {
+    const ConnectionCodes = {
         ACCESS_DENIED: 'ER_ACCESS_DENIED_ERROR',
         DBACCESS_DENIED_ERROR: 'ER_DBACCESS_DENIED_ERROR',
         NOT_FOUND: 'ENOTFOUND',
         ETIMEDOUT: 'ETIMEDOUT'
     };
-    
+
     function handleConnectionError(err) {
         if (err.code) {
-            var msg = "Access error is unknown:" + err.message;
-            switch (err.code) { 
+            let msg = "Access error is unknown:" + err.message;
+            let host;
+            switch (err.code) {
                 case ConnectionCodes.ACCESS_DENIED:
                 case ConnectionCodes.DBACCESS_DENIED_ERROR:
                 case ConnectionCodes.ETIMEDOUT:
                     msg = err.message.substring(err.code.length + 1);
                     break;
                 case ConnectionCodes.NOT_FOUND:
-                    var host = "unknown";
+                    host = "unknown";
                     if (dbPool && dbPool.config && dbPool.config.connectionConfig) {
                         host = dbPool.config.connectionConfig.host;
                     }
@@ -65,7 +58,7 @@ module.exports = function () {
             logger.error("A connection to the database could not be established.  The message was:\n\n   " + msg + "\n");
         }
     }
-    
+
     function determineDBPassword(config) {
         return new Promise((resolve) => {
             if (config.password && config.password.length > 0) {
@@ -74,8 +67,7 @@ module.exports = function () {
                 config.password = nconf.get("db_password");
                 if (config.password && config.password.length > 0) {
                     return resolve();
-                }
-                else {
+                } else {
                     process.stdout.write('\nConfiguration did not contain a database password.\nEnter database password: ');
                     pw(function (value) {
                         config.password = value;
@@ -85,11 +77,11 @@ module.exports = function () {
             }
         });
     }
-    
+
     function enableKeepAlive() {
-        var Pool = require('mysql/lib/Pool');
+        const Pool = require('mysql/lib/Pool');
         Pool.prototype.startKeepAlive = function () {
-            var pool = this;
+            const pool = this;
             this.config.keepalive = 30000;
             setInterval(function () {
                 logger.debug("Keep alive fired for " + pool._freeConnections.length + " connections");
@@ -105,7 +97,7 @@ module.exports = function () {
         };
 
     }
-    
+
     function createPool() {
         return new Promise((resolve, reject) => {
             if (config) {
@@ -122,7 +114,7 @@ module.exports = function () {
 
                     dbPool.getConnection(function (err, connection) {
                         connectionCount++;
-                        if( connection ) {
+                        if (connection) {
                             connection.release();
                         }
                         if (!err) {
@@ -134,14 +126,14 @@ module.exports = function () {
                     });
                 });
             } else {
-                var msg = "The database " + dbName + " was not found in the configuration.";
+                const msg = "The database " + dbName + " was not found in the configuration.";
                 logger.error(msg);
                 reject(msg);
             }
 
         });
     }
-    
+
     function getPool() {
         return new Promise((resolve, reject) => {
             if (dbPool) {
@@ -156,10 +148,10 @@ module.exports = function () {
         });
     }
 
-    var connectionCount = 0;
+    connectionCount = 0;
 
     return {
-        
+
         startup: function () {
             return new Promise((resolve, reject) => {
                 if (!dbPool) {
@@ -199,13 +191,13 @@ module.exports = function () {
                                 }
                                 return del.call(this, err2, sequence);
                             };*/
-                            if( connectionCount > 1000000) {
+                            if (connectionCount > 1000000) {
                                 releaseCount = 0;
                                 connectionCount = 0;
                                 logger.debug("resetting connection counts to guard against buffer overrun...");
                             }
                             connectionCount++;
-                            logger.trace("new connection:     > " + connectionCount + " (" + (connectionCount - releaseCount) + " unreleased)" );
+                            logger.trace("new connection:     > " + connectionCount + " (" + (connectionCount - releaseCount) + " unreleased)");
                             resolve(connection);
                         } else {
                             handleConnectionError(err);

@@ -1,12 +1,12 @@
-var connectionMgr = require('../../pom/connection-mysql');
-var catalogueNumberService = require('../../services/catalogue-numbers');
-var catalogueService = require('../../services/catalogues');
-var albumService = require('../../services/albums');
-var catalogueNumberHelper = require('../catalogue-number-helper');
-var catalogueNumber = require('../catalogue-number');
-var _ = require('lodash');
+const connectionMgr = require('../../pom/connection-mysql');
+const catalogueNumberService = require('../../services/catalogue-numbers');
+const catalogueService = require('../../services/catalogues');
+const catalogueNumberHelper = require('../catalogue-number-helper');
+const catalogueNumber = require('../catalogue-number');
+const _ = require('lodash');
+let Logger = require('../../util/logger');
 
-var converter = function() {
+const converter = function() {
     return {
         convertAll : limit => {
 
@@ -44,6 +44,8 @@ var converter = function() {
     }
 }();
 module.exports = converter;
+
+let logger = Logger.getLogger("server");
 
 connectionMgr.startup().then(() => {
     converter.convertAll(100000).then(() => {

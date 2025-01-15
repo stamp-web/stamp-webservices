@@ -1,17 +1,14 @@
-var _ = require('lodash');
+const _ = require('lodash');
 
-var connectionManager = require('../pom/connection-mysql');
-var dataTranslator = require('./mysql-translator');
-var odata = require('odata-filter-parser')
-var Parser = odata.Parser;
-var Operators = odata.Operators;
-var Predicate = odata.Predicate;
-var Logger = require('../util/logger');
+const connectionManager = require('../pom/connection-mysql');
+const dataTranslator = require('./mysql-translator');
+const odata = require('odata-filter-parser')
+const Operators = odata.Operators;
+const Predicate = odata.Predicate;
+const Logger = require('../util/logger');
 
 
 function PersistentCollection() {
-    "use strict";
-
     let sqlTrace = Logger.getLogger("sql");
     let logger = Logger.getLogger("server");
 
@@ -48,7 +45,7 @@ function PersistentCollection() {
                             let qs = dataTranslator.generateUpdateByFields(this.fieldDefinition, provided, storedObj);
                             if( qs !== null ) {
                                 sqlTrace.debug(qs);
-                                connection.beginTransaction(err => {
+                                connection.beginTransaction(() => {
                                     connection.query(qs, (err, rows) => {
                                         if (!PersistentCollection.rollbackOnError(connection, reject, err)) {
                                             if (rows.changedRows === 0 && rows.affectedRows === 0) {
@@ -100,21 +97,20 @@ function PersistentCollection() {
 
         create: function(obj) {
             return new Promise((resolve, reject) => {
-                var provided = this.fieldDefinition.internalize(obj);
-                var generateId = false;
+                const provided = this.fieldDefinition.internalize(obj);
                 connectionManager.getConnection().then(connection => {
                     connection.beginTransaction(err => {
                         if (!PersistentCollection.rollbackOnError(connection, reject, err)) {
                             this.generateId(this.fieldDefinition, provided).then(id => {
                                 provided.ID = id;
                                 this.preCreate(provided).then(() => {  // opportunity for services to manipulate the object
-                                    var validation = this.fieldDefinition.validate(provided);
+                                    const validation = this.fieldDefinition.validate(provided);
                                     if( validation === null ) {
-                                        var insertStatement = dataTranslator. generateInsertByFields(this.fieldDefinition, provided);
+                                        const insertStatement = dataTranslator.generateInsertByFields(this.fieldDefinition, provided);
                                         sqlTrace.debug(insertStatement);
-                                        connection.query(insertStatement, (err, rows) => {
+                                        connection.query(insertStatement, (err) => {
                                             if (!PersistentCollection.rollbackOnError(connection, reject, err)) {
-                                                this.postCreate(connection, provided).then(_obj => {
+                                                this.postCreate(connection, provided).then(() => {
                                                     connection.commit(() => {
                                                         connection.release();
                                                         this.findById(id).then(result => {
@@ -155,7 +151,7 @@ function PersistentCollection() {
                         connection.beginTransaction(err => {
                             if (!PersistentCollection.rollbackOnError(connection, reject, err)) {
                                 this.preDelete(connection, id).then(() => {
-                                    var qs = 'DELETE FROM ' + this.fieldDefinition.getTableName() + ' WHERE ID=?';
+                                    const qs = `DELETE FROM ${this.fieldDefinition.getTableName()} WHERE ID=?`;
                                     sqlTrace.debug(qs);
                                     connection.query(qs, [id], (err, rows) => {
                                         if (err || rows.affectedRows === 0) {
@@ -173,7 +169,7 @@ function PersistentCollection() {
                                             });
                                         }
                                     });
-                                }, function (err) {
+                                }, (err) => {
                                     PersistentCollection.rollbackOnError(connection, reject, err);
                                 });
                             }
@@ -183,7 +179,7 @@ function PersistentCollection() {
             });
 
         },
-        
+        // eslint-disable-next-line no-unused-vars
         getFromTables: function (params) {
             return this.fieldDefinition.getTableName() + " AS " + this.fieldDefinition.getAlias();
         },
@@ -200,12 +196,12 @@ function PersistentCollection() {
                 definitions = [];
                 definitions.push(this.fieldDefinition);
             }
-            var sortKeys = params.$orderby.split(' ');
-            var orderby = '';
-            var found = false;
+            const sortKeys = params.$orderby.split(' ');
+            let orderby = '';
+            let found = false;
             _.each( definitions, definition => {
                 if( !found ) {
-                    var field = _.find(definition.getFieldDefinitions(), { field: sortKeys[0] });
+                    const field = _.find(definition.getFieldDefinitions(), {field: sortKeys[0]});
                     if( field ) {
                         if( field.sortFn ) {
                             orderby = (field.sortFn.apply(definition));
@@ -227,8 +223,8 @@ function PersistentCollection() {
             return orderby;
         },
         count: function (params) {
-            var whereClause = this.getWhereClause(params);
-            var qs = 'SELECT COUNT(DISTINCT ' + this.fieldDefinition.getAlias() + '.ID) AS COUNT FROM ' + this.getFromTables(params) + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '');
+            const whereClause = this.getWhereClause(params);
+            const qs = 'SELECT COUNT(DISTINCT ' + this.fieldDefinition.getAlias() + '.ID) AS COUNT FROM ' + this.getFromTables(params) + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '');
             sqlTrace.debug(qs);
             return new Promise((resolve, reject) => {
                 connectionManager.getConnection().then(connection => {
@@ -249,11 +245,11 @@ function PersistentCollection() {
         },
         
         findById: function (id) {
-            var params = {
+            const params = {
                 $filter: new Predicate({
-                        subject: 'id',
-                        operator: Operators.EQUALS,
-                        value: id
+                    subject: 'id',
+                    operator: Operators.EQUALS,
+                    value: id
                 }),
                 $limit: 1000,
                 $offset: 0,
@@ -272,14 +268,14 @@ function PersistentCollection() {
             });
         },
         find: function (params) {
-            var whereClause = this.getWhereClause(params);
+            const whereClause = this.getWhereClause(params);
             const _defaults = {
                 $limit: 1000,
                 $offset: 0
             };
             params = params || _defaults;
 
-            var qs = 'SELECT SQL_CALC_FOUND_ROWS ' + this.fieldDefinition.getAlias() + '.* FROM ' + this.getFromTables(params) + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' ' + this.getOrderByClause(params) + ' LIMIT ' + params.$offset + ',' + params.$limit;
+            const qs = 'SELECT SQL_CALC_FOUND_ROWS ' + this.fieldDefinition.getAlias() + '.* FROM ' + this.getFromTables(params) + ((whereClause.length > 0) ? (' WHERE ' + whereClause) : '') + ' ' + this.getOrderByClause(params) + ' LIMIT ' + params.$offset + ',' + params.$limit;
             sqlTrace.debug(qs);
             return new Promise((resolve, reject) => {
                 connectionManager.getConnection().then(connection => {
@@ -305,7 +301,7 @@ function PersistentCollection() {
                                         console.log("query time: " + ((new Date()).getTime() - t) + "ms");
                                     }
                                     return resolve(result);
-                                }, function(err) {
+                                }, err => {
                                     connection.release();
                                     return reject(dataTranslator.getErrorMessage(err));
                                 });
@@ -316,25 +312,28 @@ function PersistentCollection() {
                             resolve({ rows: [], total: 0});
                         }
                     });
-                }, function (err) {
+                }, (err) => {
                     reject(dataTranslator.getErrorMessage(err));
                 });
             });
         },
+        // eslint-disable-next-line no-unused-vars
         preCreate: obj => {
             return Promise.resolve();
         },
-        postFind: function (connection, rows) {
+        postFind: (connection, rows) => {
             return Promise.resolve(rows);
         },
         /** Post create hook to do additional operations */
-        postCreate: function (connection, obj) {
+        postCreate: (connection, obj) => {
            return Promise.resolve(obj);
         },
+        // eslint-disable-next-line no-unused-vars
         preCommitUpdate: async (connection,merged,storedObj) => {
             return Promise.resolve({modified: false});
         },
-        preDelete: function (connection, id) {
+        // eslint-disable-next-line no-unused-vars
+        preDelete: (connection, id) => {
             return Promise.resolve();
         },
         
@@ -392,15 +391,15 @@ PersistentCollection.updateSequence = (_id, fieldDefinition) => {
         let qs = "UPDATE SEQUENCE_GEN SET ID_VAL=? WHERE ID_NAME='" + fieldDefinition.getSequenceColumn() + "'";
         sqlTrace.debug(qs + " Bind params: [" + _id + "]");
         connectionManager.getConnection().then(connection => {
-            connection.beginTransaction(err => {
-                connection.query(qs, [_id], (err, rows) => {
+            connection.beginTransaction(() => {
+                connection.query(qs, [_id], (err) => {
                     if (err) {
                         connection.rollback(() => {
                             connection.release();
                             reject(dataTranslator.getErrorMessage(err));
                         });
                     } else {
-                        connection.commit(c_err => {
+                        connection.commit(() => {
                             connection.release();
                             resolve();
                         });

@@ -1,37 +1,37 @@
-var restInterfaces = require('./rest-interfaces')();
-var entityManaged = require('./rest-entitymanaged');
-var albums = require("../services/albums");
-var album = require('../model/album');
-var extend = require('node.extend');
-var Logger = require('../util/logger');
-var Authenticator = require('../util/authenticator');
-var routeHelper = require('./route-helper');
+const restInterfaces = require('./rest-interfaces')();
+const entityManaged = require('./rest-entitymanaged');
+const albums = require("../services/albums");
+const album = require('../model/album');
+const extend = require('node.extend');
+const Logger = require('../util/logger');
+const Authenticator = require('../util/authenticator');
+const routeHelper = require('./route-helper');
 
-var logger = Logger.getLogger("server");
+const logger = Logger.getLogger("server");
 
-var RESOURCE_PATH = "/albums";
+const RESOURCE_PATH = "/albums";
 
-exports.configure = function (app, basePath) {
-    "use strict";
-    var service = extend(true, {}, new entityManaged(albums), restInterfaces);
+exports.configure = (app, basePath) => {
 
-    service.moveTo = function(req, res) {
-        var scId = req.params.scId;
-        var params = {
+    const service = extend(true, {}, new entityManaged(albums), restInterfaces);
+
+    service.moveTo = (req, res) => {
+        const scId = req.params.scId;
+        const params = {
             stampCollectionRef: scId
         };
-        albums.update(params, req.params.id).then(function(obj) {
+        albums.update(params, req.params.id).then(obj => {
             res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
             res.status(routeHelper.StatusCode.OK);
-            var data = album.externalize(obj);
+            const data = album.externalize(obj);
             return res.json(data);
-        }, function (err) {
+        }, err => {
             logger.error(err);
             routeHelper.setErrorStatus(res, err);
         });
 
     };
     app.post(basePath + RESOURCE_PATH + "/:id/moveTo/:scId", Authenticator.applyAuthentication(), service.moveTo );
-    app.get(basePath + RESOURCE_PATH + "/!countStamps", Authenticator.applyAuthentication(), service.countStamps);
+    app.get(basePath + RESOURCE_PATH + "/\\!countStamps", Authenticator.applyAuthentication(), service.countStamps);
     service.initialize(app, basePath + RESOURCE_PATH, albums, album);
 };

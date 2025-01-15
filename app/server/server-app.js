@@ -12,7 +12,6 @@ const favicon = require('serve-favicon');
 const nconf = require('nconf');
 const http = require('http');
 const https = require('https')
-const connect = require('connect');
 const domainMiddleware = require('domain-middleware');
 const FileStreamRotator = require('file-stream-rotator');
 const Logger = require('../util/logger');

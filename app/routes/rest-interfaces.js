@@ -1,52 +1,46 @@
-var _ = require('lodash');
-var Parser = require('odata-filter-parser').Parser;
-var Logger = require('../util/logger');
-var Level = require('../util/level');
-var Authenticator = require('../util/authenticator');
-var routeHelper = require('./route-helper');
-var logger = Logger.getLogger("server");
-var initialized = false;
+const _ = require('lodash');
+const Parser = require('odata-filter-parser').Parser;
+const Logger = require('../util/logger');
+const Level = require('../util/level');
+const Authenticator = require('../util/authenticator');
+const routeHelper = require('./route-helper');
+const logger = Logger.getLogger("server");
 
 function restInterfaces() {
-    "use strict";
-
-    var collection;
-    var field;
+    let collection;
+    let field;
 
     return {
         initialize: function (app, basePath, col, f) {
-
             collection = col;
             field = f;
 
             app.get(basePath, Authenticator.applyAuthentication(), this.find);
             app.post(basePath, Authenticator.applyAuthentication(), this.create);
-            app.put(basePath + "/:id", Authenticator.applyAuthentication(), this.update);
-            app.get(basePath + "/!count", Authenticator.applyAuthentication(), this.count);
-            app.get(basePath + "/:id", Authenticator.applyAuthentication(), this.findById);
-            app.delete(basePath + '/:id', Authenticator.applyAuthentication(), this.remove);
-            logger.debug("   Registering services at " + basePath);
+            app.put(`${basePath}/:id`, Authenticator.applyAuthentication(), this.update);
+            app.get(`${basePath}/\\!count`, Authenticator.applyAuthentication(), this.count);
+            app.get(`${basePath}/:id`, Authenticator.applyAuthentication(), this.findById);
+            app.delete(`${basePath}/:id`, Authenticator.applyAuthentication(), this.remove);
+            logger.debug(`   Registering services at ${basePath}`);
         },
-        findById: function (req, res) {
-            var that = this;
-            var id = req.params.id;
-            collection.findById(id).then(function (row) {
+        findById: (req, res) => {
+            const id = req.params.id;
+            collection.findById(id).then(row => {
                 if (row !== null) {
-                    var data = field.externalize(row);
+                    const data = field.externalize(row);
                     res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                     res.status(routeHelper.StatusCode.OK);
                     return res.json(data);
                 } else {
                     res.status(routeHelper.StatusCode.NOT_FOUND).end();
                 }
-            }, function (err) {
+            }, () => {
                 res.status(routeHelper.StatusCode.INTERNAL_ERROR).send(routeHelper.ClientMessages.INTERNAL_ERROR);
             });
         },
-        update: function (req, res) {
-            var that = this;
-            var id = req.params.id;
-            collection.update(req.body, id, req.query).then(function (obj) {
+        update: (req, res) => {
+            const id = req.params.id;
+            collection.update(req.body, id, req.query).then(obj => {
                 let data = field.externalize(obj);
                 if(logger.isEnabled(Level.DEBUG)) {
                     logger.debug(data);
@@ -54,36 +48,34 @@ function restInterfaces() {
                 res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                 res.status(routeHelper.StatusCode.OK);
                 return res.json(data);
-            }, function (err) {
+            }, err => {
                 logger.error(err);
                 routeHelper.setErrorStatus(res, err);
             });
         },
-        create: function (req, res) {
-            var that = this;
-            collection.create(req.body).then(function (obj) {
+        create: (req, res) => {
+            collection.create(req.body).then(obj => {
                 res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                 res.status(routeHelper.StatusCode.CREATED);
-                var data = field.externalize(obj);
+                const data = field.externalize(obj);
                 if(logger.isEnabled(Level.DEBUG)) {
                     logger.debug(data);
                 }
                 return res.json(data);
-            }, function (err) {
+            }, err => {
                 logger.error(err);
                 routeHelper.setErrorStatus(res, err);
             });
     
         },
-        count: function (req, res) {
-            var params = {
-                $filter : (req.query && req.query.$filter) ? Parser.parse(req.query.$filter) : null,
+        count: (req, res) => {
+            const params = {
+                $filter: (req.query && req.query.$filter) ? Parser.parse(req.query.$filter) : null,
                 $limit: req.query.$top,
                 $offset: req.query.$skip,
                 $orderby: req.query.$orderby
             };
-            var that = this;
-            collection.count(params).then(function (result) {
+            collection.count(params).then(result => {
                 res.format({
                     'text/plain': function () {
                         return res.send('' + result);
@@ -92,41 +84,39 @@ function restInterfaces() {
                         return res.json({ count: result });
                     }
                 });
-            }, function (err) {
+            }, err => {
                 logger.error(err);
                 res.status(routeHelper.StatusCode.INTERNAL_ERROR).send(routeHelper.ClientMessages.INTERNAL_ERROR).end();
             });
         },
-        find: function (req, res) {
-            var params = {
-                $filter : (req.query && req.query.$filter) ? Parser.parse(req.query.$filter) : null,
+        find: (req, res) => {
+            const params = {
+                $filter: (req.query && req.query.$filter) ? Parser.parse(req.query.$filter) : null,
                 $limit: req.query.$top || 1000,
                 $offset: req.query.$skip || 0,
                 $orderby: req.query.$orderby || null
             };
-            var that = this;
-            collection.find(params).then(function (data) {
-                var result = {
+            collection.find(params).then(data => {
+                const result = {
                     total: data.total
                 };
                 result[collection.collectionName] = [];
-                _.each(data.rows, function (row) {
+                _.each(data.rows, row => {
                     result[collection.collectionName].push(field.externalize(row));
                 });
                 res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                 res.status(routeHelper.StatusCode.OK);
                 return res.json(result);
-            }, function (err) {
+            }, err => {
                 logger.error(err);
                 res.status(routeHelper.StatusCode.INTERNAL_ERROR).send(routeHelper.ClientMessages.INTERNAL_ERROR).end();
             });
         },
-        remove: function (req, res) {
-            var that = this;
-            var id = req.params.id;
-            collection.remove(id).then(function () {
+        remove: (req, res) => {
+            const id = req.params.id;
+            collection.remove(id).then(() => {
                 res.status(routeHelper.StatusCode.NO_CONTENT).end();
-            }, function (err) {
+            }, err => {
                 routeHelper.setErrorStatus(res, err);
             });
         }

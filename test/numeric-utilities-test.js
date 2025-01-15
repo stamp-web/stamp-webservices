@@ -1,4 +1,4 @@
-var NumericUtilities = require("../app/util/numeric-utilities");
+const NumericUtilities = require("../app/util/numeric-utilities");
 
 describe('numeric-utilities', () => {
     describe('determineShiftedValues', () => {

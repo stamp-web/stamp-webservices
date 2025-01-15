@@ -1,9 +1,8 @@
-var extend = require('node.extend');
-var PersistentCollection = require('./persistent-collection');
-var preference = require('../model/preference');
+const extend = require('node.extend');
+const PersistentCollection = require('./persistent-collection');
+const preference = require('../model/preference');
 
-var preferences = extend(true, {}, new PersistentCollection(), function() {
-    "use strict";
+const preferences = extend(true, {}, new PersistentCollection(), function () {
     return {
         collectionName: 'preferences',
         fieldDefinition: preference

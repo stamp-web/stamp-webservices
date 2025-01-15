@@ -1,11 +1,11 @@
-var superagent = require('superagent');
-var session = require('./util/integration-session');
-var NamedCollectionVerifications = require('./util/named-collection-verifier');
+const superagent = require('superagent');
+const session = require('./util/integration-session');
+const NamedCollectionVerifications = require('./util/named-collection-verifier');
 
 
 describe('REST Services for Sellers', () => {
 
-    var hostname, server_port, connection;
+    let hostname, server_port, connection;
 
     afterAll(done => {
         session.cleanup(function () {
@@ -64,20 +64,20 @@ describe('REST Services for Sellers', () => {
             name: 'Test of Delete Seller_ID'
         }, undefined, function (seller) {
             // seller is now created and available for evaluation
-            connection.query('INSERT INTO STAMPS (ID,COUNTRY_ID,DENOMINATION) VALUES(80200,1,"1d")', function (err, data) {
+            connection.query('INSERT INTO STAMPS (ID,COUNTRY_ID,DENOMINATION) VALUES(80200,1,"1d")', (err) => {
                 if (err) {
                     throw Error("could not save stamp");
                 }
-                connection.query('INSERT INTO OWNERSHIP (ID,SELLER_ID,STAMP_ID) VALUES(80200,' + seller.id + ',80200)', function (err, data) {
+                connection.query('INSERT INTO OWNERSHIP (ID,SELLER_ID,STAMP_ID) VALUES(80200,' + seller.id + ',80200)', (err) => {
                     if (err) {
                         throw Error("could not save ownership");
                     }
-                    var time = new Date().getTime();
-                    superagent.del('http://' + hostname + ':' + server_port + '/rest/sellers/' + seller.id)
-                        .end(function (e, res) {
+                    const time = new Date().getTime();
+                    superagent.del(`http://${hostname}:${server_port}/rest/sellers/${seller.id}`)
+                        .end( (e, res) => {
                             expect(e).toEqual(null);
                             expect(res.status).toEqual(204);
-                            connection.query('SELECT s.MODIFYSTAMP AS sMod, o.MODIFYSTAMP AS oMod, o.SELLER_ID AS seller_id FROM STAMPS AS s LEFT OUTER JOIN OWNERSHIP AS o ON s.ID=o.STAMP_ID WHERE s.ID=80200', function (err, data) {
+                            connection.query('SELECT s.MODIFYSTAMP AS sMod, o.MODIFYSTAMP AS oMod, o.SELLER_ID AS seller_id FROM STAMPS AS s LEFT OUTER JOIN OWNERSHIP AS o ON s.ID=o.STAMP_ID WHERE s.ID=80200', (err, data) => {
                                 expect(err).toEqual(null);
                                 expect(new Date(data[0].sMod).getTime() - time).toBeLessThan(500);
                                 expect(new Date(data[0].oMod).getTime() - time).toBeLessThan(500);

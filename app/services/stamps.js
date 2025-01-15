@@ -6,7 +6,6 @@ let stamp = require('../model/stamp');
 let catalogueNumberHelper = require('../model/catalogue-number-helper');
 let ownership = require('../model/ownership');
 let catalogueNumber = require('../model/catalogue-number');
-let catalogue = require('../model/catalogue');
 let country = require('../model/country');
 let catalogues = require('./catalogues');
 let _ = require('lodash');
@@ -15,8 +14,6 @@ let Logger = require('../util/logger');
 
 
 let stamps = extend(true, {}, new PersistentCollection(), function () {
-    "use strict";
-
     let sqlTrace = Logger.getLogger("sql");
 
     function generateColumnExpression(fields, tableRef,distinct) {
@@ -61,6 +58,7 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
         return select;
     }
 
+    // eslint-disable-next-line no-unused-vars
     let cachePolicy = true;
     let foundStamps = false;
 
@@ -112,9 +110,9 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
                     }
                 };
                 resolveWhenFinished();
-                _.each(updateList, function (sql) {
+                _.each(updateList, (sql) => {
                     sqlTrace.debug(sql);
-                    connection.query(sql, function (err, data) {
+                    connection.query(sql, (err) => {
                         if (err !== null) {
                             reject(dataTranslator.getErrorMessage(err));
                         } else {
@@ -124,7 +122,7 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
 
                     });
                 });
-                _.each(createList, function (obj) {
+                _.each(createList, (obj) => {
                     let creating = obj;
                     PersistentCollection.getNextSequence(creating.fieldDefinition, (err, id) => {
                         if (err !== null) {
@@ -133,7 +131,7 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
                             creating.object.ID = id;
                             let c_sql = dataTranslator.generateInsertByFields(creating.fieldDefinition, creating.object);
                             sqlTrace.debug(c_sql);
-                            connection.query(c_sql, (err, data) => {
+                            connection.query(c_sql, (err) => {
                                 if (err !== null) {
                                     reject(dataTranslator.getErrorMessage(err));
                                 } else {
@@ -169,7 +167,7 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
                             catNum.ID = id;
                             let sql = dataTranslator. generateInsertByFields(catalogueNumber, catNum);
                             sqlTrace.debug(sql);
-                            connection.query(sql, (err, result) => {
+                            connection.query(sql, (err) => {
                                 if (err) {
                                     reject(dataTranslator.getErrorMessage(err));
                                 } else {
@@ -191,7 +189,7 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
                             owner.ID = id;
                             let sql = dataTranslator. generateInsertByFields(ownership, owner);
                             sqlTrace.debug(sql);
-                            connection.query(sql, (err, result) => {
+                            connection.query(sql, (err) => {
                                 if (err) {
                                     reject(dataTranslator.getErrorMessage(err));
                                 } else {
@@ -261,7 +259,7 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
                 sqlTrace.debug(select);
                 let t = (new Date()).getTime();
                 connectionManager.getConnection().then(connection => {
-                    let query = connection.query(select, (err, stamps) => {
+                    connection.query(select, (err, stamps) => {
                         if (err) {
                             connection.release();
                             reject(dataTranslator.getErrorMessage(err));

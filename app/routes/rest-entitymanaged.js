@@ -1,14 +1,13 @@
-var Logger = require('../util/logger');
-var Authenticator = require('../util/authenticator');
-var routeHelper = require('./route-helper');
+const Logger = require('../util/logger');
+const routeHelper = require('./route-helper');
 
-var logger = Logger.getLogger("server");
+const logger = Logger.getLogger("server");
 
-var entityManaged = function (collect) {
-    var collection = collect;
+const entityManaged = function (collect) {
+    const collection = collect;
     return {
-        countStamps: function (req, res) {
-            collection.countStamps().then(function (result) {
+        countStamps: (req, res) => {
+            collection.countStamps().then(result => {
                 res.format({
                     'text/plain': function () {
                         return res.send('' + result);
@@ -17,13 +16,13 @@ var entityManaged = function (collect) {
                         return res.send(routeHelper.convertMap(result));
                     }
                 });
-            }, function (err) {
+            }, err => {
                 logger.error(err);
                 res.status(routeHelper.StatusCode.INTERNAL_ERROR).send(routeHelper.ClientMessages.INTERNAL_ERROR).end();
             });
         }
     }
-}
+};
 
 
 module.exports = entityManaged;

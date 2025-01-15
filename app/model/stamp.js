@@ -1,23 +1,29 @@
-var extend = require('node.extend');
-var fieldDefinition = require('./field-definition');
-var country = require('./country');
+const extend = require('node.extend');
+const fieldDefinition = require('./field-definition');
+const country = require('./country');
 
-var stamp = extend({}, fieldDefinition, function() {
-        "use strict";
-        return {
+const stamp = extend({}, fieldDefinition, function () {
+    return {
         getFieldDefinitions: function () {
             return [
-                { field: 'id', column: 'ID', type: 'long', required: true },
-                { field: 'rate', column: 'DENOMINATION', type: 'string', required: true },
-                { field: 'description', column: 'DESCRIPTION', type: 'string' },
-                { field: 'catalogueCount', column: 'CATALOGUE_COUNT', type: 'int', internal: true },
-                { field: 'countryRef', column: 'COUNTRY_ID', type: 'long', required: true, joinWith: 'COUNTRIES', sortFn: this.sortByCountry },
-                { field: 'wantList', type: 'boolean', column: 'WANTLIST' },
-                { field: 'catalogueCount', column: 'CATALOGUE_COUNT', type: 'int', internal: true },
-                { field: 'createTimestamp', column: 'CREATESTAMP', type: 'date', internal: true },
-                { field: 'modifyTimestamp', column: 'MODIFYSTAMP', type: 'date', internal: true },
-                { field: 'catalogueNumbers', column: 'CATALOGUENUMBER', type: 'obj_array', model: 'catalogue-number' },
-                { field: 'stampOwnerships', column: 'OWNERSHIP', type: 'obj_array', model: 'ownership' }
+                {field: 'id', column: 'ID', type: 'long', required: true},
+                {field: 'rate', column: 'DENOMINATION', type: 'string', required: true},
+                {field: 'description', column: 'DESCRIPTION', type: 'string'},
+                {field: 'catalogueCount', column: 'CATALOGUE_COUNT', type: 'int', internal: true},
+                {
+                    field: 'countryRef',
+                    column: 'COUNTRY_ID',
+                    type: 'long',
+                    required: true,
+                    joinWith: 'COUNTRIES',
+                    sortFn: this.sortByCountry
+                },
+                {field: 'wantList', type: 'boolean', column: 'WANTLIST'},
+                {field: 'catalogueCount', column: 'CATALOGUE_COUNT', type: 'int', internal: true},
+                {field: 'createTimestamp', column: 'CREATESTAMP', type: 'date', internal: true},
+                {field: 'modifyTimestamp', column: 'MODIFYSTAMP', type: 'date', internal: true},
+                {field: 'catalogueNumbers', column: 'CATALOGUENUMBER', type: 'obj_array', model: 'catalogue-number'},
+                {field: 'stampOwnerships', column: 'OWNERSHIP', type: 'obj_array', model: 'ownership'}
             ];
         },
         getSequenceColumn: function () {
@@ -29,7 +35,7 @@ var stamp = extend({}, fieldDefinition, function() {
         getAlias: function () {
             return "s";
         },
-        sortByCountry: function() {
+        sortByCountry: function () {
             return country.getAlias() + '.NAME';
         }
 

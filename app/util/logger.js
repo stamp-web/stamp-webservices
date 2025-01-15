@@ -1,12 +1,14 @@
 "use strict";
-var fs = require('fs');
-var FileStreamRotator = require('file-stream-rotator');
-var Level = require('./level');
+const fs = require('fs');
+const FileStreamRotator = require('file-stream-rotator');
+const Level = require('./level');
 
 function Logger(loggerName) {
+    // eslint-disable-next-line no-unused-vars
     let name = loggerName;
     let debugLevel = Level.INFO;
     let target = "console";
+    // eslint-disable-next-line no-unused-vars
     let targetPath;
 
     let CONSOLE_LOGGING = Level.levels.indexOf(Level.INFO); // 2
@@ -23,9 +25,9 @@ function Logger(loggerName) {
             if (typeof message !== 'string') {
                 message = JSON.stringify(message);
             }
-            var msg = level.toUpperCase() + ': ' + message;
+            const msg = `${level.toUpperCase()}: ${message}`;
             accessLogStream.write( msg + '\n');
-            var ordinal = Level.levels.indexOf(level);
+            const ordinal = Level.levels.indexOf(level);
             if( !Logger.silentLogging && (ordinal <= CONSOLE_LOGGING || ordinal === 5)) {
                 console.log(message);
             }
@@ -65,13 +67,13 @@ function Logger(loggerName) {
             target = type;
             targetPath = item;
             if( target === 'file') {
-                var path = item;
+                let path = item;
                 if( item.endsWith('.log')) {
                     path = item.substring(0, item.lastIndexOf('/'));
                 }
                 fs.access( path, fs.R_OK | fs.W_OK,  (err) => {
                     if( err !== null ) {
-                        fs.mkdir(path, (err) => {
+                        fs.mkdir(path, () => {
                             resolve();
                         });
                     } else {

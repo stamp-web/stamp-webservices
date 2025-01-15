@@ -1,20 +1,15 @@
-var extend = require('node.extend');
-var PersistentCollection = require('./persistent-collection');
-var EntityManagement = require('./entity-management');
-var dataTranslator = require('./mysql-translator');
-var catalogue = require('../model/catalogue');
-var stamp = require('../model/stamp');
-var catalogueNumber = require('../model/catalogue-number');
-var connectionManager = require('../pom/connection-mysql');
-var _ = require('lodash');
+const extend = require('node.extend');
+const PersistentCollection = require('./persistent-collection');
+const EntityManagement = require('./entity-management');
+const dataTranslator = require('./mysql-translator');
+const catalogue = require('../model/catalogue');
+const stamp = require('../model/stamp');
+const catalogueNumber = require('../model/catalogue-number');
 
-var Logger = require('../util/logger');
+const Logger = require('../util/logger');
 
-
-
-var catalogueService = extend(true, {}, new EntityManagement(), new PersistentCollection(), function () {
-    "use strict";
-    var sqlTrace = Logger.getLogger('sql');
+const catalogueService = extend(true, {}, new EntityManagement(), new PersistentCollection(), function () {
+    const sqlTrace = Logger.getLogger('sql');
 
     return {
         getCountStampWhereStatement: function() {

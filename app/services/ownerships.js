@@ -1,22 +1,20 @@
-var extend = require('node.extend');
-var PersistentCollection = require('./persistent-collection');
-var connectionManager = require('../pom/connection-mysql');
+const extend = require('node.extend');
+const PersistentCollection = require('./persistent-collection');
+const connectionManager = require('../pom/connection-mysql');
+const dataTranslator = require('./mysql-translator');
+const ownership = require('../model/ownership');
+const stamp = require('../model/stamp');
+const catalogue = require('../model/catalogue');
+const catalogueNumber = require('../model/catalogue-number');
+const Logger = require('../util/logger');
+const ExchangeRates = require('../util/exchange-rates');
+const fx = require('money');
+const accounting = require('accounting');
+const _ = require('lodash');
 
-var ownership = require('../model/ownership');
-var stamp = require('../model/stamp');
-var catalogue = require('../model/catalogue');
-var catalogueNumber = require('../model/catalogue-number');
-var Logger = require('../util/logger');
-var ExchangeRates = require('../util/exchange-rates');
-var fx = require('money');
-var accounting = require('accounting');
-
-var _ = require('lodash');
-
-var ownershipService = extend(true, {}, new PersistentCollection(), function () {
-    "use strict";
-    var sqlTrace = Logger.getLogger("sql");
-    var serverLog = Logger.getLogger("server");
+const ownershipService = extend(true, {}, new PersistentCollection(), function () {
+    const sqlTrace = Logger.getLogger("sql");
+    const serverLog = Logger.getLogger("server");
 
     ExchangeRates.checkRates(() => {
         serverLog.info('rates are retrieved for ownership.');
@@ -25,7 +23,11 @@ var ownershipService = extend(true, {}, new PersistentCollection(), function () 
     function buildCatalogueValueQuery(stampList) {
         let cnA = catalogueNumber.getAlias();
         let sA = stamp.getAlias();
-        let qs = `SELECT ${stamp.getAlias()}.ID AS STAMP_ID,${ownership.getAlias()}.ID,${catalogueNumber.getAlias()}.CATALOGUEVALUE,${catalogue.getAlias()}.CURRENCY FROM  ` +
+        let qs = `SELECT ${stamp.getAlias()}.ID AS STAMP_ID,
+                         ${ownership.getAlias()}.ID,
+                         ${catalogueNumber.getAlias()}.CATALOGUEVALUE,
+                         ${catalogue.getAlias()}.CURRENCY
+                  FROM  ` +
             `${stamp.getTableClause()}, ${ownership.getTableClause()}, ${catalogue.getTableClause()}, ${catalogueNumber.getTableClause()} WHERE ` +
             `${cnA}.STAMP_ID=${sA}.ID AND ${cnA}.ACTIVE=1 AND ${ownership.getAlias()}.STAMP_ID=${sA}.ID AND ${cnA}.CATALOGUE_REF=${catalogue.getAlias()}.ID AND ` +
             `${sA}.ID IN(${stampList.join()})`;
@@ -48,7 +50,8 @@ var ownershipService = extend(true, {}, new PersistentCollection(), function () 
         let price = accounting.toFixed(Math.max(value * ratio, 0.01), 2);
         let oA = ownership.getAlias();
         let sA = stamp.getAlias();
-        let qs = `UPDATE ${ownership.getTableClause()} INNER JOIN ${stamp.getTableClause()} SET ` +
+        let qs = `UPDATE ${ownership.getTableClause()} INNER JOIN ${stamp.getTableClause()}
+                  SET ` +
             `${oA}.MODIFYSTAMP=CURDATE(),${oA}.PRICE=${price},${oA}.CURRENCY='${currencyCode}',` +
             `${sA}.MODIFYSTAMP=CURDATE() WHERE ${sA}.ID=${result.STAMP_ID} AND ${oA}.ID=${result.ID}`;
         sqlTrace.debug('update price paid query=', qs);
@@ -58,8 +61,8 @@ var ownershipService = extend(true, {}, new PersistentCollection(), function () 
     function sumCatalogueValue(queryResult, targetCurrency) {
         let sum = 0.0;
         _.forEach(queryResult, result => {
-            if(result.CATALOGUEVALUE > 0) {
-                sum += fx.convert(result.CATALOGUEVALUE, { from: result.CURRENCY, to: targetCurrency });
+            if (result.CATALOGUEVALUE > 0) {
+                sum += fx.convert(result.CATALOGUEVALUE, {from: result.CURRENCY, to: targetCurrency});
             }
         });
         sum = accounting.toFixed(sum, 2);
@@ -80,8 +83,8 @@ var ownershipService = extend(true, {}, new PersistentCollection(), function () 
                         let total = _.size(queryResult);
                         let processed = 0
 
-                        connection.beginTransaction(trxErr => {
-                            _.forEach(queryResult, (result, idx) => {
+                        connection.beginTransaction(() => {
+                            _.forEach(queryResult, (result) => {
                                 const handleProcessing = () => {
                                     if (processed === total) {
                                         connection.commit(err => {
@@ -93,7 +96,7 @@ var ownershipService = extend(true, {}, new PersistentCollection(), function () 
                                         });
                                     }
                                 }
-                                if(result.CATALOGUEVALUE > 0) {
+                                if (result.CATALOGUEVALUE > 0) {
                                     let sql = buildUpdateQuery(result, currencyCode, ratio);
                                     connection.query(sql, err => {
                                         if (!PersistentCollection.rollbackOnError(connection, reject, err)) {

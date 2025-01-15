@@ -1,11 +1,10 @@
-var superagent = require('superagent');
-var session = require('./util/integration-session');
-var NamedCollectionVerifications = require('./util/named-collection-verifier');
-var _ = require('lodash');
+const superagent = require('superagent');
+const session = require('./util/integration-session');
+const NamedCollectionVerifications = require('./util/named-collection-verifier');
 
 describe('REST Services for Reports', () => {
 
-    var hostname, server_port, connection;
+    let hostname, server_port;
 
     afterAll(done => {
         session.cleanup(function () {
@@ -17,7 +16,6 @@ describe('REST Services for Reports', () => {
         session.initialize(function () {
             hostname = session.getHostname();
             server_port = session.getPort();
-            connection = session.getConnection();
             done();
         });
     });
@@ -26,28 +24,28 @@ describe('REST Services for Reports', () => {
         NamedCollectionVerifications.verifyPost('countries', {
             name: 'Nova Scotia', description: 'Province of Canada'
         }, undefined, (country) => {
-            var stamp = {
-                countryRef:       country.id,
-                rate:             "1d",
-                description:      "reddish brown",
-                wantList:         false,
+            const stamp = {
+                countryRef: country.id,
+                rate: "1d",
+                description: "reddish brown",
+                wantList: false,
                 catalogueNumbers: [
                     {
                         catalogueRef: 2,
-                        number:       "23a",
-                        value:        105.23,
-                        condition:    1,
-                        active:       true
+                        number: "23a",
+                        value: 105.23,
+                        condition: 1,
+                        active: true
                     }
                 ],
-                stampOwnerships:  []
+                stampOwnerships: []
             };
-            superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
+            superagent.post(`http://${hostname}:${server_port}/rest/stamps`)
                 .send(stamp)
-                .end(function (e, res) {
+                .end((e, res) => {
                     expect(res.status).toEqual(201);
                     superagent.get(`http://${hostname}:${server_port}/rest/reports?$filter=(${encodeURI('countryRef eq ' + country.id)})&$reportType=CatalogueValue`)
-                        .end(function (e, res) {
+                        .end((e, res) => {
                             expect(res.status).toEqual(200);
                             expect(res.body.value).toBe('105.23')
                             expect(res.body.code).toBe('USD')
@@ -61,7 +59,7 @@ describe('REST Services for Reports', () => {
         NamedCollectionVerifications.verifyPost('countries', {
             name: 'Prince Edward Island', description: 'Province of Canada'
         }, undefined, (country) => {
-            var stamp = {
+            const stamp = {
                 countryRef: country.id,
                 rate: "1d",
                 description: "purple",
@@ -80,12 +78,12 @@ describe('REST Services for Reports', () => {
                     pricePaid: 3.57
                 }]
             };
-            superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
+            superagent.post(`http://${hostname}:${server_port}/rest/stamps`)
                 .send(stamp)
-                .end(function (e, res) {
+                .end((e, res) => {
                     expect(res.status).toEqual(201);
                     superagent.get(`http://${hostname}:${server_port}/rest/reports?$filter=(${encodeURI('albumRef eq 3')})&$reportType=CostBasis`)
-                        .end(function (e, res) {
+                        .end((e, res) => {
                             expect(res.status).toEqual(200);
                             expect(res.body.value).toBe('3.57')
                             expect(res.body.code).toBe('USD')
@@ -99,7 +97,7 @@ describe('REST Services for Reports', () => {
         NamedCollectionVerifications.verifyPost('countries', {
             name: `Test-${new Date().getTime()}`
         }, undefined, (country) => {
-            var stamp = {
+            const stamp = {
                 countryRef: country.id,
                 rate: "1d",
                 description: "red",
@@ -120,12 +118,12 @@ describe('REST Services for Reports', () => {
                     pricePaid: 22.50
                 }]
             };
-            superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
+            superagent.post(`http://${hostname}:${server_port}/rest/stamps`)
                 .send(stamp)
-                .end(function (e, res) {
+                .end((e, res) => {
                     expect(res.status).toEqual(201);
                     superagent.get(`http://${hostname}:${server_port}/rest/reports?$filter=(${encodeURI('countryRef eq ' + country.id)})&$reportType=CashValue`)
-                        .end(function (e, res) {
+                        .end((e, res) => {
                             expect(res.status).toEqual(200);
                             expect(res.body.value).toBe('3.75')
                             expect(res.body.code).toBe('USD')

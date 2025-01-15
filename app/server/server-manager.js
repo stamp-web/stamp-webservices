@@ -1,12 +1,10 @@
-"use strict";
-
-var cluster = require('cluster');
-var path = require('path');
-var nconf = require('nconf');
+const cluster = require('cluster');
+const path = require('path');
+const nconf = require('nconf');
 nconf.argv().env();
 
-var numCPUs = require('os').cpus().length;
-var numForks = numCPUs;
+let numCPUs = require('os').cpus().length;
+let numForks = numCPUs;
 if (nconf.get("cpu")) {
     numForks = nconf.get("cpu");
 }
@@ -15,14 +13,13 @@ cluster.setupMaster({
     exec: path.join(__dirname, 'server.js')
 });
 
-var created = 0;
 
-for(var i = 0; i < numForks; i++ ) {
+for(let i = 0; i < numForks; i++ ) {
     cluster.fork();
 }
 
 cluster.on('disconnect', function (worker) {
-    var w = cluster.fork();
+    let w = cluster.fork();
     console.error('[%s] Worker with process ID %s disconnected... starting a new worker with process ID %s',
         new Date(), worker.process.pid, w.process.pid);
 });

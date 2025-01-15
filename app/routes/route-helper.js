@@ -1,11 +1,9 @@
-﻿var url = require('url');
-var _ = require('lodash');
+﻿const _ = require('lodash');
 
-var routeHelper = function () {
-    "use strict";
+const routeHelper = function () {
 
     return {
-        StatusCode : {
+        StatusCode: {
             OK: 200,
             CREATED: 201,
             NO_CONTENT: 204,
@@ -17,17 +15,17 @@ var routeHelper = function () {
         },
         ClientMessages: {
             INTERNAL_ERROR: "An unexpected error occured on the server."
-        }, 
-        ContentType : {
+        },
+        ContentType: {
             JSON: "application/json",
             TEXT: "text/plain"
-        }, 
-        Headers : {
+        },
+        Headers: {
             CONTENT_TYPE: "Content-Type",
             CONTENT_LENGTH: "Content-Length"
         },
-        setErrorStatus : function (res, err) {
-            var code = this.StatusCode.INTERNAL_ERROR;
+        setErrorStatus: function (res, err) {
+            let code = this.StatusCode.INTERNAL_ERROR;
             switch (err.code) {
                 case 'UNIQUENESS_EXCEPTION':
                     code = this.StatusCode.CONFLICT;
@@ -47,12 +45,12 @@ var routeHelper = function () {
             }
             res.status(code).send(err.message);
         },
-        convertMap: function(results) {
-            var obj = [];
-            _.forEach(results, function(result) {
-                var keys = Object.keys(result);
-                var r = {};
-                _.forEach(keys, function(key) {
+        convertMap: function (results) {
+            const obj = [];
+            _.forEach(results, function (result) {
+                const keys = Object.keys(result);
+                const r = {};
+                _.forEach(keys, function (key) {
                     r[key.toLowerCase()] = result[key];
                 })
                 obj.push(r);

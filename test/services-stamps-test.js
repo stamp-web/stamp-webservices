@@ -1,12 +1,12 @@
-var _ = require('lodash');
-var superagent = require('superagent');
-var session = require('./util/integration-session');
-var stampUtil = require('./util/stamp-utilities');
-var NamedCollectionVerifications = require('./util/named-collection-verifier');
+const _ = require('lodash');
+const superagent = require('superagent');
+const session = require('./util/integration-session');
+const stampUtil = require('./util/stamp-utilities');
+const NamedCollectionVerifications = require('./util/named-collection-verifier');
 
 describe('REST Services for Stamps', () => {
 
-    var hostname, server_port, connection;
+    let hostname, server_port, connection;
 
     afterAll(done => {
         session.cleanup( () => {
@@ -24,8 +24,8 @@ describe('REST Services for Stamps', () => {
     });
 
     it('GET works with no stamps', done => {
-        superagent.get('http://' + hostname + ':' + server_port + '/rest/stamps')
-            .end(function (e, res) {
+        superagent.get(`http://${hostname}:${server_port}/rest/stamps`)
+            .end( (e, res) => {
                 expect(e).toEqual(null);
                 expect(res.status).toEqual(200);
                 expect(res.body.total).toEqual(0);
@@ -35,47 +35,47 @@ describe('REST Services for Stamps', () => {
     });
 
     it('POST valid creation with 201 status', done => {
-        var stamp = {
-            countryRef:       1,
-            rate:             "1d",
-            description:      "red",
-            wantList:         false,
+        const stamp = {
+            countryRef: 1,
+            rate: "1d",
+            description: "red",
+            wantList: false,
             catalogueNumbers: [
                 {
                     catalogueRef: 1,
-                    number:       "23a",
-                    value:        0.65,
-                    condition:    1,
-                    active:       true
+                    number: "23a",
+                    value: 0.65,
+                    condition: 1,
+                    active: true
                 }
             ],
-            stampOwnerships:  [
+            stampOwnerships: [
                 {
-                    albumRef:  2,
+                    albumRef: 2,
                     condition: 2,
-                    grade:     1,
-                    notes:     "this is a note",
+                    grade: 1,
+                    notes: "this is a note",
                     pricePaid: 0.25,
-                    code:      "USD",
+                    code: "USD",
                     sellerRef: 1,
                     purchased: "2007-05-15T00:00:00-05:00"
                 }
             ]
         };
-        stampUtil.create(stamp, function (e, res) {
-            var result = res.body;
+        stampUtil.create(stamp,  (e, res) => {
+            const result = res.body;
             expect(result.id).toBeGreaterThan(1000);
             expect(result.rate).toEqual("1d");
             expect(result.description).toEqual("red");
             expect(result.countryRef).toBe(1);
-            var catalogueNumbers = res.body.catalogueNumbers;
+            const catalogueNumbers = res.body.catalogueNumbers;
             expect(catalogueNumbers.length).toBe(1);
             expect(catalogueNumbers[0].id).toBeGreaterThan(1000);
             expect(catalogueNumbers[0].value > 0.64999 && catalogueNumbers[0].value < 0.65001).toBeTruthy();
             expect(catalogueNumbers[0].number).toEqual("23a");
             expect(catalogueNumbers[0].condition).toBe(1);
             expect(catalogueNumbers[0].active).toBe(true);
-            var ownership = res.body.stampOwnerships[0];
+            const ownership = res.body.stampOwnerships[0];
             expect(ownership.grade).toBe(1);
             expect(ownership.condition).toBe(2);
             expect(ownership.albumRef).toBe(2);
@@ -89,29 +89,29 @@ describe('REST Services for Stamps', () => {
     });
 
     it('POST for descriptions with apostrophes (issue #48)', done => {
-        var description = "blackish opal-green (rotary press printing - 1'5'1)";
-        var stamp = {
-            countryRef:       1,
-            rate:             "30pf",
-            description:      description,
-            wantList:         true,
+        const description = "blackish opal-green (rotary press printing - 1'5'1)";
+        const stamp = {
+            countryRef: 1,
+            rate: "30pf",
+            description: description,
+            wantList: true,
             catalogueNumbers: [
                 {
                     catalogueRef: 1,
-                    number:       "172 W OR",
-                    value:        2.50,
-                    condition:    1,
-                    active:       true
+                    number: "172 W OR",
+                    value: 2.50,
+                    condition: 1,
+                    active: true
                 }
             ]
         };
         stampUtil.create(stamp, function (e, res) {
-            var result = res.body;
+            const result = res.body;
             expect(result.id).toBeGreaterThan(1000);
             expect(result.rate).toEqual("30pf");
             expect(result.description).toEqual(description);
             expect(result.countryRef).toBe(1);
-            var catalogueNumbers = res.body.catalogueNumbers;
+            const catalogueNumbers = res.body.catalogueNumbers;
             expect(catalogueNumbers.length).toBe(1);
             expect(catalogueNumbers[0].id).toBeGreaterThan(1000);
             expect(catalogueNumbers[0].value > 2.4999 && catalogueNumbers[0].value < 2.5001).toBeTruthy();
@@ -126,22 +126,22 @@ describe('REST Services for Stamps', () => {
         NamedCollectionVerifications.verifyPost('countries', {
             name: 'test-multiple-conditions'
         }, null, function (country) {
-            var stamp = {
-                countryRef:       country.id,
-                rate:             "1d",
-                description:      "red",
-                wantList:         true,
+            let stamp = {
+                countryRef: country.id,
+                rate: "1d",
+                description: "red",
+                wantList: true,
                 catalogueNumbers: [
                     {
                         catalogueRef: 1,
-                        number:       "or-test-1",
-                        value:        0.65,
-                        condition:    1,
-                        active:       true
+                        number: "or-test-1",
+                        value: 0.65,
+                        condition: 1,
+                        active: true
                     }
                 ]
             };
-            stampUtil.create(stamp, function (e, res) {
+            stampUtil.create(stamp,  () => {
                 stamp = {
                     countryRef:       country.id,
                     rate:             "2d",
@@ -157,9 +157,9 @@ describe('REST Services for Stamps', () => {
                         }
                     ]
                 };
-                stampUtil.create(stamp, function (e, res) {
-                    superagent.get('http://' + hostname + ':' + server_port + '/rest/stamps?$filter=(countryRef eq ' + country.id + ' and ((condition eq 1) or (condition eq 4)))')
-                        .end(function (e, res) {
+                stampUtil.create(stamp, () => {
+                    superagent.get(`http://${hostname}:${server_port}/rest/stamps?$filter=(countryRef eq ${country.id} and ((condition eq 1) or (condition eq 4)))`)
+                        .end((e, res) => {
                             expect(e).toEqual(null);
                             expect(res.status).toEqual(200);
                             expect(res.body.total).toEqual(1);
@@ -176,22 +176,22 @@ describe('REST Services for Stamps', () => {
         NamedCollectionVerifications.verifyPost('countries', {
             name: 'test-compound-conditions'
         }, null, country => {
-            var stamp = {
-                countryRef:       country.id,
-                rate:             '1d',
-                description:      'orange-red',
-                wantList:         true,
+            let stamp = {
+                countryRef: country.id,
+                rate: '1d',
+                description: 'orange-red',
+                wantList: true,
                 catalogueNumbers: [
                     {
                         catalogueRef: 1,
-                        number:       '1d-orange',
-                        value:        100.0,
-                        condition:    1,
-                        active:       true
+                        number: '1d-orange',
+                        value: 100.0,
+                        condition: 1,
+                        active: true
                     }
                 ]
             };
-            stampUtil.create(stamp, (e, res) => {
+            stampUtil.create(stamp, () => {
                 stamp = {
                     countryRef:       country.id,
                     rate:             "2d",
@@ -207,11 +207,9 @@ describe('REST Services for Stamps', () => {
                         }
                     ]
                 };
-                stampUtil.create(stamp, async (e, res) => {
-
-
-                    let checkForStamp = async (filter, isDone) => {
-                        superagent.get('http://' + hostname + ':' + server_port + '/rest/stamps?$filter=' + filter)
+                stampUtil.create(stamp, async () => {
+                    let checkForStamp = async (filter) => {
+                        superagent.get(`http://${hostname}:${server_port}/rest/stamps?$filter=${filter}`)
                             .end((e, res) => {
                                 expect(e).toEqual(null);
                                 expect(res.status).toEqual(200);
@@ -222,9 +220,9 @@ describe('REST Services for Stamps', () => {
                     };
 
                     let filter = `((countryRef eq ${country.id}) and (startswith(rate,'2d') and endswith(description,'orange')))`;
-                    await checkForStamp(filter, false);
+                    await checkForStamp(filter);
                     filter = `((countryRef eq ${country.id}) and ((contains(rate,'1d')) and (contains(description,'orange'))))`;
-                    await checkForStamp(filter, true);
+                    await checkForStamp(filter);
 
                 });
             });
@@ -232,45 +230,43 @@ describe('REST Services for Stamps', () => {
 
     });
 
-
-
     it('POST with apostrophe is valid creation with 201 status (Issue #36)', done => {
-        var stamp = {
-            countryRef:       1,
-            rate:             "1d'ish",
-            description:      "Lidth's Jay",
-            wantList:         false,
+        const stamp = {
+            countryRef: 1,
+            rate: "1d'ish",
+            description: "Lidth's Jay",
+            wantList: false,
             catalogueNumbers: [
                 {
                     catalogueRef: 1,
-                    number:       "ss'5",
-                    value:        25.4,
-                    condition:    1,
-                    active:       true
+                    number: "ss'5",
+                    value: 25.4,
+                    condition: 1,
+                    active: true
                 }
             ],
-            stampOwnerships:  [
+            stampOwnerships: [
                 {
-                    albumRef:  2,
+                    albumRef: 2,
                     condition: 2,
-                    grade:     1,
-                    notes:     "this is a note of happy day of you'll love",
+                    grade: 1,
+                    notes: "this is a note of happy day of you'll love",
                     pricePaid: 0.25,
-                    code:      "USD",
+                    code: "USD",
                     sellerRef: 1,
                     purchased: "2007-05-15T00:00:00-05:00"
                 }
             ]
         };
         stampUtil.create(stamp, function (e, res) {
-            var result = res.body;
+            const result = res.body;
             expect(result.id).toBeGreaterThan(1000);
             expect(result.rate).toEqual("1d'ish");
             expect(result.description).toEqual("Lidth's Jay");
-            var catalogueNumbers = res.body.catalogueNumbers;
+            const catalogueNumbers = res.body.catalogueNumbers;
             expect(catalogueNumbers.length).toBe(1);
             expect(catalogueNumbers[0].number).toEqual("ss'5");
-            var ownership = res.body.stampOwnerships[0];
+            const ownership = res.body.stampOwnerships[0];
             expect(ownership.notes).toEqual("this is a note of happy day of you'll love");
             done();
         });
@@ -301,7 +297,7 @@ describe('REST Services for Stamps', () => {
         stampUtil.create(stamp, (e, res) => {
             let result = res.body;
             let id = result.id;
-            superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps/purchase')
+            superagent.post(`http://${hostname}:${server_port}/rest/stamps/purchase`)
                 .send({stamps: [id], pricePaid: 50, currencyCode: 'USD'})
                 .end((e, res) => {
                     expect(res.status).toEqual(200);
@@ -315,7 +311,6 @@ describe('REST Services for Stamps', () => {
                 });
         });
     });
-
 
     it('POST purchase updates stamps unless null catalogue values (Issue #71)', done => {
         let stamp = {
@@ -341,7 +336,7 @@ describe('REST Services for Stamps', () => {
         stampUtil.create(stamp, (e, res) => {
             let result = res.body;
             let id = result.id;
-            superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps/purchase')
+            superagent.post(`http://${hostname}:${server_port}/rest/stamps/purchase`)
                 .send({stamps: [id], pricePaid: 50, currencyCode: 'USD'})
                 .end((e, res) => {
                     expect(res.status).toEqual(200);
@@ -356,48 +351,47 @@ describe('REST Services for Stamps', () => {
         });
     });
 
-
     it('POST Create a wantlist stamp with 201 status', done => {
-        var stamp = {
-            countryRef:       1,
-            rate:             "3d",
-            description:      "yellow-green",
-            wantList:         true,
+        const stamp = {
+            countryRef: 1,
+            rate: "3d",
+            description: "yellow-green",
+            wantList: true,
             catalogueNumbers: [
                 {
                     catalogueRef: 1,
-                    number:       "45",
-                    value:        0.75,
-                    condition:    1,
-                    active:       true
+                    number: "45",
+                    value: 0.75,
+                    condition: 1,
+                    active: true
                 }
             ]
         };
-        stampUtil.create(stamp, function (e, res) {
+        stampUtil.create(stamp, (e, res) => {
             expect(res.body.stampOwnerships).not.toBe(undefined);
             expect(res.body.stampOwnerships.length).toBe(0);
             done();
         });
     });
 
-    xit('POST Create a wantlist stamp with polish characters (Issue #72)', done => {
-        var stamp = {
-            countryRef:       1,
+    it.skip('POST Create a wantlist stamp with polish characters (Issue #72)', done => {
+        const stamp = {
+            countryRef: 1,
             //ł
-            rate:             "1z\u0142 + 1z\u0142".replace(/[\u0800-\uFFFF]/g, ''),
-            description:      "purple and black",
-            wantList:         true,
+            rate: "1z\u0142 + 1z\u0142".replace(/[\u0800-\uFFFF]/g, ''),
+            description: "purple and black",
+            wantList: true,
             catalogueNumbers: [
                 {
                     catalogueRef: 1,
-                    number:       "12",
-                    value:        2.0,
-                    condition:    1,
-                    active:       true
+                    number: "12",
+                    value: 2.0,
+                    condition: 1,
+                    active: true
                 }
             ]
         };
-        stampUtil.create(stamp, function (e, res) {
+        stampUtil.create(stamp, (e, res) => {
             expect(res.status).toEqual(201);
             done();
         });
@@ -405,36 +399,36 @@ describe('REST Services for Stamps', () => {
 
 
     it('Verify trigger behavior on INSERT/DELETE catalogue numbers', done => {
-        var stamp = {
-            countryRef:       1,
-            rate:             "6d",
-            description:      "yellow",
-            wantList:         false,
+        const stamp = {
+            countryRef: 1,
+            rate: "6d",
+            description: "yellow",
+            wantList: false,
             catalogueNumbers: [
                 {
                     catalogueRef: 1,
-                    number:       "45",
-                    value:        5.65,
-                    condition:    1,
-                    active:       true
+                    number: "45",
+                    value: 5.65,
+                    condition: 1,
+                    active: true
                 },
                 {
                     catalogueRef: 1,
-                    number:       "45a",
-                    value:        56.23,
-                    condition:    0,
-                    active:       false
+                    number: "45a",
+                    value: 56.23,
+                    condition: 0,
+                    active: false
                 }
             ],
-            stampOwnerships:  []
+            stampOwnerships: []
         };
-        superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
+        superagent.post(`http://${hostname}:${server_port}/rest/stamps`)
             .send(stamp)
-            .end(function (e, res) {
+            .end((e, res) => {
                 expect(e).toEqual(null);
                 expect(res.status).toEqual(201);
-                var id = res.body.id;
-                var query = function (count, callback) {
+                const id = res.body.id;
+                const query = function (count, callback) {
                     connection.query('SELECT CATALOGUE_COUNT FROM STAMPS WHERE ID=' + id, function (err, data) {
                         if (err) {
                             throw Error("could not get catalogue_count");
@@ -444,7 +438,7 @@ describe('REST Services for Stamps', () => {
                     });
                 };
                 query(2, function () {
-                    superagent.post('http://' + hostname + ':' + server_port + '/rest/catalogueNumbers')
+                    superagent.post(`http://${hostname}:${server_port}/rest/catalogueNumbers`)
                         .send({
                                 catalogueRef: 1,
                                 number:       67,
@@ -455,9 +449,9 @@ describe('REST Services for Stamps', () => {
                         ).end(function (e, res) {
                         expect(e).toEqual(null);
                         expect(res.status).toEqual(201);
-                        var catID = res.body.id;
+                        const catID = res.body.id;
                         query(3, function () {
-                            superagent.del('http://' + hostname + ':' + server_port + '/rest/catalogueNumbers/' + catID)
+                            superagent.del(`http://${hostname}:${server_port}/rest/catalogueNumbers/${catID}`)
                                 .end(function (e, res) {
                                     expect(e).toEqual(null);
                                     expect(res.status).toEqual(204);
@@ -471,24 +465,24 @@ describe('REST Services for Stamps', () => {
     });
 
     it('PUT Convert a wantlist to a stamp with 200 status', done => {
-        var stamp = {
-            countryRef:       1,
-            rate:             "3d",
-            description:      "orange",
-            wantList:         true,
+        let stamp = {
+            countryRef: 1,
+            rate: "3d",
+            description: "orange",
+            wantList: true,
             catalogueNumbers: [
                 {
                     catalogueRef: 1,
-                    number:       "46",
-                    value:        12.50,
-                    condition:    1,
-                    unknown:      true,
-                    nospace:      true,
-                    active:       true
+                    number: "46",
+                    value: 12.50,
+                    condition: 1,
+                    unknown: true,
+                    nospace: true,
+                    active: true
                 }
             ]
         };
-        superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
+        superagent.post(`http://${hostname}:${server_port}/rest/stamps`)
             .send(stamp)
             .end(function (e, res) {
                 expect(e).toEqual(null);
@@ -512,7 +506,7 @@ describe('REST Services for Stamps', () => {
                     pricePaid: 0.25,
                     code:      "USD"
                 });
-                superagent.put('http://' + hostname + ':' + server_port + '/rest/stamps/' + stamp.id)
+                superagent.put(`http://${hostname}:${server_port}/rest/stamps/${stamp.id}`)
                     .send(stamp)
                     .end(function (e, res) {
                         expect(e).toEqual(null);
@@ -531,7 +525,7 @@ describe('REST Services for Stamps', () => {
     });
 
     it('GET Collection with 200 status', done => {
-        superagent.get('http://' + hostname + ':' + server_port + '/rest/stamps')
+        superagent.get(`http://${hostname}:${server_port}/rest/stamps`)
             .end(function (e, res) {
                 expect(e).toEqual(null);
                 expect(res.status).toEqual(200);
@@ -542,47 +536,47 @@ describe('REST Services for Stamps', () => {
     });
 
     it('Verify exists checking', done => {
-        var stamp = {
-            countryRef:       1,
-            rate:             "6d",
-            description:      "green",
-            wantList:         true,
+        const stamp = {
+            countryRef: 1,
+            rate: "6d",
+            description: "green",
+            wantList: true,
             catalogueNumbers: [
                 {
                     catalogueRef: 1,
-                    number:       "26",
-                    value:        57.50,
-                    condition:    1,
-                    unknown:      true,
-                    nospace:      true,
-                    active:       true
+                    number: "26",
+                    value: 57.50,
+                    condition: 1,
+                    unknown: true,
+                    nospace: true,
+                    active: true
                 }
             ]
         };
-        superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
+        superagent.post(`http://${hostname}:${server_port}/rest/stamps`)
             .send(stamp)
             .end(function (e, res) {
                 expect(e).toEqual(null);
                 expect(res.status).toBe(201);
-                var existsChecks = [{
+                const existsChecks = [{
                     filter: "(((countryRef eq 1) and (catalogueRef eq 1)) and (number eq '26'))",
-                    total:  1
+                    total: 1
                 }, {
                     filter: "(((countryRef eq 9999) and (catalogueRef eq 1)) and (number eq '26'))",
-                    total:  0
+                    total: 0
                 }, {
                     filter: "(((countryRef eq 1) and (catalogueRef eq 9999)) and (number eq '26'))",
-                    total:  0
+                    total: 0
                 }, {
                     filter: "(((countryRef eq 1) and (catalogueRef eq 1)) and (number eq '26-9999'))",
-                    total:  0
+                    total: 0
                 }, {
                     filter: "(((countryRef eq 9999) and (catalogueRef eq 9999)) and (number eq '26-9999'))",
-                    total:  0
+                    total: 0
                 }];
-                var count = 0;
-                var fn = function (exists) {
-                    superagent.get('http://' + hostname + ':' + server_port + '/rest/stamps?$filter=' + exists.filter)
+                let count = 0;
+                const fn = (exists) => {
+                    superagent.get(`http://${hostname}:${server_port}/rest/stamps?$filter=${exists.filter}`)
                         .end(function (e, res) {
                             expect(e).toBe(null);
                             expect(res.status).toBe(200);

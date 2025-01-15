@@ -4,7 +4,6 @@ let Logger = require('../util/logger');
 let PREFIX = require('./prefix.json');
 
 module.exports = function () {
-
     let logger = Logger.getLogger("server");
 
     function generatePrefix(prefix, catalogueType) {

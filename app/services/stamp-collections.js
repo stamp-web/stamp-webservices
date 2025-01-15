@@ -1,30 +1,29 @@
-var extend = require('node.extend');
-var PersistentCollection = require('./persistent-collection');
-var EntityManagement = require('./entity-management');
-var dataTranslator = require('./mysql-translator');
-var Predicate = require('odata-filter-parser').Predicate;
-var Operators = require('odata-filter-parser').Operators;
-var stampCollection = require('../model/stamp-collection');
-var album = require('../model/album');
-var stamp = require('../model/stamp');
-var ownership = require('../model/ownership');
-var albums = require('./albums');
+const extend = require('node.extend');
+const PersistentCollection = require('./persistent-collection');
+const EntityManagement = require('./entity-management');
+const dataTranslator = require('./mysql-translator');
+const Predicate = require('odata-filter-parser').Predicate;
+const Operators = require('odata-filter-parser').Operators;
+const stampCollection = require('../model/stamp-collection');
+const album = require('../model/album');
+const stamp = require('../model/stamp');
+const ownership = require('../model/ownership');
+const albums = require('./albums');
 
-var _ = require('lodash');
+const _ = require('lodash');
 
-var collections = extend(true, {},  new EntityManagement(), new PersistentCollection(), function() {
-    "use strict";
+const collections = extend(true, {}, new EntityManagement(), new PersistentCollection(), function () {
     return {
         collectionName: 'stampCollections',
         fieldDefinition: stampCollection,
 
-        getCountStampWhereStatement: function() {
+        getCountStampWhereStatement: function () {
             return album.getAlias() + '.COLLECTION_ID=' + this.fieldDefinition.getAlias() + '.ID AND ' +
                 ownership.getAlias() + '.ALBUM_ID = ' + album.getAlias() + '.ID AND ' + ownership.getAlias() + '.STAMP_ID=' +
                 stamp.getAlias() + '.ID';
         },
 
-        getCountStampFromTables: function() {
+        getCountStampFromTables: function () {
             return this.fieldDefinition.getTableClause() + ',' + stamp.getTableClause() + ',' +
                 ownership.getTableClause() + ',' + album.getTableClause();
 
@@ -32,17 +31,17 @@ var collections = extend(true, {},  new EntityManagement(), new PersistentCollec
 
         /**
          * Will pre-delete the album(s) for the stamp collection.
-         * 
+         *
          * @param connection    The sql connection
          * @param id            The id of the collection to delete
-         * 
+         *
          * @return promise of success
          */
         preDelete: function (connection, id) {
             return new Promise((resolve, reject) => {
-                var params = {
-                    $filter : new Predicate({
-                        subject: _.find(album.getFieldDefinitions(), { column: "COLLECTION_ID" }).field,
+                const params = {
+                    $filter: new Predicate({
+                        subject: _.find(album.getFieldDefinitions(), {column: "COLLECTION_ID"}).field,
                         operator: Operators.EQUALS,
                         value: id
                     }),
@@ -67,7 +66,7 @@ var collections = extend(true, {},  new EntityManagement(), new PersistentCollec
                         let processError = err => {
                             reject(dataTranslator.getErrorMessage(err));
                         };
-                        for (var i = 0; i < len; i++) {
+                        for (let i = 0; i < len; i++) {
                             let row = results.rows[i];
                             albums.remove(row.ID).then(processRemoved, processError);
                         }

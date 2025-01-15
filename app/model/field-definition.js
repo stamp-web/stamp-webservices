@@ -1,41 +1,44 @@
-var _ = require('lodash');
-var Constants = require('../util/constants');
-var Logger = require('../util/logger');
-var moment = require('moment');
+const _ = require('lodash');
+const Constants = require('../util/constants');
+const Logger = require('../util/logger');
+const moment = require('moment');
 
-var fieldDefinition = function () {
-    "use strict";
-    var logger = Logger.getLogger("fieldDefinition");
+const fieldDefinition = function () {
+    const logger = Logger.getLogger("fieldDefinition");
 
     return {
         toInternal: function (f) {
-            var val = _.find(this.getFieldDefinitions(), { field: f });
-            return (val) ? val.column: undefined;
+            const val = _.find(this.getFieldDefinitions(), {field: f});
+            return (val) ? val.column : undefined;
         },
         /**
-         * Validate whether the required fields are all provided in the object 
-         * specified.  This method is used to validate incoming objects for 
+         * Validate whether the required fields are all provided in the object
+         * specified.  This method is used to validate incoming objects for
          * validity.
-         * 
-         * @param obj (JsObject) 
+         *
+         * @param obj (JsObject)
          */
         validate: function (obj) {
-            var valid = null;
-            _.each(this.getFieldDefinitions(), function (definition) {
+            let valid = null;
+            _.each(this.getFieldDefinitions(), (definition) => {
                 if (definition.required === true) {
                     if (!obj[definition.column]) {
-                        valid = { code: 'REQUIRED_FIELD', message: 'A value for field \'' + definition.field + '\' is required.', processed: true};
+                        valid = {
+                            code: 'REQUIRED_FIELD',
+                            message: 'A value for field \'' + definition.field + '\' is required.',
+                            processed: true
+                        };
                         return false;
                     }
                 }
             });
             return valid;
         },
-        formatValue: function(definition, value) {
+        formatValue: function (definition, value) {
             if (definition.type === 'id_array' || definition.type === 'obj_array') {
                 return undefined;
             }
-            var val = null;
+            let val = null;
             switch (definition.type) {
                 case 'long':
                 case 'float':
@@ -48,35 +51,33 @@ var fieldDefinition = function () {
                     break;
                 case 'date':
                     if (_.isDate(value) || _.isString(value)) {
-                        val = "\'" + moment(value).format(Constants.MYSQL_DATEFORMAT) + "\'";
+                        val = "'" + moment(value).format(Constants.MYSQL_DATEFORMAT) + "'";
                     }
                     break;
                 case 'boolean':
                     val = (value === true);
                     break;
                 default:
-                    val = (value === null) ? null : "\'" + value + "\'";
+                    val = (value === null) ? null : "'" + value + "'";
             }
             return val;
         },
         internalize: function (o) {
-            var obj = {};
-            var that = this;
-            _.each(_.keys(o), function (key) {
-                var field = _.find(that.getFieldDefinitions(), { field: key });
+            const obj = {};
+            _.each(_.keys(o), (key) => {
+                const field = _.find(this.getFieldDefinitions(), {field: key});
                 if (field && !field.nonPersistent) {
                     if (field.type === 'obj_array' && field.model) {
-                        var m = require('./' + field.model);
+                        const m = require('./' + field.model);
                         obj[field.column] = [];
-                        _.each(o[key], function (cObj) {
-                            var converted = m.internalize(cObj);
+                        _.each(o[key], (cObj) => {
+                            const converted = m.internalize(cObj);
                             obj[field.column].push(converted);
                         });
-                    }
-                    else {
-                        var val = o[key];
-                        if( field.type === 'string' && val && val.replace ) {
-                            val = val.replace(/\'/g, "\'\'"); // escape apostrophe
+                    } else {
+                        let val = o[key];
+                        if (field.type === 'string' && val && val.replace) {
+                            val = val.replace(/'/g, "''"); // escape apostrophe
                         }
                         obj[field.column] = val;
 
@@ -86,64 +87,62 @@ var fieldDefinition = function () {
             return obj;
         },
         getField: function (o, column) {
-            if( column ) {
-                return _.find(this.getFieldDefinitions(), { column: o });
+            if (column) {
+                return _.find(this.getFieldDefinitions(), {column: o});
             } else {
-                return _.find(this.getFieldDefinitions(), { field: o });
+                return _.find(this.getFieldDefinitions(), {field: o});
             }
         },
         merge: function (cur, orig) {
-            var that = this;
-            _.each(_.keys(orig), function (key) {
+            _.each(_.keys(orig), (key) => {
                 if (cur[key] === undefined && orig[key] !== undefined) {
                     cur[key] = orig[key];
                 } else if (_.isArray(cur[key])) {
-                    var field = that.getField(key, true);
+                    const field = this.getField(key, true);
                     if (field.type === "obj_array" && field.model) {
-                        for (var i = 0; i < orig[key].length; i++) {
-                            var mergeSource = orig[key][i];
-                            var mergeChild = _.find(cur[key], { ID: mergeSource.ID });
-                            if( mergeChild ) {
+                        for (let i = 0; i < orig[key].length; i++) {
+                            const mergeSource = orig[key][i];
+                            const mergeChild = _.find(cur[key], {ID: mergeSource.ID});
+                            if (mergeChild) {
                                 require('./' + field.model).merge(mergeChild, mergeSource);
                             } else {
                                 cur[key].push(mergeSource);
                             }
                         }
                     }
-                } 
+                }
             });
             return cur;
         },
         externalize: function (o) {
-            var obj = _.clone(o);
+            const obj = _.clone(o);
             try {
                 if (!o) {
                     return;
                 }
 
-                var that = this;
-                _.each(_.keys(o), function (key) {
-                    var field = _.find(that.getFieldDefinitions(), { column: key });
+                _.each(_.keys(o), (key) => {
+                    const field = _.find(this.getFieldDefinitions(), {column: key});
                     if (!field || (field.internal) || (typeof field.externalizeOnEmpty !== 'undefined' && field.externalizeOnEmpty === false && o[key] === null)) {
                         delete obj[key];
                     } else if (field.type === "obj_array") {
-                        var children = obj[key];
-                        var childDef = require('./' + field.model);
+                        const children = obj[key];
+                        const childDef = require('./' + field.model);
                         obj[field.field] = [];
-                        _.each(children, function (child) {
-                            var c = childDef.externalize(child);
+                        _.each(children, (child) => {
+                            const c = childDef.externalize(child);
                             obj[field.field].push(c);
                         });
                         delete obj[key];
                     } else {
-                        var val = obj[key];
+                        let val = obj[key];
                         delete obj[key];
                         switch (field.type) {
                             case 'boolean':
                                 val = (!_.isBoolean(val)) ? (val === 1) : val;
                                 break;
                             case 'date':
-                                if( _.isDate(val) || _.isString(val)) {
+                                if (_.isDate(val) || _.isString(val)) {
                                     val = moment(val).format('YYYY-MM-DDTHH:mm:ss.SSSZ');
                                 } else {
                                     logger.warn("object with id " + o.ID + " has invalid date: " + val);
@@ -154,7 +153,7 @@ var fieldDefinition = function () {
 
                     }
                 });
-            } catch( err ) {
+            } catch (err) {
                 logger.error(err);
             }
 
@@ -170,9 +169,8 @@ var fieldDefinition = function () {
          * @param value
          * @returns {string}
          */
-        getSpecialExpression: function(key, op, value) {
-            return null;
-        },
+        // eslint-disable-next-line no-unused-vars
+        getSpecialExpression: (key, op, value) => null,
         getFieldDefinitions: function () {
             throw new Error("getFieldDefinitions() needs to implemented by provider.");
         },
@@ -185,7 +183,7 @@ var fieldDefinition = function () {
         getAlias: function () {
             throw new Error("getAlias() needs to be implemented by provider.");
         },
-        getTableClause: function() {
+        getTableClause: function () {
             return this.getTableName() + ' AS ' + this.getAlias();
         }
     };

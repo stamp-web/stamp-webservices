@@ -1,11 +1,9 @@
-var connectionManager = require('../pom/connection-mysql');
-var dataTranslator = require('./mysql-translator');
-var stamp = require('../model/stamp');
-var Logger = require('../util/logger');
+const connectionManager = require('../pom/connection-mysql');
+const dataTranslator = require('./mysql-translator');
+const stamp = require('../model/stamp');
+const Logger = require('../util/logger');
 
 function EntityManagement() {
-    "use strict";
-
     let sqlTrace = Logger.getLogger('sql');
     let foundStamps = false;
 
@@ -28,7 +26,7 @@ function EntityManagement() {
             }
 
             return new Promise((resolve, reject) => {
-                var qs = 'SELECT ' + this.fieldDefinition.getAlias() + '.ID AS ID, COUNT(' + stamp.getAlias() + '.ID) AS COUNT FROM ' + this.getCountStampFromTables() + ' WHERE ' +
+                const qs = 'SELECT ' + this.fieldDefinition.getAlias() + '.ID AS ID, COUNT(' + stamp.getAlias() + '.ID) AS COUNT FROM ' + this.getCountStampFromTables() + ' WHERE ' +
                     this.getCountStampWhereStatement() + ' GROUP BY ' + this.fieldDefinition.getAlias() + '.ID';
                 sqlTrace.debug(qs);
                 connectionManager.getConnection().then(connection => {

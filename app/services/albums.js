@@ -1,25 +1,21 @@
-var extend = require('node.extend');
-var PersistentCollection = require('./persistent-collection');
-var EntityManagement = require('./entity-management');
-var dataTranslator = require('./mysql-translator');
-var album = require('../model/album');
-var countries = require('./countries');
-var ownership = require('../model//ownership');
-var stamp = require('../model/stamp');
-var _ = require('lodash');
+const extend = require('node.extend');
+const PersistentCollection = require('./persistent-collection');
+const EntityManagement = require('./entity-management');
+const dataTranslator = require('./mysql-translator');
+const album = require('../model/album');
+const ownership = require('../model//ownership');
+const stamp = require('../model/stamp');
+const _ = require('lodash');
 
-var albums = extend(true, {}, new EntityManagement(), new PersistentCollection(), function () {
-
-    "use strict";
-
-    var Logger = require('../util/logger');
-    var sqlTrace = Logger.getLogger('sql');
+const albums = extend(true, {}, new EntityManagement(), new PersistentCollection(), function () {
+    const Logger = require('../util/logger');
+    const sqlTrace = Logger.getLogger('sql');
 
     function mergeCountries(connection, obj) {
         return new Promise((resolve, reject) => {
             if (obj.COUNTRIES && obj.COUNTRIES.length === 0) {
                 let clear_link = "DELETE FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=?";
-                connection.query(clear_link, [obj.ID], (err, results) => {
+                connection.query(clear_link, [obj.ID], (err) => {
                     if (err) {
                         reject(dataTranslator.getErrorMessage(err));
                     } else {
@@ -44,7 +40,7 @@ var albums = extend(true, {}, new EntityManagement(), new PersistentCollection()
                             }
                         }
                         let totalUpdates = remove_ids.length + current.length;
-                        if( totalUpdates === 0 ) {
+                        if (totalUpdates === 0) {
                             resolve(obj);
                         }
                         let updates = 0;
@@ -58,7 +54,7 @@ var albums = extend(true, {}, new EntityManagement(), new PersistentCollection()
                                 }
                             }
                             qs += ")";
-                            connection.query(qs, [obj.ID], (err, results) => {
+                            connection.query(qs, [obj.ID], (err) => {
                                 if (err) {
                                     reject(dataTranslator.getErrorMessage(err));
                                 } else {
@@ -73,7 +69,7 @@ var albums = extend(true, {}, new EntityManagement(), new PersistentCollection()
                         if (current.length > 0) {
                             let qs = "INSERT INTO ALBUMS_COUNTRIES (ALBUM_ID,COUNTRY_ID) VALUES(?,?)";
                             for (let i = 0; i < current.length; i++) {
-                                connection.query(qs, [obj.ID, current[i]], (err, results) => {
+                                connection.query(qs, [obj.ID, current[i]], (err) => {
                                     if (err) {
                                         reject(dataTranslator.getErrorMessage(err));
                                     } else {
@@ -98,11 +94,11 @@ var albums = extend(true, {}, new EntityManagement(), new PersistentCollection()
         collectionName: 'albums',
         fieldDefinition: album,
 
-        getCountStampWhereStatement: function() {
+        getCountStampWhereStatement: function () {
             return ownership.getAlias() + '.ALBUM_ID=' + this.fieldDefinition.getAlias() + '.ID AND ' + stamp.getAlias() + '.ID=' + ownership.getAlias() + '.STAMP_ID';
         },
 
-        getCountStampFromTables: function() {
+        getCountStampFromTables: function () {
             return this.fieldDefinition.getTableClause() + ',' + stamp.getTableClause() + ',' + ownership.getTableClause();
         },
 
@@ -110,7 +106,7 @@ var albums = extend(true, {}, new EntityManagement(), new PersistentCollection()
             return new Promise((resolve, reject) => {
                 // TODO: Should no longer be needed with CASCADE rule
                 let delete_link = "DELETE FROM ALBUMS_COUNTRIES WHERE ALBUM_ID= ?";
-                connection.query(delete_link, [id], (err, results) => {
+                connection.query(delete_link, [id], (err) => {
                     if (err) {
                         reject(dataTranslator.getErrorMessage(err));
                     } else {
@@ -127,7 +123,7 @@ var albums = extend(true, {}, new EntityManagement(), new PersistentCollection()
                     _.each(obj.COUNTRIES, countryId => {
                         let insert_link = "INSERT INTO ALBUMS_COUNTRIES (ALBUM_ID,COUNTRY_ID) VALUES(?,?)";
                         sqlTrace.debug(insert_link);
-                        connection.query(insert_link, [obj.ID,countryId], (err, results) => {
+                        connection.query(insert_link, [obj.ID, countryId], (err) => {
                             if (err) {
                                 reject(dataTranslator.getErrorMessage(err));
                             } else {
@@ -142,9 +138,10 @@ var albums = extend(true, {}, new EntityManagement(), new PersistentCollection()
 
         },
 
-        preCommitUpdate: function(connection,merged,storedObj) {
+        // eslint-disable-next-line no-unused-vars
+        preCommitUpdate: function (connection, merged, storedObj) {
             return new Promise((resolve, reject) => {
-                mergeCountries(connection,merged).then(result => {
+                mergeCountries(connection, merged).then(() => {
                     resolve({
                         modified: true
                     });
@@ -170,7 +167,7 @@ var albums = extend(true, {}, new EntityManagement(), new PersistentCollection()
                         reject(dataTranslator.getErrorMessage(err));
                     } else {
                         for (let j = 0; j < r.length; j++) {
-                            let a = _.find(result.rows, { ID: r[j].ALBUM_ID });
+                            let a = _.find(result.rows, {ID: r[j].ALBUM_ID});
                             a.COUNTRIES.push(r[j].COUNTRY_ID);
                         }
                         resolve();

@@ -1,29 +1,28 @@
-var passport = require('passport');
-var BasicStrategy = require('passport-http').BasicStrategy;
-var nconf = require('nconf');
-var _ = require('lodash');
-var session = require('express-session');
-var cookieParser = require('cookie-parser');
-var Logger = require('./logger');
-var Level = require('./level');
+const passport = require('passport');
+const BasicStrategy = require('passport-http').BasicStrategy;
+const nconf = require('nconf');
+const _ = require('lodash');
+const session = require('express-session');
+const cookieParser = require('cookie-parser');
+const Logger = require('./logger');
+const Level = require('./level');
 
 nconf.argv().env().file(__dirname + '/../../config/application.json');
 
-var logger = Logger.getLogger('user-auth');
+const logger = Logger.getLogger('user-auth');
 
-var UserCache;
-var authType = nconf.get("authentication");
+let UserCache;
+const authType = nconf.get("authentication");
 logger.debug("Authentication Type specified: " + authType);
 
 function Authenticator() {}
 
-var BasicValidation = {}
+const BasicValidation = {};
 
 BasicValidation.validator = function(username, password, done) {
-    "use strict";
-    var user = _.find(BasicValidation.getUserCache(), {username: username});
+    const user = _.find(BasicValidation.getUserCache(), {username: username});
     if(logger.isEnabled(Level.DEBUG)) {
-        logger.debug("For username \'" + username + " found user : " + user);
+        logger.debug(`For username '${username}' found user : '${user}'`);
     }
 
     if (!username || !user || username !== user.username) {
@@ -36,9 +35,8 @@ BasicValidation.validator = function(username, password, done) {
 };
 
 BasicValidation.getUserCache = function( ) {
-    "use strict";
     if( !UserCache ) {
-        var file = nconf.get("password_file")
+        let file = nconf.get("password_file");
         if( !file ) {
             file = '../../config/users.json';
         }
@@ -48,17 +46,14 @@ BasicValidation.getUserCache = function( ) {
 }
 
 BasicValidation.serializeUser = function(user,done) {
-    "use strict";
     done(null, user.id);
 };
 
 BasicValidation.deserializeUser = function(id,done) {
-    "use strict";
     done(null,_.find(BasicValidation.getUserCache(), {id: id}));
 };
 
 Authenticator.initialize = function(app) {
-    "use strict";
     if( authType !== null && authType !== 'none') {
         app.use(cookieParser());
         app.use(session({
@@ -85,7 +80,6 @@ Authenticator.initialize = function(app) {
 };
 
 Authenticator.applyAuthentication = function() {
-    "use strict";
     if( authType !== null ) {
         switch(authType) {
             case 'basic':

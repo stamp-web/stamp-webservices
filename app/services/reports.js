@@ -1,28 +1,27 @@
-﻿var _ = require('lodash');
+﻿const _ = require('lodash');
 
-var connectionManager = require('../pom/connection-mysql');
-var dataTranslator = require('./mysql-translator');
-var stamp = require('../model/stamp');
-var catalogue = require('../model/catalogue');
-var ownership = require('../model/ownership');
-var catalogueNumber = require('../model/catalogue-number');
-var Logger = require('../util/logger');
-var ExchangeRates = require('../util/exchange-rates');
-var fx = require('money');
-var accounting = require('accounting');
+const connectionManager = require('../pom/connection-mysql');
+const dataTranslator = require('./mysql-translator');
+const stamp = require('../model/stamp');
+const catalogue = require('../model/catalogue');
+const ownership = require('../model/ownership');
+const catalogueNumber = require('../model/catalogue-number');
+const Logger = require('../util/logger');
+const ExchangeRates = require('../util/exchange-rates');
+const fx = require('money');
+const accounting = require('accounting');
 
-var report = function () {
-    "use strict";
-
-    var sqlTrace = Logger.getLogger("sql");
+const report = function () {
+    const sqlTrace = Logger.getLogger("sql");
 
     function generateFromTables() {
-        var sql = "FROM " + stamp.getTableName() + ' AS ' + stamp.getAlias() + ' ';
-        sql += 'JOIN ' + catalogueNumber.getTableName() + ' AS ' + catalogueNumber.getAlias() + ' ON ' + stamp.getAlias() + '.ID=' + catalogueNumber.getAlias() + '.STAMP_ID ';
-        sql += "LEFT JOIN " + ownership.getTableName() + ' AS ' + ownership.getAlias() + ' ON ' + stamp.getAlias() + '.ID=' + ownership.getAlias() + '.STAMP_ID ';
-        sql += "LEFT JOIN " + catalogue.getTableName() + ' AS ' + catalogue.getAlias() + ' ON ' + catalogueNumber.getAlias() + '.CATALOGUE_REF = ' + catalogue.getAlias() + '.ID ';
+        let sql = `FROM ${stamp.getTableName()} AS ${stamp.getAlias()} `;
+        sql += `JOIN ${catalogueNumber.getTableName()} AS ${catalogueNumber.getAlias()} ON ${stamp.getAlias()}.ID=${catalogueNumber.getAlias()}.STAMP_ID `;
+        sql += `LEFT JOIN ${ownership.getTableName()} AS ${ownership.getAlias()} ON ${stamp.getAlias()}.ID=${ownership.getAlias()}.STAMP_ID `;
+        sql += `LEFT JOIN ${catalogue.getTableName()} AS ${catalogue.getAlias()} ON ${catalogueNumber.getAlias()}.CATALOGUE_REF=${catalogue.getAlias()}.ID `;
         return sql;
     }
+
     return {
         getCatalogueTotal: function ($filter, currency) {
             return new Promise((resolve, reject) => {
@@ -36,7 +35,7 @@ var report = function () {
                     }
                     sql += "GROUP BY " + catalogueNumber.getAlias() + ".CATALOGUE_REF";
                     sqlTrace.debug(sql);
-                    let query = connection.query(sql, (err, results) => {
+                    connection.query(sql, (err, results) => {
                         connection.release()
                         if (err) {
                             reject(dataTranslator.getErrorMessage(err));
@@ -44,14 +43,14 @@ var report = function () {
                         let processResults = () => {
                             let sum = 0.0;
                             _.each(results, result => {
-                                if( result.VALUE && result.VALUE > 0 ) {
+                                if (result.VALUE && result.VALUE > 0) {
                                     let cur = result.CURRENCY;
-                                    if( !cur || cur === '' ) {
+                                    if (!cur || cur === '') {
                                         cur = 'USD';
                                     }
                                     try {
-                                        sum += fx.convert(result.VALUE, { from: cur, to: currency });
-                                    } catch( fxErr ) {
+                                        sum += fx.convert(result.VALUE, {from: cur, to: currency});
+                                    } catch (fxErr) {
                                         if (fxErr !== 'fx error') {
                                             throw fxErr;
                                         } else {
@@ -72,15 +71,15 @@ var report = function () {
         getCostBasis: function ($filter, currency) {
             return new Promise((resolve, reject) => {
                 connectionManager.getConnection("reports").then(connection => {
-                    var sql = "SELECT DISTINCT " + stamp.getAlias()  +".ID," + ownership.getAlias() + ".CURRENCY," + ownership.getAlias() + ".PRICE AS VALUE ";
+                    let sql = `SELECT DISTINCT ${stamp.getAlias()}.ID,${ownership.getAlias()}.CURRENCY,${ownership.getAlias()}.PRICE AS VALUE `;
                     sql += generateFromTables();
-                    sql += "WHERE " + stamp.getAlias() + ".WANTLIST=0 ";
+                    sql += `WHERE ${stamp.getAlias()}.WANTLIST=0 `;
                     let whereClause = ($filter) ? dataTranslator.toWhereClause($filter, [stamp, catalogueNumber, catalogue, ownership]) : '';
                     if (whereClause.length > 0) {
-                        sql += "AND " + whereClause + " ";
+                        sql += `AND ${whereClause} `;
                     }
                     sqlTrace.debug(sql);
-                    let query = connection.query(sql, (err, results) => {
+                    connection.query(sql, (err, results) => {
                         connection.release()
                         if (err) {
                             reject(dataTranslator.getErrorMessage(err));
@@ -88,14 +87,14 @@ var report = function () {
                         let processResults = () => {
                             let sum = 0.0;
                             _.each(results, result => {
-                                if( result.VALUE && result.VALUE > 0 ) {
+                                if (result.VALUE && result.VALUE > 0) {
                                     let cur = result.CURRENCY;
-                                    if( !cur || cur === '' ) {
+                                    if (!cur || cur === '') {
                                         cur = 'USD';
                                     }
                                     try {
-                                        sum += fx.convert(result.VALUE, { from: cur, to: currency });
-                                    } catch( fxErr ) {
+                                        sum += fx.convert(result.VALUE, {from: cur, to: currency});
+                                    } catch (fxErr) {
                                         if (fxErr !== 'fx error') {
                                             throw fxErr;
                                         } else {
@@ -128,7 +127,7 @@ var report = function () {
                     }
                     sql += `GROUP BY ${cv}.CATALOGUE_REF, ${owner}.DEFECTS, ${owner}.DECEPTION, ${owner}.GRADE`;
                     sqlTrace.debug(sql);
-                    let query = connection.query(sql, (err, results) => {
+                    connection.query(sql, (err, results) => {
                         connection.release()
                         if (err) {
                             reject(dataTranslator.getErrorMessage(err));
@@ -136,15 +135,15 @@ var report = function () {
                         let processResults = () => {
                             let sum = 0.0;
                             _.each(results, result => {
-                                if( result.VALUE && result.VALUE > 0 ) {
+                                if (result.VALUE && result.VALUE > 0) {
                                     let cur = result.CURRENCY;
-                                    if( !cur || cur === '' ) {
+                                    if (!cur || cur === '') {
                                         cur = 'USD';
                                     }
                                     try {
-                                        let v = fx.convert(result.VALUE, { from: cur, to: currency });
+                                        let v = fx.convert(result.VALUE, {from: cur, to: currency});
                                         sum += ownership.getCalculatedValue(v, result.GRADE, result.DECEPTION, result.DEFECTS);
-                                    } catch( fxErr ) {
+                                    } catch (fxErr) {
                                         if (fxErr !== 'fx error') {
                                             throw fxErr;
                                         } else {

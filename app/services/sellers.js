@@ -1,12 +1,11 @@
-var extend = require('node.extend');
-var PersistentCollection = require('./persistent-collection');
-var EntityManagement = require('./entity-management');
-var seller = require('../model/seller');
-var stamp = require('../model/stamp');
-var ownership = require('../model/ownership');
+const extend = require('node.extend');
+const PersistentCollection = require('./persistent-collection');
+const EntityManagement = require('./entity-management');
+const seller = require('../model/seller');
+const stamp = require('../model/stamp');
+const ownership = require('../model/ownership');
 
-var sellers = extend(true, {}, new EntityManagement(), new PersistentCollection(), function () {
-    "use strict";
+const sellers = extend(true, {}, new EntityManagement(), new PersistentCollection(), function() {
     return {
         collectionName: 'sellers',
         fieldDefinition: seller,
@@ -15,7 +14,7 @@ var sellers = extend(true, {}, new EntityManagement(), new PersistentCollection(
             return ownership.getAlias() + '.SELLER_ID=' + this.fieldDefinition.getAlias() + '.ID AND ' + stamp.getAlias() + '.ID=' + ownership.getAlias() + '.STAMP_ID';
         },
 
-        getCountStampFromTables: function() {
+        getCountStampFromTables: function()  {
             return this.fieldDefinition.getTableClause() + ',' + stamp.getTableClause() + ',' + ownership.getTableClause();
         }
     };

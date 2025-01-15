@@ -1,7 +1,5 @@
-var superagent = require('superagent');
-var CatalogueNumberHelper = require('../app/model/catalogue-number-helper');
+const CatalogueNumberHelper = require('../app/model/catalogue-number-helper');
 
-"use strict";
 describe('Catalogue number helper test', () => {
     let catalogue = [
         {

@@ -1,10 +1,7 @@
-let extend = require('node.extend');
-let _ = require('lodash');
-let fieldDefinition = require('./field-definition');
+const extend = require('node.extend');
+const fieldDefinition = require('./field-definition');
 
-let catalogueNumber = extend({}, fieldDefinition, function () {
-    "use strict";
-
+const catalogueNumber = extend({}, fieldDefinition, function () {
     return {
         getFieldDefinitions: function () {
             return [

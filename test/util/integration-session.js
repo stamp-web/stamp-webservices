@@ -1,51 +1,49 @@
-﻿var _ = require('lodash');
-var Logger = require('../../app/util/logger');
-var Level = require('../../app/util/level');
-var child_process = require('child_process');
-var path = require('path');
-var nconf = require('nconf');
-var fs = require('fs');
-var mysql = require('mysql');
+﻿const _ = require('lodash');
+const Logger = require('../../app/util/logger');
+const Level = require('../../app/util/level');
+const child_process = require('child_process');
+const nconf = require('nconf');
+const fs = require('fs');
+const mysql = require('mysql');
 
 module.exports = function () {
-    "use strict";
-    var executed = false;
-    var connection;
-    var childFork;
-    var logger = Logger.getLogger('server');
+    let executed = false;
+    let connection;
+    let childFork;
+    const logger = Logger.getLogger('server');
 
     Logger.silenceConsole();
 
     nconf.argv().env().file(__dirname + '/../../config/application.json');
 
-    var database = (nconf.get('test_database') ? nconf.get('test_database') : 'test');
-    var sql_level = 'warn';
+    const database = (nconf.get('test_database') ? nconf.get('test_database') : 'test');
+    let sql_level = 'warn';
     if (nconf.get('sql_level')) {
         sql_level = nconf.get('sql_level');
     }
 
-    var hostname = 'localhost';
+    let hostname = 'localhost';
     if (nconf.get('hostname')) {
         hostname = nconf.get('hostname');
     }
-    var server_port = 9002;
+    let server_port = 9002;
     if (nconf.get('port')) {
         server_port = +nconf.get('port');
     }
 
-    var ready_for_test = false;
+    let ready_for_test = false;
 
 
     function loadFromFile(connection, fileContent, callback) {
-        var lines = fileContent.match(/^.*((\r\n|\n|\r)|$)/gm);
-        var count = lines.length;
+        const lines = fileContent.match(/^.*((\r\n|\n|\r)|$)/gm);
+        const count = lines.length;
         _.each(lines, function (line) {
             line = line.replace('\n', '').replace('\r', '');
             if (line.length < 2) {
                 callback();
                 return;
             }
-            connection.query(line, (err, rows) => {
+            connection.query(line, (err) => {
                 if (err) {
                     console.log(err);
                 }
@@ -60,7 +58,7 @@ module.exports = function () {
     }
 
     function forkProcess(callback) {
-        var child = child_process.fork(__dirname + '/../../app/server/server', [], {
+        const child = child_process.fork(__dirname + '/../../app/server/server', [], {
             cwd: '..',
             env: {
                 disableCache: true,
@@ -79,12 +77,12 @@ module.exports = function () {
         child.on('message', m => {
             if (m && m === 'SERVER_STARTED') {
                 logger.info( 'Received message that server is successfully started...');
-                var f = () => {
+                const f = () => {
                     _.delay(() => {
                         if (ready_for_test) {
                             callback();
                         } else {
-                            logger.info( 'Server started but SQL statements are still executing...');
+                            logger.info('Server started but SQL statements are still executing...');
                             f();
                         }
                     }, 125);
@@ -102,6 +100,7 @@ module.exports = function () {
     }
 
     return {
+        totalCount: 0,
         getHostname: function() {
             return hostname;
         },
@@ -110,8 +109,8 @@ module.exports = function () {
         },
         getConnection: function() {
            if( !connection ) {
-               var dbConfigs = nconf.get('databases');
-               var dbConfig = dbConfigs[database];
+               const dbConfigs = nconf.get('databases');
+               const dbConfig = dbConfigs[database];
 
                connection = mysql.createConnection({
                    host: dbConfig.host,
@@ -130,15 +129,15 @@ module.exports = function () {
                     logger.info( 'Reading SQL contents...');
                 });
                 if (!ready_for_test) {
-                    var file = ((process.cwd().indexOf('\\test') > 0) ? '../' : '') + 'test/dbscript/initial-data.sql';
-                    var contents = fs.readFileSync(file, { encoding: 'utf-8' }).toString();
-                    var count = 0;
-                    var totalCount = loadFromFile(this.getConnection(), contents, (err) => {
-                        if(err) {
+                    const file = ((process.cwd().indexOf('\\test') > 0) ? '../' : '') + 'test/dbscript/initial-data.sql';
+                    const contents = fs.readFileSync(file, {encoding: 'utf-8'}).toString();
+                    let count = 0;
+                    this.totalCount = loadFromFile(this.getConnection(), contents, (err) => {
+                        if (err) {
                             callback(err);
                             return;
                         }
-                        if( ++count === totalCount ) {
+                        if (++count === this.totalCount) {
                             notifyStatementsComplete();
                             childFork = forkProcess(callback);
                             executed = true;

@@ -3,7 +3,6 @@ const fieldDefinition = require('./field-definition');
 const NumericUtilities = require('../util/numeric-utilities');
 
 const ownership = extend({}, fieldDefinition, function() {
-    "use strict";
     return {
         getFieldDefinitions: function () {
             return [
@@ -28,7 +27,7 @@ const ownership = extend({}, fieldDefinition, function() {
         },
 
         getSpecialExpression: function(key, op, value) {
-            var exp = "";
+            let exp = "";
             switch(key) {
                 case 'stampCollectionRef':
                     exp = this.getAlias() + '.ALBUM_ID IN (SELECT ID FROM ALBUMS WHERE COLLECTION_ID=' + value + ')';

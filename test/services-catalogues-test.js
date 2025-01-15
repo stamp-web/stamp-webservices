@@ -1,29 +1,28 @@
-var superagent = require('superagent');
-var session = require('./util/integration-session');
-var NamedCollectionVerifications = require('./util/named-collection-verifier');
+const superagent = require('superagent');
+const session = require('./util/integration-session');
+const NamedCollectionVerifications = require('./util/named-collection-verifier');
 
 
 describe('REST Services for Catalogues', () => {
 
-    var hostname, server_port, connection;
+    let hostname, server_port;
 
     afterAll(done => {
-        session.cleanup(function () {
+        session.cleanup(() => {
             done();
         });
     });
 
     beforeAll(done => {
-        session.initialize(function () {
+        session.initialize(() => {
             hostname = session.getHostname();
             server_port = session.getPort();
-            connection = session.getConnection();
             done();
         });
     });
 
     it('GET Collection with 200 status', done => {
-        NamedCollectionVerifications.verifyCollection('catalogues', undefined, function (obj) {
+        NamedCollectionVerifications.verifyCollection('catalogues', undefined, (obj) => {
             expect(obj.issue).not.toBe(null);
             expect(obj.type).not.toBe(null);
             done();
@@ -35,7 +34,7 @@ describe('REST Services for Catalogues', () => {
             name:  'Stamps of the world',
             issue: 2014,
             type:  0
-        }, undefined, function (obj) {
+        }, undefined, (obj) => {
             expect(obj.issue).toEqual(2014);
             expect(obj.type).toEqual(0);
             done();
@@ -52,7 +51,7 @@ describe('REST Services for Catalogues', () => {
     it('POST valid creation with 201 status', done => {
         NamedCollectionVerifications.verifyPost('catalogues', {
             name: 'Scott Postage Specialized', issue: 2012, type: 1, code: 'USD', description: 'Detailed specialized'
-        }, undefined, function (obj) {
+        }, undefined, (obj) => {
             expect(obj.issue).toEqual(2012);
             expect(obj.type).toEqual(1);
             expect(obj.code).toEqual('USD');
@@ -69,29 +68,29 @@ describe('REST Services for Catalogues', () => {
     it('DELETE vetoed for orphaned stamps', done => {
         NamedCollectionVerifications.verifyPost('catalogues', {
             name: 'Unable to delete orphans', issue: 2014, type: 1
-        }, undefined, function (obj) {
-            var id = obj.id;
-            var stamp = {
-                countryRef:       1,
-                rate:             "1d",
-                description:      "reddish-brown",
-                wantList:         true,
+        }, undefined, (obj) => {
+            const id = obj.id;
+            const stamp = {
+                countryRef: 1,
+                rate: "1d",
+                description: "reddish-brown",
+                wantList: true,
                 catalogueNumbers: [
                     {
                         catalogueRef: id,
-                        number:       "23a",
-                        value:        0.65,
-                        condition:    1,
-                        active:       true
+                        number: "23a",
+                        value: 0.65,
+                        condition: 1,
+                        active: true
                     }
                 ]
             };
-            superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
+            superagent.post(`http://${hostname}:${server_port}/rest/stamps`)
                 .send(stamp)
-                .end(function (e, res) {
+                .end((e, res) => {
                     expect(res.status).toBe(201);
-                    superagent.del('http://' + hostname + ':' + server_port + '/rest/catalogues/' + id)
-                        .end(function (e, res) {
+                    superagent.del(`http://${hostname}:${server_port}/rest/catalogues/${id}`)
+                        .end((e, res) => {
                             expect(res.status).toBe(409);
                             done();
                         });
@@ -103,35 +102,35 @@ describe('REST Services for Catalogues', () => {
         NamedCollectionVerifications.verifyPost('catalogues', {
             name: 'ok to delete secondary CNs', issue: 2012, type: 2
         }, undefined, function (obj) {
-            var id = obj.id;
-            var stamp = {
-                countryRef:       1,
-                rate:             "3d",
-                description:      "reddish-brown",
-                wantList:         true,
+            const id = obj.id;
+            const stamp = {
+                countryRef: 1,
+                rate: "3d",
+                description: "reddish-brown",
+                wantList: true,
                 catalogueNumbers: [
                     {
                         catalogueRef: id,
-                        number:       "23a",
-                        value:        0.65,
-                        condition:    1,
-                        active:       false
+                        number: "23a",
+                        value: 0.65,
+                        condition: 1,
+                        active: false
                     },
                     {
                         catalogueRef: 1,
-                        number:       "1-active",
-                        value:        0.25,
-                        active:       true,
-                        condition:    1
+                        number: "1-active",
+                        value: 0.25,
+                        active: true,
+                        condition: 1
                     }
                 ]
             };
-            superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
+            superagent.post(`http://${hostname}:${server_port}/rest/stamps`)
                 .send(stamp)
-                .end(function (e, res) {
+                .end((e, res) => {
                     expect(res.status).toBe(201);
-                    superagent.del('http://' + hostname + ':' + server_port + '/rest/catalogues/' + id)
-                        .end(function (e, res) {
+                    superagent.del(`http://${hostname}:${server_port}/rest/catalogues/${id}`)
+                        .end((e, res) => {
                             expect(res.status).toBe(204);
                             done();
                         });

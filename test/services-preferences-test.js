@@ -1,11 +1,7 @@
-var superagent = require('superagent');
-var session = require('./util/integration-session');
-var NamedCollectionVerifications = require('./util/named-collection-verifier');
-
+const session = require('./util/integration-session');
+const NamedCollectionVerifications = require('./util/named-collection-verifier');
 
 describe('REST Services for Preferences', () => {
-
-    var hostname, server_port, connection;
 
     afterAll(done => {
         session.cleanup(function () {
@@ -14,10 +10,7 @@ describe('REST Services for Preferences', () => {
     });
 
     beforeAll(done => {
-        session.initialize(function () {
-            hostname = session.getHostname();
-            server_port = session.getPort();
-            connection = session.getConnection();
+        session.initialize( () => {
             done();
         });
     });

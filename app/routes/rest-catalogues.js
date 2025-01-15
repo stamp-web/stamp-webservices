@@ -1,15 +1,14 @@
-var restInterfaces = require('./rest-interfaces')();
-var entityManaged = require('./rest-entitymanaged');
-var catalogues = require("../services/catalogues");
-var catalogue = require('../model/catalogue');
-var Authenticator = require('../util/authenticator');
-var extend = require('node.extend');
+const restInterfaces = require('./rest-interfaces')();
+const entityManaged = require('./rest-entitymanaged');
+const catalogues = require("../services/catalogues");
+const catalogue = require('../model/catalogue');
+const Authenticator = require('../util/authenticator');
+const extend = require('node.extend');
 
-var RESOURCE_PATH = "/catalogues";
+const RESOURCE_PATH = "/catalogues";
 
-exports.configure = function (app, basePath) {
-    "use strict";
-    var service = extend(true, {}, new entityManaged(catalogues), restInterfaces);
-    app.get(basePath + RESOURCE_PATH + "/!countStamps", Authenticator.applyAuthentication(), service.countStamps);
+exports.configure = (app, basePath) => {
+    const service = extend(true, {}, new entityManaged(catalogues), restInterfaces);
+    app.get(basePath + RESOURCE_PATH + "/\\!countStamps", Authenticator.applyAuthentication(), service.countStamps);
     service.initialize(app, basePath + RESOURCE_PATH, catalogues, catalogue);
 };

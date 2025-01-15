@@ -1,23 +1,22 @@
-var restInterfaces = require('./rest-interfaces')();
-var stamps = require("../services/stamps");
-var ownerships = require("../services/ownerships");
-var Logger = require('../util/logger');
-var stamp = require('../model/stamp');
-var extend = require('node.extend');
-var Authenticator = require('../util/authenticator');
-var routeHelper = require('./route-helper');
-var _ = require('lodash');
+const restInterfaces = require('./rest-interfaces')();
+const stamps = require("../services/stamps");
+const ownerships = require("../services/ownerships");
+const Logger = require('../util/logger');
+const stamp = require('../model/stamp');
+const extend = require('node.extend');
+const Authenticator = require('../util/authenticator');
+const routeHelper = require('./route-helper');
+const _ = require('lodash');
 
-var RESOURCE_PATH = "/stamps";
+const RESOURCE_PATH = "/stamps";
 
-var logger = Logger.getLogger("server");
+const logger = Logger.getLogger("server");
 
-exports.configure = function (app, basePath) {
-    "use strict";
-    var service = extend(true, {}, restInterfaces);
+exports.configure = (app, basePath) => {
+    const service = extend(true, {}, restInterfaces);
 
     service.purchase = (req,res) => {
-        let content = req.body;
+        const content = req.body;
         logger.debug(content);
 
         if(content.pricePaid <= 0) {
@@ -37,11 +36,11 @@ exports.configure = function (app, basePath) {
         ownerships.purchase(content.stamps, content.pricePaid, content.currencyCode).then(() => {
             res.status(routeHelper.StatusCode.OK);
             return res.send();
-        }, function (err) {
+        }, () => {
             res.status(routeHelper.StatusCode.INTERNAL_ERROR).send(routeHelper.ClientMessages.INTERNAL_ERROR);
         });
     };
 
-    app.post(basePath + RESOURCE_PATH + "/purchase", Authenticator.applyAuthentication(), service.purchase );
-    service.initialize(app, basePath + RESOURCE_PATH, stamps, stamp);
+    app.post(`${basePath}${RESOURCE_PATH}/purchase`, Authenticator.applyAuthentication(), service.purchase );
+    service.initialize(app, `${basePath}${RESOURCE_PATH}`, stamps, stamp);
 };

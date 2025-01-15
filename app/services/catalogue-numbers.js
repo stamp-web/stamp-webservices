@@ -11,12 +11,10 @@ let Logger = require('../util/logger');
 let connectionManager = require('../pom/connection-mysql');
 
 let catalogueNumberService = extend(true, {}, new PersistentCollection(), function () {
-    "use strict";
-
     let logger = Logger.getLogger("server");
     let sqlTrace = Logger.getLogger("sql");
 
-    let cachedCatalogues;
+    // eslint-disable-next-line no-unused-vars
     let cachePolicy = true;
 
     const getCatalogues = () => {
@@ -36,6 +34,7 @@ let catalogueNumberService = extend(true, {}, new PersistentCollection(), functi
             return Promise.resolve();
         },
 
+        // eslint-disable-next-line no-unused-vars
         preCommitUpdate: async (connection, merged, storedObj) => {
             let results = await getCatalogues();
             let cats = results.rows;
@@ -59,7 +58,7 @@ let catalogueNumberService = extend(true, {}, new PersistentCollection(), functi
             sql += ' ON DUPLICATE KEY UPDATE ID=VALUES(ID), NUMBER=VALUES(NUMBER), NUMBERSORT=VALUES(NUMBERSORT)';
             return new Promise((resolve, reject) => {
                 connectionManager.getConnection().then(connection => {
-                    connection.beginTransaction((err) => {
+                    connection.beginTransaction(() => {
                         connection.query(sql, (err, rows) => {
                             if (!PersistentCollection.rollbackOnError(connection, reject, err)) {
                                 if (rows.changedRows === 0 && rows.affectedRows === 0) {
@@ -105,11 +104,11 @@ let catalogueNumberService = extend(true, {}, new PersistentCollection(), functi
                             let count = 0;
                             let total = activeCN ? 2 : 1;
                             connectionManager.getConnection().then(connection => {
-                                connection.beginTransaction(err => {
+                                connection.beginTransaction(() => {
                                     let updateFn = (connection,id,isActive) => {
                                         let sql = "UPDATE " + catalogueNumber.getTableName() + " SET ACTIVE=" + (isActive ? 1 : 0) + ",MODIFYSTAMP=CURDATE() WHERE ID=" + id;
                                         sqlTrace.debug(sql);
-                                        connection.query(sql, (err,result) => {
+                                        connection.query(sql, (err) => {
                                             if (!PersistentCollection.rollbackOnError(connection, reject, err)) {
                                                 count++;
                                                 if( count === total ) {
