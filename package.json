@@ -1,5 +1,5 @@
 {
-  "name": "stamp_webservices",
+  "name": "stamp-webservices",
   "version": "4.1.1",
   "description": "stamp-webservices",
   "main": "./app/server.js",
