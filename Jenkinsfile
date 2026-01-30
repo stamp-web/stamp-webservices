@@ -84,7 +84,7 @@ pipeline {
 
     post {
         success {
-            archiveArtifacts artifacts: '*.tgz', fingerprint: true
+            archiveArtifacts artifacts: 'artifacts/*.tgz', fingerprint: true
         }
     }
 }
