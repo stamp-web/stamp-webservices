@@ -60,8 +60,8 @@ pipeline {
         stage('Package') {
             steps {
                 sh '''
-                    mkdir -p artifacts
-                    npm pack --pack-destination artifacts
+                    mkdir -p archive
+                    npm pack --pack-destination archive
                 '''
             }
         }
@@ -84,7 +84,7 @@ pipeline {
 
     post {
         success {
-            archiveArtifacts artifacts: 'artifacts/*.tgz', fingerprint: true
+            archiveArtifacts artifacts: 'archive/*.tgz', fingerprint: true
         }
     }
 }
