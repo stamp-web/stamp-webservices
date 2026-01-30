@@ -1,8 +1,12 @@
 pipeline {
     agent any
 
+    triggers {
+        githubPush()
+    }
+
     parameters {
-        credentials(name: 'CONFIG_FILE_CRED', defaultValue: '', description: 'Secret file for environment config')
+        credentials(name: 'CONFIG_FILE_CRED', defaultValue: 'stampWebTest.txt', description: 'Secret file for environment config')
     }
 
     stages {
