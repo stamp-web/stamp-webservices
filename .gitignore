@@ -1,4 +1,5 @@
 node_modules
+archive
 obj
 lib
 /.ntvs_analysis.dat
@@ -15,3 +16,4 @@ stamp-web
 /certs
 /config/users.json
 audit.json
+stamp*.tgz

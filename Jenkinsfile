@@ -6,6 +6,11 @@ pipeline {
     }
 
     stages {
+        stage('Clean') {
+            steps {
+                cleanWs()
+            }
+        }
         stage('Checkout') {
             steps {
                 checkout([
@@ -13,7 +18,7 @@ pipeline {
                     branches: [[name: '*/master']],
                     userRemoteConfigs: [[
                         url: 'https://github.com/stamp-web/stamp-webservices.git',
-                        credentialsId: 'jadrake-github'
+                        credentialsId: 'github'
                     ]]
                 ])
             }
@@ -21,11 +26,11 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                sh 'npm install --omit=dev'
             }
         }
 
-        stage('Apply Environment Config') {
+        stage('Environment Config') {
 			steps {
 				withCredentials([
 					file(credentialsId: "${params.CONFIG_FILE_CRED}", variable: 'CFG_FILE')
@@ -38,25 +43,11 @@ pipeline {
 			}
 		}
 
-        stage('Stamp Build Number') {
+        stage('Set Build') {
             steps {
                 sh '''
                     echo "{\"buildTime\": ${BUILD_ID}}" > www/build-number.json
                 '''
-            }
-        }
-
-        stage('Unit Tests') {
-            environment {
-                port = '9008'
-            }
-            steps {
-                sh 'npx jest --runInBand --testTimeout 30000'
-            }
-            post {
-                always {
-                    junit allowEmptyResults: true, testResults: '**/junit*.xml'
-                }
             }
         }
 
@@ -71,6 +62,21 @@ pipeline {
                 sh 'npm pack'
             }
         }
+
+        stage('Unit Tests') {
+            environment {
+                port = '9008'
+            }
+            steps {
+                sh 'npm install && npx jest --runInBand --testTimeout 30000'
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: '**/junit*.xml'
+                }
+            }
+        }
+
     }
 
     post {

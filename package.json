@@ -11,6 +11,7 @@
     "accounting": "^0.4.1",
     "audit": "^0.0.6",
     "compression": "^1.7.5",
+    "connect-redis": "^7.1.0",
     "cookie-parser": "^1.4.6",
     "domain-middleware": "^0.1.0",
     "eslint-plugin-jest": "^28.10.0",
@@ -31,6 +32,7 @@
     "passport": "^0.7.0",
     "passport-http": "^0.3.0",
     "pw": "0.0.4",
+    "redis": "^4.6.13",
     "serve-favicon": "^2.5.0",
     "serve-static": "^1.16.2",
     "zpad": "^0.5.0"
@@ -66,6 +68,9 @@
     "package.json",
     "create-tables.sql",
     "config/**",
+    "!config/application.json",
+    "!config/users.json",
+    "!config/exchange-rates.json",
     "app/**",
     "!tests/**"
   ]

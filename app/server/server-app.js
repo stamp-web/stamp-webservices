@@ -21,6 +21,12 @@ const _ = require('lodash');
 const path = require('path');
 const fs = require('fs');
 
+/**
+ * Redis for production level session storage
+ */
+const redis = require('redis');
+const RedisStore =  require('connect-redis').default;
+
 nconf.argv().env().file(__dirname + '/../../config/application.json');
 
 const SERVICES_PATH = 'rest';
@@ -91,8 +97,44 @@ function createServer() {
     return server;
 }
 
+function createRedisSessionConfig(secret) {
+    // Create Redis client
+    const redisClient = redis.createClient({
+        socket: {
+            host: process.env.REDIS_HOST || 'localhost',
+            port: process.env.REDIS_PORT || 6379
+        }
+    });
+
+    redisClient.on('error', (err) => {
+        logger.error('Redis Client Error', err);
+    });
+
+    // Connect the Redis client
+    redisClient.connect().catch(console.error);
+
+    const sessionConfig = {
+        store: new RedisStore({ client: redisClient }),
+        resave: false,
+        name: 'stamp-webservices',
+        saveUninitialized: false,
+        secret: secret,
+        cookie: {
+            sameSite: 'strict',
+            secure: true,
+            maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        }
+    };
+    return sessionConfig;
+
+}
+
 function createSessionConfig() {
     const secret = nconf.get('session_secret') || 'STAMPWEB';
+    const sessionType = nconf.get('session_type') || 'memory';
+    if (sessionType === 'redis') {
+        return createRedisSessionConfig(secret);
+    }
     const sessionConfig = {
         resave: false,
         name: 'stamp-webservices',
@@ -155,6 +197,10 @@ app.get(`${BASEPATH}config/logger/:logger`, configureLoggerRemotely);
 const aurelia_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/aurelia/`);
 const www_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/`);
 const vue_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/stamp-web/`);
+
+app.get('/', (req, res) => {
+    res.redirect('/stamp-web');
+});
 
 app.use('/stamp-web', serveStatic(vue_path));
 app.use('/stamp-webservices', serveStatic(www_path));
