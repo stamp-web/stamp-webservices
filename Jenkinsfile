@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    parameters {
+        credentials(name: 'CONFIG_FILE_CRED', defaultValue: '', description: 'Secret file for environment config')
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -23,10 +27,14 @@ pipeline {
 
         stage('Apply Environment Config') {
 			steps {
-				sh '''
-					mkdir -p config
-					cp testConfigForStampWeb config/application.json
-				'''
+				withCredentials([
+					file(credentialsId: "${params.CONFIG_FILE_CRED}", variable: 'CFG_FILE')
+				]) {
+				    sh '''
+				    mkdir -p config
+					cp "$CFG_FILE" config/application.json
+					'''
+				}
 			}
 		}
 
