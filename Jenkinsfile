@@ -59,7 +59,10 @@ pipeline {
 
         stage('Package') {
             steps {
-                sh 'npm pack'
+                sh '''
+                    mkdir -p artifacts
+                    npm pack --pack-destination artifacts
+                '''
             }
         }
 
