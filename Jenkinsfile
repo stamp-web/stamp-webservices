@@ -4,9 +4,8 @@ pipeline {
     triggers {
         githubPush()
     }
-
     parameters {
-        credentials(name: 'CONFIG_FILE_CRED', defaultValue: 'test-application.json', description: 'Secret file for environment config')
+        string(name: 'CONFIG_FILE_ID', defaultValue: 'test-application.json', description: 'Test configuration file setup')
     }
 
     stages {
@@ -36,14 +35,12 @@ pipeline {
 
         stage('Environment Config') {
 			steps {
-				withCredentials([
-					file(credentialsId: "${params.CONFIG_FILE_CRED}", variable: 'CFG_FILE')
-				]) {
-				    sh '''
-				    mkdir -p config
-					cp "$CFG_FILE" config/application.json
-					'''
-				}
+			    configFileProvider([configFile(fileId: "${params.CONFIG_FILE_ID}", variable: 'CFG_FILE')]) {
+                    sh '''
+                    mkdir -p config
+                    cp "$CFG_FILE" config/application.json
+                    '''
+                }
 			}
 		}
 
