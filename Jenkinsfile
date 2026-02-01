@@ -5,7 +5,7 @@ pipeline {
         githubPush()
     }
     parameters {
-        string(name: 'CONFIG_FILE_ID', defaultValue: 'test-application.json', description: 'Test configuration file setup')
+        string(name: 'CONFIG_FILE_ID', defaultValue: 'test-application', description: 'Test configuration file setup')
     }
 
     stages {
