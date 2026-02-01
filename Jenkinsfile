@@ -6,7 +6,7 @@ pipeline {
     }
 
     parameters {
-        credentials(name: 'CONFIG_FILE_CRED', defaultValue: 'stampWebTest.txt', description: 'Secret file for environment config')
+        credentials(name: 'CONFIG_FILE_CRED', defaultValue: 'test-application.json', description: 'Secret file for environment config')
     }
 
     stages {
