@@ -111,7 +111,7 @@ function createRedisSessionConfig(secret) {
     });
 
     // Connect the Redis client
-    redisClient.connect().catch(console.error);
+    redisClient.connect()
 
     const sessionConfig = {
         store: new RedisStore({ client: redisClient }),

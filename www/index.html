@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Redirecting...</title>
+    <script>
+        // Redirect to path + "stamp-web/#"
+        const basePath = window.location.pathname.replace(/\/$/, ""); // remove trailing slash
+        window.location.href = `${basePath}/stamp-web/#`;
+    </script>
+</head>
+<body>
+<p>Redirecting to <a id="redirect-link">stamp-web/#</a>...</p>
+<script>
+    // Update the fallback link dynamically
+    const link = document.getElementById("redirect-link");
+    link.href = `${window.location.pathname.replace(/\/$/, "")}/stamp-web/#`;
+</script>
+</body>
+</html>
