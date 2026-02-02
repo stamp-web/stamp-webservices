@@ -184,7 +184,6 @@ module.exports = function () {
                 getPool().then(pool => {
                     pool.getConnection((err, connection) => {
                         if (!err) {
-                            console.error('got a connection err', err)
                             /*
                             Note sure what this was doing, but it is causing tests to fail
                             var del = connection._protocol._delegateError;
