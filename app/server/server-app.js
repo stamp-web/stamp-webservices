@@ -135,7 +135,7 @@ function createSessionConfig() {
     if (sessionType === 'redis') {
         return createRedisSessionConfig(secret);
     }
-    consle.error('Session type: ' + sessionType)
+    console.error('Session type: ' + sessionType)
     const sessionConfig = {
         resave: false,
         name: 'stamp-webservices',
