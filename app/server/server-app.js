@@ -135,6 +135,7 @@ function createSessionConfig() {
     if (sessionType === 'redis') {
         return createRedisSessionConfig(secret);
     }
+    consle.error('Session type: ' + sessionType)
     const sessionConfig = {
         resave: false,
         name: 'stamp-webservices',
@@ -223,6 +224,7 @@ connectionMgr.startup().then(() => {
         connectionMgr.shutdown();
     });
     process.on('uncaughtException', err => {
+        console.error('Uncaught exception:', err)
         console.log(err.stack); // should update to use domains/clusters
     });
     // See if the server is running as a child process and if so signal completion of startup
@@ -230,6 +232,7 @@ connectionMgr.startup().then(() => {
         process.send('SERVER_STARTED');
     }
 }, err => {
+    console.error('failed startup:', err)
     logger.error(err);
     process.exit(1);
 });

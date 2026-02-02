@@ -160,6 +160,7 @@ module.exports = function () {
                         reject("No database was selected.");
                     }
                     config = nconf.get("databases")[dbName];
+                    console.error('DB Config:', config)
                     getPool().then(() => {
                         resolve();
                     }, err => {
@@ -182,6 +183,7 @@ module.exports = function () {
                 getPool().then(pool => {
                     pool.getConnection((err, connection) => {
                         if (!err) {
+                            console.error('got a connection err', err)
                             /*
                             Note sure what this was doing, but it is causing tests to fail
                             var del = connection._protocol._delegateError;
