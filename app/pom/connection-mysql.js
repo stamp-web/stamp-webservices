@@ -160,10 +160,11 @@ module.exports = function () {
                         reject("No database was selected.");
                     }
                     config = nconf.get("databases")[dbName];
-                    console.error('DB Config:', config)
                     getPool().then(() => {
+                        console.error("Connection pool created for database named '" + dbName + "'");
                         resolve();
                     }, err => {
+                        console.error("Error creating connection pool", err);
                         reject(err);
                     });
                 }

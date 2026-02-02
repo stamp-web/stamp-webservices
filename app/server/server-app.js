@@ -132,10 +132,11 @@ function createRedisSessionConfig(secret) {
 function createSessionConfig() {
     const secret = nconf.get('session_secret') || 'STAMPWEB';
     const sessionType = nconf.get('session_type') || 'memory';
+    console.error('Session type: ' + sessionType)
     if (sessionType === 'redis') {
         return createRedisSessionConfig(secret);
     }
-    console.error('Session type: ' + sessionType)
+
     const sessionConfig = {
         resave: false,
         name: 'stamp-webservices',
