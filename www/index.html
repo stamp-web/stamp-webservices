@@ -4,24 +4,13 @@
     <meta charset="UTF-8">
     <title>Redirecting...</title>
     <script>
-        const pathParts = window.location.pathname.split("/").filter(p => p.length > 0);
-        // Remove the last segment if there is one
-        if (pathParts.length > 0) {
-            pathParts.pop();
-        }
-        // Rebuild the prefix
-        const prefix = pathParts.length > 0 ? `/${pathParts.join("/")}` : "";
-        // Redirect to prefix + /stamp-web/#
-        window.location.href = `${prefix}/stamp-web/#`;
+        window.location.href = `/stampweb/stamp-web/#`;
     </script>
 </head>
 <body>
 <p>Redirecting to <a id="redirect-link">stamp-web/#</a>...</p>
 <script>
-    const pathParts = window.location.pathname.split("/").filter(p => p.length > 0);
-    if (pathParts.length > 0) pathParts.pop();
-    const prefix = pathParts.length > 0 ? `/${pathParts.join("/")}` : "";
-    document.getElementById("redirect-link").href = `${prefix}/stamp-web/#`;
+    document.getElementById("redirect-link").href = `/stampweb/stamp-web/#`;
 </script>
 </body>
 </html>
