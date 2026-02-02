@@ -132,7 +132,7 @@ function createRedisSessionConfig(secret) {
 function createSessionConfig() {
     const secret = nconf.get('session_secret') || 'STAMPWEB';
     const sessionType = nconf.get('session_type') || 'memory';
-    console.error('Session type: ' + sessionType)
+    logger.info(`Session type: ${sessionType}`);
     if (sessionType === 'redis') {
         return createRedisSessionConfig(secret);
     }
@@ -225,7 +225,6 @@ connectionMgr.startup().then(() => {
         connectionMgr.shutdown();
     });
     process.on('uncaughtException', err => {
-        console.error('Uncaught exception:', err)
         console.log(err.stack); // should update to use domains/clusters
     });
     // See if the server is running as a child process and if so signal completion of startup
@@ -233,7 +232,6 @@ connectionMgr.startup().then(() => {
         process.send('SERVER_STARTED');
     }
 }, err => {
-    console.error('failed startup:', err)
     logger.error(err);
     process.exit(1);
 });
