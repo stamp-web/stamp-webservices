@@ -161,10 +161,10 @@ module.exports = function () {
                     }
                     config = nconf.get("databases")[dbName];
                     getPool().then(() => {
-                        console.error("Connection pool created for database named '" + dbName + "'");
+                        logger.info("Connection pool created for database named '" + dbName + "'");
                         resolve();
                     }, err => {
-                        console.error("Error creating connection pool", err);
+                        logger.error("Error creating connection pool", err);
                         reject(err);
                     });
                 }
