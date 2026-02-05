@@ -97,19 +97,23 @@ function createServer() {
     return server;
 }
 
-function createRedisSessionConfig(secret) {
+async function createRedisSessionConfig(secret) {
     // Create Redis client
+
+
     const redisClient = redis.createClient({
         socket: {
             host: process.env.REDIS_HOST || 'localhost',
             port: process.env.REDIS_PORT || 6379
         }
     });
-
-    redisClient.on('error', (err) => {
-        logger.error('Redis Client Error: %O', err)
-    });
-
+    try {
+        await redisClient.connect();
+        logger.info('Redis connected');
+    } catch (err) {
+        logger.error('Redis connect failed: %O', err);
+    }
+    
     // Connect the Redis client
     redisClient.connect()
 
