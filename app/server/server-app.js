@@ -96,12 +96,13 @@ function createServer() {
     return server;
 }
 
-function createSessionConfig() {
+async function createSessionConfig() {
     const secret = nconf.get('session_secret') || 'STAMPWEB';
+    console.log('Session Secret: ' + secret )
     const sessionType = nconf.get('session_type') || 'memory';
     logger.info(`Session type: ${sessionType}`);
     if (sessionType === 'redis') {
-        const redisConfig = createRedisSessionConfig(secret);
+        const redisConfig = await createRedisSessionConfig(secret);
         if(redisConfig) {
             return redisConfig
         } else {
@@ -123,8 +124,8 @@ function createSessionConfig() {
 }
 
 const app = express();
-
-app.use(session(createSessionConfig()));
+const sessionConfig = createSessionConfig();
+app.use(session(sessionConfig));
 app.use(compression());
 app.use(helmet({
     crossOriginEmbedderPolicy: false

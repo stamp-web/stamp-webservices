@@ -3,7 +3,7 @@ import RedisStore from "connect-redis";
 
 let client;
 
-export async function getRedisClient() {
+export function getRedisClient() {
     if (!client && !client?.isOpen) {
         client = redis.createClient({
             socket: {
@@ -16,14 +16,14 @@ export async function getRedisClient() {
             console.error('Redis Client Error:', err)
         );
 
-        await client.connect(); // ✅ only once
+        client.connect(); // ✅ only once
     }
 
     return client;
 }
 
-export async function createRedisSessionConfig(secret) {
-    const redisClient = await getRedisClient();
+export function createRedisSessionConfig(secret) {
+    const redisClient = getRedisClient();
     if( redisClient ) {
         const sessionConfig = {
             store: new RedisStore({ client: redisClient }),
