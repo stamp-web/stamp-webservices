@@ -107,7 +107,7 @@ function createRedisSessionConfig(secret) {
     });
 
     redisClient.on('error', (err) => {
-        logger.error('Redis Client Error', err);
+        logger.error('Redis Client Error: %O', err)
     });
 
     // Connect the Redis client
