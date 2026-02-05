@@ -24,8 +24,7 @@ const fs = require('fs');
 /**
  * Redis for production level session storage
  */
-const redis = require('redis');
-const RedisStore =  require('connect-redis').default;
+const {createRedisSessionConfig} = require("./redis-client");
 
 nconf.argv().env().file(__dirname + '/../../config/application.json');
 
@@ -97,48 +96,17 @@ function createServer() {
     return server;
 }
 
-async function createRedisSessionConfig(secret) {
-    // Create Redis client
-
-
-    const redisClient = redis.createClient({
-        socket: {
-            host: process.env.REDIS_HOST || 'localhost',
-            port: process.env.REDIS_PORT || 6379
-        }
-    });
-    try {
-        await redisClient.connect();
-        logger.info('Redis connected');
-    } catch (err) {
-        logger.error('Redis connect failed: %O', err);
-    }
-    
-    // Connect the Redis client
-    redisClient.connect()
-
-    const sessionConfig = {
-        store: new RedisStore({ client: redisClient }),
-        resave: false,
-        name: 'stamp-webservices',
-        saveUninitialized: false,
-        secret: secret,
-        cookie: {
-            sameSite: 'strict',
-            secure: true,
-            maxAge: 24 * 60 * 60 * 1000 // 24 hours
-        }
-    };
-    return sessionConfig;
-
-}
-
 function createSessionConfig() {
     const secret = nconf.get('session_secret') || 'STAMPWEB';
     const sessionType = nconf.get('session_type') || 'memory';
     logger.info(`Session type: ${sessionType}`);
     if (sessionType === 'redis') {
-        return createRedisSessionConfig(secret);
+        const redisConfig = createRedisSessionConfig(secret);
+        if(redisConfig) {
+            return redisConfig
+        } else {
+            logger.error('Redis Config or Session could not be established.  Using Memory Session.')
+        }
     }
 
     const sessionConfig = {
