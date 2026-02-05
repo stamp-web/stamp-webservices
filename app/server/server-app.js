@@ -124,8 +124,11 @@ async function createSessionConfig() {
 }
 
 const app = express();
-const sessionConfig = createSessionConfig();
-app.use(session(sessionConfig));
+const sessionConfig = createSessionConfig().then(config => {
+    console.log(config);
+    app.use(session(config));
+
+});
 app.use(compression());
 app.use(helmet({
     crossOriginEmbedderPolicy: false
