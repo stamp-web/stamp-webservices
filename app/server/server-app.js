@@ -125,7 +125,7 @@ async function createSessionConfig() {
 
 const app = express();
 const sessionConfig = createSessionConfig().then(config => {
-    console.log(config);
+    logger.debug('session config:', config);
     app.use(session(config));
 
 });
