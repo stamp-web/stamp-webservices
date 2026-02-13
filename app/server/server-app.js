@@ -170,7 +170,6 @@ app.use(
 
 app.get(`${BASEPATH}config/logger`, showLoggers);
 app.get(`${BASEPATH}config/logger/:logger`, configureLoggerRemotely);
-app.get(`${BASEPATH}config/logger/:logger`, configureLoggerRemotely);
 
 const aurelia_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/aurelia/`);
 const www_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/`);

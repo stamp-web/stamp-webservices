@@ -103,6 +103,7 @@ module.exports = function () {
             if (config) {
                 determineDBPassword(config).then(function () {
                     enableKeepAlive();
+                    console.log('>>>>', config)
                     dbPool = mysql.createPool({
                         connectionLimit: 20,
                         host: config.host,
