@@ -57,6 +57,11 @@ ExchangeRates.retrieveExchangeData = () => {
     });
 };
 
+ExchangeRates.isExchangeDataExpired = (exchangeData) => {
+    return !exchangeData.lastUpdated ||
+        (new Date().getTime() - exchangeData.lastUpdated > EXCHANGE_RATES_TIME_INTERVAL);
+};
+
 ExchangeRates.loadExchangeDataFromFile = async (filename) => {
     try {
         const data = await fs.promises.readFile(filename, { encoding: 'UTF-8' });
