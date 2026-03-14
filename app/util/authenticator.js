@@ -54,15 +54,20 @@ BasicValidation.deserializeUser = function(id,done) {
 };
 
 Authenticator.initialize = function(app) {
+    const result  = {configured: false, authType: authType};
     if( authType !== null && authType !== 'none') {
+        const sessionSecret = nconf.get("authentication-session-secret");
+        if (!sessionSecret) {
+            throw new Error('Session secret must be configured via "authentication-session-secret" in config');
+        }
         app.use(cookieParser());
         app.use(session({
             name: 'stamp-webservices',
-            secret: 'e523f4f181cf6beb7c3dbdb2182acb1f',
+            secret: sessionSecret,
             resave: false,
             saveUninitialized: true,
             cookie: {
-                maxAge: 36000 // one hour
+                maxAge: 3600000 // one hour
             }
         }));
         app.use(passport.initialize());
@@ -70,13 +75,24 @@ Authenticator.initialize = function(app) {
 
         switch(authType) {
             case 'basic':
-                passport.serializeUser(BasicValidation.serializeUser);
-                passport.deserializeUser(BasicValidation.deserializeUser);
-                passport.use(new BasicStrategy({}, BasicValidation.validator));
+                try {
+                    passport.serializeUser(BasicValidation.serializeUser);
+                    passport.deserializeUser(BasicValidation.deserializeUser);
+                    passport.use(new BasicStrategy({}, BasicValidation.validator));
+                    logger.info('Basic authentication strategy configured successfully');
+                } catch (err) {
+                    logger.error(`Failed to configure basic authentication: ${err.message}`);
+                    throw err;
+                }
+                break;
+            default:
+                logger.warn(`Unknown authentication type: ${authType}`);
                 break;
         }
-
+        result.configured = true;
     }
+
+    return result;
 };
 
 Authenticator.applyAuthentication = function() {
@@ -84,6 +100,9 @@ Authenticator.applyAuthentication = function() {
         switch(authType) {
             case 'basic':
                 return passport.authenticate('basic', { session: true });
+            default:
+                logger.warn(`Unknown authentication type in applyAuthentication: ${authType}`);
+                break;
         }
     }
     return function(req,res,next) { next(); };
