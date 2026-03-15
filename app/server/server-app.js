@@ -176,7 +176,7 @@ const www_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/`);
 const vue_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/stamp-web/`);
 
 app.get('/', (req, res) => {
-    res.redirect('/stamp-web');
+    res.redirect('/index.html');
 });
 
 app.use('/stamp-web', serveStatic(vue_path));
