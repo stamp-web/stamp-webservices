@@ -175,13 +175,14 @@ const aurelia_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/aure
 const www_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/`);
 const vue_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/stamp-web/`);
 
-app.get('/', (req, res) => {
-    res.redirect('/stampweb/index.html');
-});
-
 app.use('/stamp-web', serveStatic(vue_path));
 app.use('/stamp-webservices', serveStatic(www_path));
 app.use('/stamp-aurelia', serveStatic(aurelia_path));
+
+app.get('/', (req, res) => {
+    res.redirect('./stamp-web/#');
+});
+
 app.use(serveStatic(www_path));
 
 require('../routes/rest-preferences').configure(app, BASEPATH + SERVICES_PATH);
