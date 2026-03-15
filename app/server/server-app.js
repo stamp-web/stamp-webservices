@@ -180,7 +180,7 @@ app.use('/stamp-webservices', serveStatic(www_path));
 app.use('/stamp-aurelia', serveStatic(aurelia_path));
 
 app.get('/', (req, res) => {
-    res.redirect('./stamp-web/#');
+    res.redirect('/stampweb/index.html');
 });
 
 app.use(serveStatic(www_path));
