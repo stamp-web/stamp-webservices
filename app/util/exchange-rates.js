@@ -1,8 +1,13 @@
-﻿const Logger = require('./logger');
-const fx = require('money');
-const https = require('https');
-const fs = require('fs');
-const nconf = require('nconf');
+﻿import Logger from './logger.js';
+import fx from 'money';
+import https from 'https';
+import fs from 'fs';
+import nconf from 'nconf';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const logger = Logger.getLogger("server");
 
@@ -96,4 +101,4 @@ ExchangeRates.checkRates = function (callback) {
     }
 };
 
-module.exports = ExchangeRates;
+export default ExchangeRates;

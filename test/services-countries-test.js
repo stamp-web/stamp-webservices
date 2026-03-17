@@ -1,8 +1,8 @@
-const superagent = require('superagent');
-const session = require('./util/integration-session');
-const NamedCollectionVerifications = require('./util/named-collection-verifier');
-const stampUtil = require('./util/stamp-utilities');
-const _ = require('lodash');
+import _ from 'lodash';
+import superagent from 'superagent';
+import session from './util/integration-session.js';
+import stampUtil from './util/stamp-utilities.js';
+import NamedCollectionVerifications from './util/named-collection-verifier.js';
 
 describe('REST Services for Countries', () => {
 

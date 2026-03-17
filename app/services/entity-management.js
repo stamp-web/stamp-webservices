@@ -1,7 +1,7 @@
-const connectionManager = require('../pom/connection-mysql');
-const dataTranslator = require('./mysql-translator');
-const stamp = require('../model/stamp');
-const Logger = require('../util/logger');
+import connectionManager from '../pom/connection-mysql.js';
+import dataTranslator from './mysql-translator.js';
+import stamp from '../model/stamp.js';
+import Logger from '../util/logger.js';
 
 function EntityManagement() {
     let sqlTrace = Logger.getLogger('sql');
@@ -17,8 +17,9 @@ function EntityManagement() {
         },
         countStamps: async function() {
             if(!foundStamps) {
-                // Need to require this here since Stamps uses collections that are EntityManagement classed
-                let count = await require('./stamps').count({});
+                // Need to import this here since Stamps uses collections that are EntityManagement classed
+                const stamps = await import('./stamps.js');
+                let count = await stamps.default.count({});
                 foundStamps = count > 0;
                 if (count === 0) {
                     return Promise.resolve([]);
@@ -32,7 +33,6 @@ function EntityManagement() {
                 connectionManager.getConnection().then(connection => {
                     connection.query(qs, (err, result) => {
                         connection.release();
-                        console.log(result);
                         if (err !== null) {
                             reject(dataTranslator.getErrorMessage(err));
                         } else {
@@ -46,6 +46,6 @@ function EntityManagement() {
 
         }
     }
-};
+}
 
-module.exports = EntityManagement;
+export default EntityManagement;

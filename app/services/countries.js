@@ -1,28 +1,28 @@
-const extend = require('node.extend');
-const EntityManagement = require('./entity-management');
-const PersistentCollection = require('./persistent-collection');
-const dataTranslator = require('./mysql-translator');
-const country = require('../model/country');
-const ownership = require('../model/ownership');
-const stamp = require('../model/stamp');
+import extend from 'node.extend';
+import EntityManagement from './entity-management.js';
+import PersistentCollection from './persistent-collection.js';
+import dataTranslator from './mysql-translator.js';
+import country from '../model/country.js';
+import ownership from '../model/ownership.js';
+import stamp from '../model/stamp.js';
 
+function updateImagePaths(connection, merged, storedObj) {
+    return new Promise((resolve, reject) => {
+        let selection = "UPDATE " + ownership.getTableName() + " " + ownership.getAlias() + " INNER JOIN " +
+            stamp.getTableName() + " " + stamp.getAlias() + " on " + ownership.getAlias() + ".STAMP_ID = " + stamp.getAlias() +
+            ".ID AND " + stamp.getAlias() + ".COUNTRY_ID = " + storedObj.ID + " SET IMAGE = REPLACE(IMAGE, '" +
+            storedObj.NAME + "', '" + merged.NAME + "') WHERE IMAGE LIKE '" + storedObj.NAME + "/%';";
+        connection.query(selection, null, (err) => {
+            if (err) {
+                reject(dataTranslator.getErrorMessage(err));
+            } else {
+                resolve();
+            }
+        });
+    });
+}
 
 const countries = extend(true, {}, new EntityManagement(), new PersistentCollection(), function () {
-    function updateImagePaths(connection, merged, storedObj) {
-        return new Promise((resolve, reject) => {
-            let selection = "UPDATE " + ownership.getTableName() + " " + ownership.getAlias() + " INNER JOIN " +
-                stamp.getTableName() + " " + stamp.getAlias() + " on " + ownership.getAlias() + ".STAMP_ID = " + stamp.getAlias() +
-                ".ID AND " + stamp.getAlias() + ".COUNTRY_ID = " + storedObj.ID + " SET IMAGE = REPLACE(IMAGE, '" +
-                storedObj.NAME + "', '" + merged.NAME + "') WHERE IMAGE LIKE '" + storedObj.NAME + "/%';";
-            connection.query(selection, null, (err) => {
-                if (err) {
-                    reject(dataTranslator.getErrorMessage(err));
-                } else {
-                    resolve();
-                }
-            });
-        });
-    }
 
     return {
         collectionName: 'countries',
@@ -51,4 +51,4 @@ const countries = extend(true, {}, new EntityManagement(), new PersistentCollect
     };
 }());
 
-module.exports = countries;
+export default countries;

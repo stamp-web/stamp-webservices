@@ -1,7 +1,7 @@
-/* eslint jest/no-standalone-expect: 0 */
-const superagent = require('superagent')
-const extend = require('node.extend');
-const nconf = require('nconf');
+import superagent from 'superagent';
+import extend from 'node.extend';
+import nconf from 'nconf';
+
 nconf.argv().env();
 
 let server_port = 9002;
@@ -60,4 +60,4 @@ const StampUtilities = {
     }
 };
 
-module.exports = StampUtilities;
+export default StampUtilities;

@@ -1,25 +1,25 @@
-const restInterfaces = require('./rest-interfaces')();
-const stamps = require("../services/stamps");
-const ownerships = require("../services/ownerships");
-const Logger = require('../util/logger');
-const stamp = require('../model/stamp');
-const extend = require('node.extend');
-const Authenticator = require('../util/authenticator');
-const routeHelper = require('./route-helper');
-const _ = require('lodash');
+import restInterfaces from './rest-interfaces.js';
+import stamps from "../services/stamps.js";
+import ownerships from "../services/ownerships.js";
+import Logger from '../util/logger.js';
+import stamp from '../model/stamp.js';
+import extend from 'node.extend';
+import Authenticator from '../util/authenticator.js';
+import routeHelper from './route-helper.js';
+import _ from 'lodash';
 
 const RESOURCE_PATH = "/stamps";
 
 const logger = Logger.getLogger("server");
 
-exports.configure = (app, basePath) => {
-    const service = extend(true, {}, restInterfaces);
+export const configure = (app, basePath) => {
+    const service = extend(true, {}, new restInterfaces());
 
-    service.purchase = (req,res) => {
+    service.purchase = (req, res) => {
         const content = req.body;
         logger.debug(content);
 
-        if(content.pricePaid <= 0) {
+        if (content.pricePaid <= 0) {
             res.status(routeHelper.StatusCode.BAD_REQUEST);
             res.send("price paid must be greater than zero.");
             return;
@@ -41,6 +41,6 @@ exports.configure = (app, basePath) => {
         });
     };
 
-    app.post(`${basePath}${RESOURCE_PATH}/purchase`, Authenticator.applyAuthentication(), service.purchase );
+    app.post(`${basePath}${RESOURCE_PATH}/purchase`, Authenticator.applyAuthentication(), service.purchase);
     service.initialize(app, `${basePath}${RESOURCE_PATH}`, stamps, stamp);
 };

@@ -1,4 +1,4 @@
-const CatalogueNumberHelper = require('../app/model/catalogue-number-helper');
+import CatalogueNumberHelper from '../app/model/catalogue-number-helper.js';
 
 describe('Catalogue number helper test', () => {
     let catalogue = [
@@ -120,4 +120,3 @@ describe('Catalogue number helper test', () => {
         });
     });
 });
-

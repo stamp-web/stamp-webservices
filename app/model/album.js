@@ -1,8 +1,8 @@
-const extend = require('node.extend');
-const fieldDefinition = require('./field-definition');
+import extend from 'node.extend';
+import fieldDefinition from './field-definition.js';
 
 const album = extend({}, fieldDefinition, function() {
-        return {
+    return {
         getFieldDefinitions: function () {
             return [
                 { field: 'name', column: 'NAME', type: 'string', required: true },
@@ -26,4 +26,4 @@ const album = extend({}, fieldDefinition, function() {
     };
 }());
 
-module.exports = album;
+export default album;

@@ -1,12 +1,19 @@
-﻿const _ = require('lodash');
-const Logger = require('../../app/util/logger');
-const Level = require('../../app/util/level');
-const child_process = require('child_process');
-const nconf = require('nconf');
-const fs = require('fs');
-const mysql = require('mysql');
+﻿import _ from 'lodash';
+import Logger from '../../app/util/logger.js';
+import Level from '../../app/util/level.js';
+import child_process from 'child_process';
+import nconf from 'nconf';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+import mysql from 'mysql';
 
-module.exports = function () {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+nconf.argv().env().file(path.join(__dirname, '/../../config/application.json'));
+
+const fn = function () {
     let executed = false;
     let connection;
     let childFork;
@@ -14,7 +21,7 @@ module.exports = function () {
 
     Logger.silenceConsole();
 
-    nconf.argv().env().file(__dirname + '/../../config/application.json');
+
 
     const database = (nconf.get('test_database') ? nconf.get('test_database') : 'test');
     let sql_level = 'warn';
@@ -172,3 +179,5 @@ module.exports = function () {
 
     };
 }();
+
+export default fn;

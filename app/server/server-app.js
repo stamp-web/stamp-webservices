@@ -1,32 +1,34 @@
-"use strict";
+import express from 'express';
+import helmet from 'helmet';
+import compression from 'compression';
+import session from 'express-session';
+import serveStatic from 'serve-static';
+import morgan from 'morgan';
+import connectionMgr from '../pom/connection-mysql.js';
+import favicon from 'serve-favicon';
+import nconf from 'nconf';
+import http from 'http';
+import https from 'https';
+import domainMiddleware from 'domain-middleware';
+import FileStreamRotator from 'file-stream-rotator';
+import Logger from '../util/logger.js';
+import Level from '../util/level.js';
+import Authenticator from '../util/authenticator.js';
+import _ from 'lodash';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { createRedisSessionConfig } from './redis-client.js';
+import { createRequire } from 'module';
 
-const express = require('express');
-const helmet = require('helmet');
+const require = createRequire(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Import CommonJS modules that don't support ES6 properly
 const contentSecurityPolicy = require('helmet-csp');
-const compression = require('compression');
-const session = require('express-session');
-const serveStatic = require('serve-static');
-const morgan = require('morgan');
-const connectionMgr = require('../pom/connection-mysql');
-const favicon = require('serve-favicon');
-const nconf = require('nconf');
-const http = require('http');
-const https = require('https')
-const domainMiddleware = require('domain-middleware');
-const FileStreamRotator = require('file-stream-rotator');
-const Logger = require('../util/logger');
-const Level = require('../util/level');
-const Authenticator = require('../util/authenticator');
-const _ = require('lodash');
-const path = require('path');
-const fs = require('fs');
 
-/**
- * Redis for production level session storage
- */
-const {createRedisSessionConfig} = require("./redis-client");
-
-nconf.argv().env().file(__dirname + '/../../config/application.json');
+nconf.argv().env().file(path.join(__dirname, '/../../config/application.json'));
 
 const SERVICES_PATH = 'rest';
 const BASEPATH = nconf.get('basePath') ? nconf.get('basePath') : '/stamp-webservices/';
@@ -98,12 +100,12 @@ function createServer() {
 
 async function createSessionConfig() {
     const secret = nconf.get('session_secret') || 'STAMPWEB';
-    console.log('Session Secret: ' + secret )
+    logger.info('Session Secret: ' + secret )
     const sessionType = nconf.get('session_type') || 'memory';
     logger.info(`Session type: ${sessionType}`);
     if (sessionType === 'redis') {
         const redisConfig = await createRedisSessionConfig(secret);
-        if(redisConfig) {
+        if (redisConfig) {
             return redisConfig
         } else {
             logger.error('Redis Config or Session could not be established.  Using Memory Session.')
@@ -124,38 +126,35 @@ async function createSessionConfig() {
 }
 
 const app = express();
-const sessionConfig = createSessionConfig().then(config => {
-    logger.debug('session config:', config);
-    app.use(session(config));
-
-});
+const sessionConfig = await createSessionConfig();
+logger.debug('session config:', sessionConfig);
+app.use(session(sessionConfig));
 app.use(compression());
 app.use(helmet({
     crossOriginEmbedderPolicy: false
 }));
 app.use(contentSecurityPolicy({
-        useDefaults: false,
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
-            imgSrc: ["https:", "'self'", "data:"],
-            fontSrc: ["'self'", "data:"],
-            objectSrc: ["'none'"],
-            upgradeInsecureRequests: [],
-        },
-        reportOnly: false,
-    })
-);
+    useDefaults: false,
+    directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["https:", "'self'", "data:"],
+        fontSrc: ["'self'", "data:"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+    },
+    reportOnly: false,
+}));
 app.use(morgan('tiny', {
     stream: FileStreamRotator.getStream({
         date_format: 'YYYYMMDD',
-        filename: __dirname + '/../../logs/access-%DATE%.log',
+        filename: path.join(__dirname, '/../../logs/access-%DATE%.log'),
         frequency: 'daily',
         verbose: false
     })
 }));
-app.use(favicon(__dirname + '/../../www/favicon.ico'));
+app.use(favicon(path.join(__dirname, '/../../www/favicon.ico')));
 app.use(express.json({strict: false}));
 app.use(express.urlencoded({extended: true}));
 Authenticator.initialize(app);
@@ -171,30 +170,39 @@ app.use(
 app.get(`${BASEPATH}config/logger`, showLoggers);
 app.get(`${BASEPATH}config/logger/:logger`, configureLoggerRemotely);
 
-const aurelia_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/aurelia/`);
-const www_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/`);
-const vue_path = path.resolve(__dirname, `..${path.sep}..${path.sep}www/stamp-web/`);
+const AURELIA_PATH = path.resolve(__dirname, `..${path.sep}..${path.sep}www/aurelia/`);
+const WWW_PATH = path.resolve(__dirname, `..${path.sep}..${path.sep}www/`);
+const VUEJS_PATH = path.resolve(__dirname, `..${path.sep}..${path.sep}www/stamp-web/`);
 
-app.use('/stamp-web', serveStatic(vue_path));
-app.use('/stamp-webservices', serveStatic(www_path));
-app.use('/stamp-aurelia', serveStatic(aurelia_path));
+app.use('/stamp-web', serveStatic(VUEJS_PATH));
+app.use('/stamp-webservices', serveStatic(WWW_PATH));
+app.use('/stamp-aurelia', serveStatic(AURELIA_PATH));
 
 app.get('/', (req, res) => {
     res.redirect('/stampweb/index.html');
 });
 
-app.use(serveStatic(www_path));
+app.use(serveStatic(WWW_PATH));
 
-require('../routes/rest-preferences').configure(app, BASEPATH + SERVICES_PATH);
-require('../routes/rest-countries').configure(app, BASEPATH + SERVICES_PATH);
-require('../routes/rest-albums').configure(app, BASEPATH + SERVICES_PATH);
-require('../routes/rest-stampCollections').configure(app, BASEPATH + SERVICES_PATH);
-require('../routes/rest-catalogues').configure(app, BASEPATH + SERVICES_PATH);
-require('../routes/catalogue-numbers').configure(app, BASEPATH + SERVICES_PATH);
-require('../routes/rest-sellers').configure(app, BASEPATH + SERVICES_PATH);
-require('../routes/rest-stamps').configure(app, BASEPATH + SERVICES_PATH);
-require('../routes/reports').configure(app, BASEPATH + SERVICES_PATH);
+const restPreferences = await import('../routes/rest-preferences.js');
+const restCountries = await import('../routes/rest-countries.js');
+const restAlbums = await import('../routes/rest-albums.js');
+const restStampCollections = await import('../routes/rest-stampCollections.js');
+const restCatalogues = await import('../routes/rest-catalogues.js');
+const catalogueNumbers = await import('../routes/catalogue-numbers.js');
+const restSellers = await import('../routes/rest-sellers.js');
+const restStamps = await import('../routes/rest-stamps.js');
+const reports = await import('../routes/reports.js');
 
+restPreferences.configure(app, BASEPATH + SERVICES_PATH);
+restCountries.configure(app, BASEPATH + SERVICES_PATH);
+restAlbums.configure(app, BASEPATH + SERVICES_PATH);
+restStampCollections.configure(app, BASEPATH + SERVICES_PATH);
+restCatalogues.configure(app, BASEPATH + SERVICES_PATH);
+catalogueNumbers.configure(app, BASEPATH + SERVICES_PATH);
+restSellers.configure(app, BASEPATH + SERVICES_PATH);
+restStamps.configure(app, BASEPATH + SERVICES_PATH);
+reports.configure(app, BASEPATH + SERVICES_PATH);
 
 connectionMgr.startup().then(() => {
     process.on('exit', () => {
@@ -203,7 +211,6 @@ connectionMgr.startup().then(() => {
     process.on('uncaughtException', err => {
         console.log(err.stack); // should update to use domains/clusters
     });
-    // See if the server is running as a child process and if so signal completion of startup
     if (process.send) {
         process.send('SERVER_STARTED');
     }
@@ -214,4 +221,4 @@ connectionMgr.startup().then(() => {
 
 server.on('request', app);
 
-module.exports = server;
+export default server;

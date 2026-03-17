@@ -1,6 +1,6 @@
-const extend = require('node.extend');
-const PersistentCollection = require('./persistent-collection');
-const preference = require('../model/preference');
+import extend from 'node.extend';
+import PersistentCollection from './persistent-collection.js';
+import preference from '../model/preference.js';
 
 const preferences = extend(true, {}, new PersistentCollection(), function () {
     return {
@@ -9,4 +9,4 @@ const preferences = extend(true, {}, new PersistentCollection(), function () {
     };
 }());
 
-module.exports = preferences;
+export default preferences;

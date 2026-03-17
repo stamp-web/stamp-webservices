@@ -1,6 +1,6 @@
-const extend = require('node.extend');
-const fieldDefinition = require('./field-definition');
-const country = require('./country');
+import extend from 'node.extend';
+import fieldDefinition from './field-definition.js';
+import country from './country.js';
 
 const stamp = extend({}, fieldDefinition, function () {
     return {
@@ -42,4 +42,4 @@ const stamp = extend({}, fieldDefinition, function () {
     };
 }());
 
-module.exports = stamp;
+export default stamp;

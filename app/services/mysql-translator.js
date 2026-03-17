@@ -1,9 +1,12 @@
-const _ = require('lodash');
-const Logger = require('../util/logger');
-const moment = require('moment');
-const Predicate = require('odata-filter-parser').Predicate;
-const Operators = require('odata-filter-parser').Operators;
-const Constants = require("../util/constants");
+import _ from 'lodash';
+import Logger from '../util/logger.js';
+import moment from 'moment';
+import dataTranslator from './mysql-translator.js';
+import Constants from '../util/constants.js';
+import odata from "odata-filter-parser";
+
+const Operators = odata.Operators;
+const Predicate = odata.Predicate;
 
 function DataTranslator() {
     const logger = Logger.getLogger("sql");
@@ -223,7 +226,7 @@ function DataTranslator() {
                                         value = value.substring(Constants.DATEOFFSET_STARTING.length + 1, value.length - 2);
                                     }
                                     value = (_.isDate(value)) ? value.toISOString() : new Date(Date.parse(value)).toISOString();
-                                    value = "'" + new moment(value).format(Constants.MYSQL_DATEFORMAT) + "'";
+                                    value = "'" + moment(value).format(Constants.MYSQL_DATEFORMAT) + "'";
                                 }
                                 expression += predicate + op + value;
                                 break;
@@ -251,4 +254,4 @@ function DataTranslator() {
     };
 }
 
-module.exports = new DataTranslator();
+export default new DataTranslator();

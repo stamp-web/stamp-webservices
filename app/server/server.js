@@ -1,6 +1,6 @@
-const Logger = require('../util/logger');
+import Logger from '../util/logger.js';
+import nconf from 'nconf';
 
-const nconf = require('nconf');
 nconf.argv().env();
 
 let port = nconf.get("port");
@@ -11,7 +11,8 @@ if (!port) {
 }
 
 const logger = Logger.getLogger("server");
-const server = require('./server-app');
+const serverModule = await import('./server-app.js');
+const server = serverModule.default;
 server.listen(port);
 logger.info("Server listening on port " + port + ", process=" + process.pid);
 

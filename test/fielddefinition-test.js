@@ -1,6 +1,6 @@
-const country = require("../app/model/country");
-const album = require("../app/model/album");
-const preference = require("../app/model/preference");
+import country from "../app/model/country.js";
+import album from "../app/model/album.js";
+import preference from "../app/model/preference.js";
 
 describe('Field definition tests', () => {
     describe('Country field definition tests', () => {
@@ -30,10 +30,10 @@ describe('Field definition tests', () => {
     });
     
     describe('Album field definition tests', () => {
-        it("Validate merge of countries", () => {
+        it("Validate merge of countries", async () => {
             const c = {NAME: "test", COUNTRIES: [1, 2]};
             const c2 = {NAME: "updated", DESCRIPTION: "descriptions"};
-            const m = album.merge(c2, c);
+            const m = await album.merge(c2, c);
             expect(m.NAME).toEqual("updated");
             expect(m.DESCRIPTION).toEqual("descriptions");
             expect(m.COUNTRIES).toEqual([1,2]);

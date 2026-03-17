@@ -1,15 +1,15 @@
-const extend = require('node.extend');
-const PersistentCollection = require('./persistent-collection');
-const EntityManagement = require('./entity-management');
-const dataTranslator = require('./mysql-translator');
-const catalogue = require('../model/catalogue');
-const stamp = require('../model/stamp');
-const catalogueNumber = require('../model/catalogue-number');
+import extend from 'node.extend';
+import PersistentCollection from './persistent-collection.js';
+import EntityManagement from './entity-management.js';
+import dataTranslator from './mysql-translator.js';
+import catalogue from '../model/catalogue.js';
+import stamp from '../model/stamp.js';
+import catalogueNumber from '../model/catalogue-number.js';
+import Logger from '../util/logger.js';
 
-const Logger = require('../util/logger');
+const sqlTrace = Logger.getLogger('sql');
 
 const catalogueService = extend(true, {}, new EntityManagement(), new PersistentCollection(), function () {
-    const sqlTrace = Logger.getLogger('sql');
 
     return {
         getCountStampWhereStatement: function() {
@@ -43,4 +43,4 @@ const catalogueService = extend(true, {}, new EntityManagement(), new Persistent
     };
 }());
 
-module.exports = catalogueService;
+export default catalogueService;

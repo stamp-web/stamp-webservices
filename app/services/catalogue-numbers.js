@@ -1,25 +1,25 @@
-let extend = require('node.extend');
-let PersistentCollection = require('./persistent-collection');
-let stamps = require('./stamps');
-let catalogues = require('./catalogues');
-let dataTranslator = require('./mysql-translator');
-let catalogueNumber = require('../model/catalogue-number');
-let catalogueNumberHelper = require('../model/catalogue-number-helper');
-let _ = require('lodash');
+import extend from 'node.extend';
+import PersistentCollection from './persistent-collection.js';
+import stamps from './stamps.js';
+import catalogues from './catalogues.js';
+import dataTranslator from './mysql-translator.js';
+import catalogueNumber from '../model/catalogue-number.js';
+import catalogueNumberHelper from '../model/catalogue-number-helper.js';
+import _ from 'lodash';
+import Logger from '../util/logger.js';
+import connectionManager from '../pom/connection-mysql.js';
 
-let Logger = require('../util/logger');
-let connectionManager = require('../pom/connection-mysql');
+let logger = Logger.getLogger("server");
+let sqlTrace = Logger.getLogger("sql");
 
-let catalogueNumberService = extend(true, {}, new PersistentCollection(), function () {
-    let logger = Logger.getLogger("server");
-    let sqlTrace = Logger.getLogger("sql");
+// eslint-disable-next-line no-unused-vars
+let cachePolicy = true;
 
-    // eslint-disable-next-line no-unused-vars
-    let cachePolicy = true;
+const getCatalogues = () => {
+    return catalogues.find();
+}
 
-    const getCatalogues = () => {
-        return catalogues.find();
-    }
+const catalogueNumberService = extend(true, {}, new PersistentCollection(), function () {
 
     return {
 
@@ -147,4 +147,4 @@ let catalogueNumberService = extend(true, {}, new PersistentCollection(), functi
     };
 }());
 
-module.exports = catalogueNumberService;
+export default catalogueNumberService;

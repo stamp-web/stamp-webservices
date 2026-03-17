@@ -1,70 +1,69 @@
-let extend = require('node.extend');
-let PersistentCollection = require('./persistent-collection');
-let connectionManager = require('../pom/connection-mysql');
-let dataTranslator = require('./mysql-translator');
-let stamp = require('../model/stamp');
-let catalogueNumberHelper = require('../model/catalogue-number-helper');
-let ownership = require('../model/ownership');
-let catalogueNumber = require('../model/catalogue-number');
-let country = require('../model/country');
-let catalogues = require('./catalogues');
-let _ = require('lodash');
+import extend from 'node.extend';
+import PersistentCollection from './persistent-collection.js';
+import connectionManager from '../pom/connection-mysql.js';
+import dataTranslator from './mysql-translator.js';
+import stamp from '../model/stamp.js';
+import catalogueNumberHelper from '../model/catalogue-number-helper.js';
+import ownership from '../model/ownership.js';
+import catalogueNumber from '../model/catalogue-number.js';
+import country from '../model/country.js';
+import catalogues from './catalogues.js';
+import _ from 'lodash';
+import Logger from '../util/logger.js';
 
-let Logger = require('../util/logger');
+const sqlTrace = Logger.getLogger("sql");
 
-
-let stamps = extend(true, {}, new PersistentCollection(), function () {
-    let sqlTrace = Logger.getLogger("sql");
-
-    function generateColumnExpression(fields, tableRef,distinct) {
-        let s = "";
-        _.each(fields, function (field, indx) {
-            let c = tableRef + "." + field.column;
-            if( distinct === true && field.column === 'ID' ) {
-                c = "DISTINCT(" + c + ")";
-            }
-            s += c;
-            if (indx < fields.length - 1) {
-                s += ',';
-            }
-        });
-        return s;
-    }
-
-    function populateKey(stamp, k) {
-        if (!_.has(stamp, k)) {
-            stamp[k] = [];
+function generateColumnExpression(fields, tableRef, distinct) {
+    let s = "";
+    _.each(fields, function (field, indx) {
+        let c = tableRef + "." + field.column;
+        if( distinct === true && field.column === 'ID' ) {
+            c = "DISTINCT(" + c + ")";
         }
-    }
-
-    function processRow(rows, row, fieldDef, key) {
-        let s = _.find(rows, { ID: row.STAMP_ID });
-        if (!s) {
-            sqlTrace.trace("No stamp found for " + row.STAMP_ID);
-            return;
+        s += c;
+        if (indx < fields.length - 1) {
+            s += ',';
         }
-        s[key].push(row);
-    }
+    });
+    return s;
+}
 
-    function getFromTableForChildren (fieldDefinition) {
-        let tables = stamp.getTableName() + ' AS ' + stamp.getAlias() + ' JOIN ' + fieldDefinition.getTableName() + ' AS ' + fieldDefinition.getAlias();
-        tables += ' ON ' + stamp.getAlias() + '.ID=' + fieldDefinition.getAlias() + '.STAMP_ID';
-        return tables;
+function populateKey(stamp, k) {
+    if (!_.has(stamp, k)) {
+        stamp[k] = [];
     }
+}
 
-    function generateChildSelection(supportedFields, fieldDefinition, inValues) {
-        let select = 'SELECT ' + generateColumnExpression(supportedFields, fieldDefinition.getAlias());
-        select += ' FROM ' + getFromTableForChildren(fieldDefinition) + ' WHERE ' + fieldDefinition.getAlias() + '.STAMP_ID IN ' + inValues;
-        return select;
+function processRow(rows, row, fieldDef, key) {
+    let s = _.find(rows, { ID: row.STAMP_ID });
+    if (!s) {
+        sqlTrace.trace("No stamp found for " + row.STAMP_ID);
+        return;
     }
+    s[key].push(row);
+}
 
-    // eslint-disable-next-line no-unused-vars
-    let cachePolicy = true;
-    let foundStamps = false;
+function getFromTableForChildren (fieldDefinition) {
+    let tables = stamp.getTableName() + ' AS ' + stamp.getAlias() + ' JOIN ' + fieldDefinition.getTableName() + ' AS ' + fieldDefinition.getAlias();
+    tables += ' ON ' + stamp.getAlias() + '.ID=' + fieldDefinition.getAlias() + '.STAMP_ID';
+    return tables;
+}
 
-    const getCatalogues = () => {
-        return catalogues.find();
-    }
+function generateChildSelection(supportedFields, fieldDefinition, inValues) {
+    let select = 'SELECT ' + generateColumnExpression(supportedFields, fieldDefinition.getAlias());
+    select += ' FROM ' + getFromTableForChildren(fieldDefinition) + ' WHERE ' + fieldDefinition.getAlias() + '.STAMP_ID IN ' + inValues;
+    return select;
+}
+
+// eslint-disable-next-line no-unused-vars
+let cachePolicy = true;
+let foundStamps = false;
+
+const getCatalogues = () => {
+    return catalogues.find();
+}
+
+const stamps = extend(true, {}, new PersistentCollection(), function () {
 
     return {
         setCachePolicy: val => {
@@ -72,7 +71,7 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
         },
 
         preCommitUpdate: async function (connection, merged, storedObj) {
-            let catalogues = (await getCatalogues()).rows;
+            let cataloguesData = (await getCatalogues()).rows;
             return new Promise((resolve, reject) => {
                 let updateList = [], createList = [];
                 let parseChildren = (childName, fieldDef) => {
@@ -81,7 +80,7 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
                             if (obj.ID) {
                                 let current = _.find(storedObj[childName], {ID: obj.ID});
                                 if (childName === 'CATALOGUENUMBER') {
-                                    obj.NUMBERSORT = catalogueNumberHelper.serialize(obj, catalogues);
+                                    obj.NUMBERSORT = catalogueNumberHelper.serialize(obj, cataloguesData);
                                 }
                                 let sql = dataTranslator.generateUpdateByFields(fieldDef, obj, current, true);
                                 if (sql !== null) {
@@ -90,7 +89,7 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
                             } else {
                                 obj.STAMP_ID = merged.ID;
                                 if (childName === 'CATALOGUENUMBER') {
-                                    obj.NUMBERSORT = catalogueNumberHelper.serialize(obj, catalogues);
+                                    obj.NUMBERSORT = catalogueNumberHelper.serialize(obj, cataloguesData);
                                 }
                                 createList.push({fieldDefinition: fieldDef, object: obj});
                             }
@@ -165,7 +164,7 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
                         catNum.STAMP_ID = obj.ID;
                         this.generateId(catalogueNumber, catNum).then(id => {
                             catNum.ID = id;
-                            let sql = dataTranslator. generateInsertByFields(catalogueNumber, catNum);
+                            let sql = dataTranslator.generateInsertByFields(catalogueNumber, catNum);
                             sqlTrace.debug(sql);
                             connection.query(sql, (err) => {
                                 if (err) {
@@ -187,7 +186,7 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
                         owner.STAMP_ID = obj.ID;
                         this.generateId(ownership, owner).then(id => {
                             owner.ID = id;
-                            let sql = dataTranslator. generateInsertByFields(ownership, owner);
+                            let sql = dataTranslator.generateInsertByFields(ownership, owner);
                             sqlTrace.debug(sql);
                             connection.query(sql, (err) => {
                                 if (err) {
@@ -259,7 +258,7 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
                 sqlTrace.debug(select);
                 let t = (new Date()).getTime();
                 connectionManager.getConnection().then(connection => {
-                    connection.query(select, (err, stamps) => {
+                    connection.query(select, (err, stampsResult) => {
                         if (err) {
                             connection.release();
                             reject(dataTranslator.getErrorMessage(err));
@@ -270,7 +269,7 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
                                     reject(dataTranslator.getErrorMessage(err));
                                 } else {
                                     let result = {
-                                        rows: stamps,
+                                        rows: stampsResult,
                                         total: countData[0].ROWCOUNT
                                     };
                                     if (result.total === 0) {
@@ -330,4 +329,4 @@ let stamps = extend(true, {}, new PersistentCollection(), function () {
     };
 }());
 
-module.exports = stamps;
+export default stamps;

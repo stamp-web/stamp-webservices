@@ -1,5 +1,5 @@
-const extend = require('node.extend');
-const fieldDefinition = require('./field-definition');
+import extend from 'node.extend';
+import fieldDefinition from './field-definition.js';
 
 const catalogueNumber = extend({}, fieldDefinition, function () {
     return {
@@ -35,4 +35,4 @@ const catalogueNumber = extend({}, fieldDefinition, function () {
     };
 }());
 
-module.exports = catalogueNumber;
+export default catalogueNumber;

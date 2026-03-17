@@ -1,9 +1,12 @@
-const _ = require('lodash');
-const Parser = require('odata-filter-parser').Parser;
-const Logger = require('../util/logger');
-const Level = require('../util/level');
-const Authenticator = require('../util/authenticator');
-const routeHelper = require('./route-helper');
+import _ from 'lodash';
+import odata from 'odata-filter-parser';
+import Logger from '../util/logger.js';
+import Level from '../util/level.js';
+import Authenticator from '../util/authenticator.js';
+import routeHelper from './route-helper.js';
+
+const Parser = odata.Parser;
+
 const logger = Logger.getLogger("server");
 
 function restInterfaces() {
@@ -25,9 +28,9 @@ function restInterfaces() {
         },
         findById: (req, res) => {
             const id = req.params.id;
-            collection.findById(id).then(row => {
+            collection.findById(id).then(async row => {
                 if (row !== null) {
-                    const data = field.externalize(row);
+                    const data = await field.externalize(row);
                     res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                     res.status(routeHelper.StatusCode.OK);
                     return res.json(data);
@@ -40,9 +43,9 @@ function restInterfaces() {
         },
         update: (req, res) => {
             const id = req.params.id;
-            collection.update(req.body, id, req.query).then(obj => {
-                let data = field.externalize(obj);
-                if(logger.isEnabled(Level.DEBUG)) {
+            collection.update(req.body, id, req.query).then(async obj => {
+                let data = await field.externalize(obj);
+                if (logger.isEnabled(Level.DEBUG)) {
                     logger.debug(data);
                 }
                 res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
@@ -54,11 +57,11 @@ function restInterfaces() {
             });
         },
         create: (req, res) => {
-            collection.create(req.body).then(obj => {
+            collection.create(req.body).then(async obj => {
                 res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                 res.status(routeHelper.StatusCode.CREATED);
-                const data = field.externalize(obj);
-                if(logger.isEnabled(Level.DEBUG)) {
+                const data = await field.externalize(obj);
+                if (logger.isEnabled(Level.DEBUG)) {
                     logger.debug(data);
                 }
                 return res.json(data);
@@ -66,7 +69,6 @@ function restInterfaces() {
                 logger.error(err);
                 routeHelper.setErrorStatus(res, err);
             });
-    
         },
         count: (req, res) => {
             const params = {
@@ -96,14 +98,15 @@ function restInterfaces() {
                 $offset: req.query.$skip || 0,
                 $orderby: req.query.$orderby || null
             };
-            collection.find(params).then(data => {
+            collection.find(params).then(async data => {
                 const result = {
                     total: data.total
                 };
                 result[collection.collectionName] = [];
-                _.each(data.rows, row => {
-                    result[collection.collectionName].push(field.externalize(row));
-                });
+                for (const row of data.rows) {
+                    const externalizedRow = await field.externalize(row);
+                    result[collection.collectionName].push(externalizedRow);
+                };
                 res.set(routeHelper.Headers.CONTENT_TYPE, routeHelper.ContentType.JSON);
                 res.status(routeHelper.StatusCode.OK);
                 return res.json(result);
@@ -123,4 +126,4 @@ function restInterfaces() {
     };
 }
 
-module.exports = restInterfaces;
+export default restInterfaces;

@@ -1,5 +1,5 @@
-const Logger = require('../util/logger');
-const routeHelper = require('./route-helper');
+import Logger from '../util/logger.js';
+import routeHelper from './route-helper.js';
 
 const logger = Logger.getLogger("server");
 
@@ -21,8 +21,7 @@ const entityManaged = function (collect) {
                 res.status(routeHelper.StatusCode.INTERNAL_ERROR).send(routeHelper.ClientMessages.INTERNAL_ERROR).end();
             });
         }
-    }
+    };
 };
 
-
-module.exports = entityManaged;
+export default entityManaged;

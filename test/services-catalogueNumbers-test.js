@@ -1,6 +1,6 @@
-const _ = require('lodash');
-const superagent = require('superagent');
-const session = require('./util/integration-session');
+import _ from 'lodash';
+import superagent from 'superagent';
+import session from './util/integration-session.js';
 
 describe('REST Services for Catalogue Numbers', () => {
 

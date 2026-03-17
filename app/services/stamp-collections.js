@@ -1,16 +1,16 @@
-const extend = require('node.extend');
-const PersistentCollection = require('./persistent-collection');
-const EntityManagement = require('./entity-management');
-const dataTranslator = require('./mysql-translator');
-const Predicate = require('odata-filter-parser').Predicate;
-const Operators = require('odata-filter-parser').Operators;
-const stampCollection = require('../model/stamp-collection');
-const album = require('../model/album');
-const stamp = require('../model/stamp');
-const ownership = require('../model/ownership');
-const albums = require('./albums');
+import extend from 'node.extend';
+import PersistentCollection from './persistent-collection.js';
+import EntityManagement from './entity-management.js';
+import dataTranslator from './mysql-translator.js';
+import odataFilterParser from 'odata-filter-parser';
+import stampCollection from '../model/stamp-collection.js';
+import album from '../model/album.js';
+import stamp from '../model/stamp.js';
+import ownership from '../model/ownership.js';
+import albums from './albums.js';
+import _ from 'lodash';
 
-const _ = require('lodash');
+const { Predicate, Operators } = odataFilterParser;
 
 const collections = extend(true, {}, new EntityManagement(), new PersistentCollection(), function () {
     return {
@@ -79,4 +79,4 @@ const collections = extend(true, {}, new EntityManagement(), new PersistentColle
     };
 }());
 
-module.exports = collections;
+export default collections;

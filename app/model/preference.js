@@ -1,5 +1,5 @@
-const extend = require('node.extend');
-const fieldDefinition = require('./field-definition');
+import extend from 'node.extend';
+import fieldDefinition from './field-definition.js';
 
 const preference = extend({}, fieldDefinition, function () {
     return {
@@ -25,4 +25,4 @@ const preference = extend({}, fieldDefinition, function () {
     };
 }());
 
-module.exports = preference;
+export default preference;

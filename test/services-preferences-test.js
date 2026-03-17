@@ -1,5 +1,5 @@
-const session = require('./util/integration-session');
-const NamedCollectionVerifications = require('./util/named-collection-verifier');
+import session from './util/integration-session.js';
+import NamedCollectionVerifications from './util/named-collection-verifier.js';
 
 describe('REST Services for Preferences', () => {
 

@@ -1,7 +1,7 @@
-const _ = require('lodash');
-const Constants = require('../util/constants');
-const Logger = require('../util/logger');
-const moment = require('moment');
+import _ from 'lodash';
+import Constants from '../util/constants.js';
+import Logger from '../util/logger.js';
+import moment from 'moment';
 
 const fieldDefinition = function () {
     const logger = Logger.getLogger("fieldDefinition");
@@ -62,30 +62,30 @@ const fieldDefinition = function () {
             }
             return val;
         },
-        internalize: function (o) {
+        internalize: async function (o) {
             const obj = {};
-            _.each(_.keys(o), (key) => {
+            for (const key of _.keys(o)) {
                 const field = _.find(this.getFieldDefinitions(), {field: key});
                 if (field && !field.nonPersistent) {
                     if (field.type === 'obj_array' && field.model) {
-                        const m = require('./' + field.model);
+                        const m = await import('./' + field.model + '.js');
                         obj[field.column] = [];
-                        _.each(o[key], (cObj) => {
-                            const converted = m.internalize(cObj);
+                        for (const cObj of o[key]) {
+                            const converted = await m.default.internalize(cObj);
                             obj[field.column].push(converted);
-                        });
+                        }
                     } else {
                         let val = o[key];
                         if (field.type === 'string' && val && val.replace) {
                             val = val.replace(/'/g, "''"); // escape apostrophe
                         }
                         obj[field.column] = val;
-
                     }
                 }
-            });
+            }
             return obj;
         },
+
         getField: function (o, column) {
             if (column) {
                 return _.find(this.getFieldDefinitions(), {column: o});
@@ -93,8 +93,8 @@ const fieldDefinition = function () {
                 return _.find(this.getFieldDefinitions(), {field: o});
             }
         },
-        merge: function (cur, orig) {
-            _.each(_.keys(orig), (key) => {
+        merge: async function (cur, orig) {
+            for (const key of _.keys(orig)) {
                 if (cur[key] === undefined && orig[key] !== undefined) {
                     cur[key] = orig[key];
                 } else if (_.isArray(cur[key])) {
@@ -104,35 +104,41 @@ const fieldDefinition = function () {
                             const mergeSource = orig[key][i];
                             const mergeChild = _.find(cur[key], {ID: mergeSource.ID});
                             if (mergeChild) {
-                                require('./' + field.model).merge(mergeChild, mergeSource);
+                                const m = await import('./' + field.model + '.js');
+                                await m.default.merge(mergeChild, mergeSource);
                             } else {
                                 cur[key].push(mergeSource);
                             }
                         }
                     }
                 }
-            });
+            }
             return cur;
         },
-        externalize: function (o) {
-            const obj = _.clone(o);
+        externalize: async function (o) {
+
+            let plainObj = o;
+            if (o && typeof o === 'object' && o.constructor.name === 'RowDataPacket') {
+                plainObj = JSON.parse(JSON.stringify(o));
+            }
+
+            const obj = _.clone(plainObj);
             try {
-                if (!o) {
+                if (!plainObj) {
                     return;
                 }
-
-                _.each(_.keys(o), (key) => {
+                for (const key of _.keys(plainObj)) {
                     const field = _.find(this.getFieldDefinitions(), {column: key});
-                    if (!field || (field.internal) || (typeof field.externalizeOnEmpty !== 'undefined' && field.externalizeOnEmpty === false && o[key] === null)) {
+                    if (!field || (field.internal) || (typeof field.externalizeOnEmpty !== 'undefined' && field.externalizeOnEmpty === false && plainObj[key] === null)) {
                         delete obj[key];
                     } else if (field.type === "obj_array") {
                         const children = obj[key];
-                        const childDef = require('./' + field.model);
+                        const childRef = await import('./' + field.model + '.js');
                         obj[field.field] = [];
-                        _.each(children, (child) => {
-                            const c = childDef.externalize(child);
+                        for (const child of children) {
+                            const c = await childRef.default.externalize(child);
                             obj[field.field].push(c);
-                        });
+                        }
                         delete obj[key];
                     } else {
                         let val = obj[key];
@@ -145,14 +151,14 @@ const fieldDefinition = function () {
                                 if (_.isDate(val) || _.isString(val)) {
                                     val = moment(val).format('YYYY-MM-DDTHH:mm:ss.SSSZ');
                                 } else {
-                                    logger.warn("object with id " + o.ID + " has invalid date: " + val);
+                                    logger.warn("object with id " + plainObj.ID + " has invalid date: " + val);
                                 }
                                 break;
                         }
                         obj[field.field] = val;
-
                     }
-                });
+                }
+
             } catch (err) {
                 logger.error(err);
             }
@@ -189,4 +195,4 @@ const fieldDefinition = function () {
     };
 };
 
-module.exports = new fieldDefinition();
+export default new fieldDefinition();

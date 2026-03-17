@@ -1,9 +1,9 @@
-const extend = require('node.extend');
-const PersistentCollection = require('./persistent-collection');
-const EntityManagement = require('./entity-management');
-const seller = require('../model/seller');
-const stamp = require('../model/stamp');
-const ownership = require('../model/ownership');
+import extend from 'node.extend';
+import PersistentCollection from './persistent-collection.js';
+import EntityManagement from './entity-management.js';
+import seller from '../model/seller.js';
+import stamp from '../model/stamp.js';
+import ownership from '../model/ownership.js';
 
 const sellers = extend(true, {}, new EntityManagement(), new PersistentCollection(), function() {
     return {
@@ -20,4 +20,4 @@ const sellers = extend(true, {}, new EntityManagement(), new PersistentCollectio
     };
 }());
 
-module.exports = sellers;
+export default sellers;

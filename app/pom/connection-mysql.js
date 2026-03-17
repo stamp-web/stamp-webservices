@@ -1,16 +1,23 @@
-﻿const mysql = require('mysql');
-const PoolConnection = require('mysql/lib/PoolConnection');
-const Logger = require('../util/logger');
-const Level = require('../util/level');
-const nconf = require('nconf');
-const pw = require("pw");
+﻿
+import mysql from 'mysql';
+import PoolConnection from 'mysql/lib/PoolConnection.js';
+import Logger from '../util/logger.js';
+import Level from '../util/level.js';
+import nconf from 'nconf';
+import pw from 'pw';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
-nconf.argv().env().file(__dirname + '/../../config/application.json');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+nconf.argv().env().file(path.join(__dirname, '../../config/application.json'));
 
 const logger = Logger.getLogger("connection");
 logger.setLevel(Level.INFO);
 
 let releaseCount = 0;
+
 /**
  * OVERRIDDEN FROM node-mysql to allow the release count to be incremented.
  *
@@ -27,7 +34,15 @@ PoolConnection.prototype.release = function release() {
     return pool.releaseConnection(this);
 };
 
-module.exports = function () {
+function logConfigration(config) {
+    const safeConfig = Object.assign({}, config);
+    if (safeConfig.password) {
+        delete safeConfig.password;
+    }
+    logger.info(`MySQL database configuration: ${JSON.stringify(safeConfig, null, 2)}`);
+}
+
+function createConnectionManager() {
     let connectionCount, dbPool, config, dbName;
 
     const ConnectionCodes = {
@@ -62,14 +77,14 @@ module.exports = function () {
     function determineDBPassword(config) {
         return new Promise((resolve) => {
             if (config.password && config.password.length > 0) {
-                return resolve();
+                resolve();
             } else {
                 config.password = nconf.get("db_password");
                 if (config.password && config.password.length > 0) {
-                    return resolve();
+                    resolve();
                 } else {
                     process.stdout.write('\nConfiguration did not contain a database password.\nEnter database password: ');
-                    pw(function (value) {
+                    pw((value) => {
                         config.password = value;
                         resolve();
                     });
@@ -78,8 +93,8 @@ module.exports = function () {
         });
     }
 
-    function enableKeepAlive() {
-        const Pool = require('mysql/lib/Pool');
+    async function enableKeepAlive() {
+        const Pool = (await import('mysql/lib/Pool.js')).default;
         Pool.prototype.startKeepAlive = function () {
             const pool = this;
             this.config.keepalive = 30000;
@@ -95,105 +110,95 @@ module.exports = function () {
                 });
             }, this.config.keepalive);
         };
-
     }
 
-    function createPool() {
-        return new Promise((resolve, reject) => {
-            if (config) {
-                determineDBPassword(config).then(function () {
-                    enableKeepAlive();
-                    console.log('>>>>', config)
-                    dbPool = mysql.createPool({
-                        connectionLimit: 20,
-                        host: config.host,
-                        user: config.user,
-                        password: config.password,
-                        database: config.schema
-                    });
-                    dbPool.startKeepAlive();
+    async function createPool() {
+        if (config) {
+            await determineDBPassword(config);
+            await enableKeepAlive();
+            logConfigration(config);
+            if (!dbPool) {
+                dbPool = mysql.createPool({
+                    connectionLimit: 20,
+                    host: config.host,
+                    user: config.user,
+                    password: config.password,
+                    database: config.schema
+                });
+                dbPool.startKeepAlive();
 
-                    dbPool.getConnection(function (err, connection) {
+                // Wait for connection test
+                await new Promise((resolve, reject) => {
+                    dbPool.getConnection((err, connection) => {
                         connectionCount++;
                         if (connection) {
                             connection.release();
                         }
                         if (!err) {
                             logger.info('MySQL database pool created for database named \'' + dbName + '\'');
-                            resolve(dbPool);
+                            resolve();
                         } else {
-                            reject(err);
+                            logger.error('Failed to create connection pool', err);
+                            reject(new Error(`Failed to create connection pool: ${err.message}`));
                         }
                     });
                 });
-            } else {
-                const msg = "The database " + dbName + " was not found in the configuration.";
-                logger.error(msg);
-                reject(msg);
             }
-
-        });
+            return dbPool;
+        } else {
+            const msg = "No Configuration was provided.";
+            logger.error(msg);
+            return null;
+        }
     }
 
-    function getPool() {
-        return new Promise((resolve, reject) => {
-            if (dbPool) {
-                resolve(dbPool);
-            } else {
-                createPool().then(pool => {
-                    resolve(pool);
-                }, err => {
-                    reject(err);
-                });
+    async function getPool() {
+        if (dbPool) {
+            return dbPool;
+        } else {
+            try {
+                return await createPool();
+            } catch (err) {
+                throw new Error('Failed to create DBPool', err);
             }
-        });
+        }
     }
 
     connectionCount = 0;
 
     return {
-
-        startup: function () {
-            return new Promise((resolve, reject) => {
-                if (!dbPool) {
-                    dbName = nconf.get("database");
-                    if (!dbName) {
-                        reject("No database was selected.");
-                    }
-                    config = nconf.get("databases")[dbName];
-                    getPool().then(() => {
-                        logger.info("Connection pool created for database named '" + dbName + "'");
-                        resolve();
-                    }, err => {
-                        logger.error("Error creating connection pool", err);
-                        reject(err);
-                    });
+        startup: async () => {
+            if (!dbPool) {
+                dbName = nconf.get("database");
+                if (!dbName) {
+                    throw new Error("No database was selected.");
                 }
-            });
+                config = nconf.get("databases")[dbName];
+                try {
+                    await getPool();
+                    logger.info("Connection pool created for database named '" + dbName + "'");
+                } catch (err) {
+                    logger.error("Error creating connection pool", err);
+                }
+            }
         },
-        shutdown: function () {
-            if (dbPool !== null) {
+        shutdown: () => {
+            if (dbPool) {
                 dbPool.end(err => {
-                    logger.warn('Error seen closing connection pool', err)
+                    logger.warn('Error seen closing connection pool', err);
                     dbPool = null;
                 });
             }
-
         },
-        getConnection: function () {
-            return new Promise((resolve, reject) => {
-                getPool().then(pool => {
+        getConnection: async () => {
+            try {
+                const pool = await getPool();
+                return new Promise((resolve, reject) => {
                     pool.getConnection((err, connection) => {
-                        if (!err) {
-                            /*
-                            Note sure what this was doing, but it is causing tests to fail
-                            var del = connection._protocol._delegateError;
-                            connection._protocol._delegateError = (err2, sequence) => {
-                                if (err2.fatal) {
-                                    logger.trace('fatal error: ' + err2.message);
-                                }
-                                return del.call(this, err2, sequence);
-                            };*/
+                        if (err) {
+                            handleConnectionError(err);
+                            reject(err);
+                        } else {
                             if (connectionCount > 1000000) {
                                 releaseCount = 0;
                                 connectionCount = 0;
@@ -202,16 +207,14 @@ module.exports = function () {
                             connectionCount++;
                             logger.trace("new connection:     > " + connectionCount + " (" + (connectionCount - releaseCount) + " unreleased)");
                             resolve(connection);
-                        } else {
-                            handleConnectionError(err);
-                            reject(err);
                         }
                     });
-                }, err => {
-                    reject(err);
                 });
-            });
-
+            } catch (e) {
+                throw e;
+            }
         }
     };
-}();
+}
+
+export default createConnectionManager();

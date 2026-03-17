@@ -1,4 +1,4 @@
-﻿const _ = require('lodash');
+﻿import _ from 'lodash';
 
 const routeHelper = function () {
 
@@ -60,5 +60,4 @@ const routeHelper = function () {
     };
 };
 
-
-module.exports = new routeHelper();
+export default new routeHelper();

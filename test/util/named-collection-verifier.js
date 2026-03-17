@@ -1,6 +1,6 @@
-﻿/* eslint jest/no-standalone-expect: 0 */
-const superagent = require('superagent')
-const nconf = require('nconf');
+﻿import superagent from 'superagent';
+import nconf from 'nconf';
+
 nconf.argv().env();
 
 let server_port = 9002;
@@ -138,4 +138,4 @@ const NamedCollectionVerifications = {
     }
 };
 
-module.exports = NamedCollectionVerifications;
+export default NamedCollectionVerifications;

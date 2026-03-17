@@ -1,29 +1,28 @@
 import redis from 'redis';
 import RedisStore from "connect-redis";
+import Logger from "../util/logger.js";
 
-let client;
+const logger = Logger.getLogger('redis-client');
+let client = null;
 
-export function getRedisClient() {
-    if (!client && !client?.isOpen) {
+export async function getRedisClient() {
+    if (!client || !client.isOpen) {
         client = redis.createClient({
             socket: {
                 host: process.env.REDIS_HOST || 'localhost',
                 port: process.env.REDIS_PORT || 6379
             }
         });
-
         client.on('error', err =>
-            console.error('Redis Client Error:', err)
+            logger.error(`Redis Client Error: ${err.code}`)
         );
-
-        client.connect(); // ✅ only once
+        await client.connect(); // ✅ only once
     }
-
     return client;
 }
 
-export function createRedisSessionConfig(secret) {
-    const redisClient = getRedisClient();
+export async function createRedisSessionConfig(secret) {
+    const redisClient = await getRedisClient();
     if( redisClient ) {
         const sessionConfig = {
             store: new RedisStore({ client: redisClient }),
@@ -37,7 +36,7 @@ export function createRedisSessionConfig(secret) {
                 maxAge: 24 * 60 * 60 * 1000 // 24 hours
             }
         };
-        console.log('Redis Session Config created and connection is established.');
+        logger.info('Redis Session Config created and connection is established.');
         return sessionConfig;
     }
     return undefined

@@ -1,4 +1,4 @@
-const NumericUtilities = require("../app/util/numeric-utilities");
+import NumericUtilities from "../app/util/numeric-utilities.js";
 
 describe('numeric-utilities', () => {
     describe('determineShiftedValues', () => {

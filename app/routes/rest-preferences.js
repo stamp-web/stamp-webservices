@@ -1,11 +1,11 @@
-const preferences = require("../services/preferences");
-const preference = require('../model/preference');
-const restInterfaces = require('./rest-interfaces')();
-const extend = require('node.extend');
+import preferences from "../services/preferences.js";
+import preference from '../model/preference.js';
+import restInterfaces from './rest-interfaces.js';
+import extend from 'node.extend';
 
 const RESOURCE_PATH = "/preferences";
 
-exports.configure = (app, basePath) => {
-    const prefsRest = extend(true, {}, restInterfaces);
+export const configure = (app, basePath) => {
+    const prefsRest = extend(true, {}, new restInterfaces());
     prefsRest.initialize(app, `${basePath}${RESOURCE_PATH}`, preferences, preference);
 };

@@ -1,7 +1,11 @@
-"use strict";
-const fs = require('fs');
-const FileStreamRotator = require('file-stream-rotator');
-const Level = require('./level');
+import fs from 'fs';
+import FileStreamRotator from 'file-stream-rotator';
+import Level from './level.js';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function Logger(loggerName) {
     // eslint-disable-next-line no-unused-vars
@@ -15,7 +19,7 @@ function Logger(loggerName) {
 
     let accessLogStream = FileStreamRotator.getStream({
         date_format: 'YYYYMMDD',
-        filename: __dirname + '/../../logs/' + loggerName + '-%DATE%.log',
+        filename: path.join(__dirname, `../../logs/${loggerName}-%DATE%.log`),
         frequency: 'daily',
         verbose: false
     });
@@ -26,9 +30,9 @@ function Logger(loggerName) {
                 message = JSON.stringify(message);
             }
             const msg = `${level.toUpperCase()}: ${message}`;
-            accessLogStream.write( msg + '\n');
+            accessLogStream.write(msg + '\n');
             const ordinal = Level.levels.indexOf(level);
-            if( !Logger.silentLogging && (ordinal <= CONSOLE_LOGGING || ordinal === 5)) {
+            if (!Logger.silentLogging && (ordinal <= CONSOLE_LOGGING || ordinal === 5)) {
                 console.log(message);
             }
         }
@@ -40,7 +44,7 @@ function Logger(loggerName) {
 
     this.error = function(message) {
         this.log(Level.ERROR, message);
-    }
+    };
 
     this.warn = function(message) {
         this.log(Level.WARN, message);
@@ -52,7 +56,7 @@ function Logger(loggerName) {
 
     this.trace = function(message) {
         this.log(Level.TRACE, message);
-    }
+    };
     
     this.setLevel = function (level) {
         debugLevel = level; 
@@ -66,14 +70,14 @@ function Logger(loggerName) {
         return new Promise(resolve => {
             target = type;
             targetPath = item;
-            if( target === 'file') {
-                let path = item;
-                if( item.endsWith('.log')) {
-                    path = item.substring(0, item.lastIndexOf('/'));
+            if (target === 'file') {
+                let targetPath = item;
+                if (item.endsWith('.log')) {
+                    targetPath = item.substring(0, item.lastIndexOf('/'));
                 }
-                fs.access( path, fs.R_OK | fs.W_OK,  (err) => {
-                    if( err !== null ) {
-                        fs.mkdir(path, () => {
+                fs.access(targetPath, fs.R_OK | fs.W_OK, (err) => {
+                    if (err !== null) {
+                        fs.mkdir(targetPath, () => {
                             resolve();
                         });
                     } else {
@@ -89,7 +93,6 @@ function Logger(loggerName) {
     this.isEnabled = function (level) {
         return (Level.levels.indexOf(level) <= Level.levels.indexOf(debugLevel));
     };
-
 }
 
 Logger.loggers = {};
@@ -108,6 +111,6 @@ Logger.getRegisteredLoggerNames = function () {
 
 Logger.silenceConsole = () => {
     Logger.silentLogging = true;
-}
+};
 
-module.exports = Logger;
+export default Logger;

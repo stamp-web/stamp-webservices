@@ -1,5 +1,5 @@
-const extend = require('node.extend');
-const fieldDefinition = require('./field-definition');
+import extend from 'node.extend';
+import fieldDefinition from './field-definition.js';
 
 const seller = extend({}, fieldDefinition, function () {
     return {
@@ -24,4 +24,4 @@ const seller = extend({}, fieldDefinition, function () {
     };
 }());
 
-module.exports = seller;
+export default seller;

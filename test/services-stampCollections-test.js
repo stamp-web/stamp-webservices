@@ -1,6 +1,6 @@
-const superagent = require('superagent');
-const session = require('./util/integration-session');
-const NamedCollectionVerifications = require('./util/named-collection-verifier');
+import superagent from 'superagent';
+import session from './util/integration-session.js';
+import NamedCollectionVerifications from './util/named-collection-verifier.js';
 
 describe('REST Services for Stamp Collections', () => {
 

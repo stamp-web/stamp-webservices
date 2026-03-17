@@ -15,4 +15,4 @@ NumericUtilities.determineShiftedValues = (total, highestCount = 20) => {
     return values
 }
 
-module.exports = NumericUtilities
+export default NumericUtilities

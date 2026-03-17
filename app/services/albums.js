@@ -1,64 +1,78 @@
-const extend = require('node.extend');
-const PersistentCollection = require('./persistent-collection');
-const EntityManagement = require('./entity-management');
-const dataTranslator = require('./mysql-translator');
-const album = require('../model/album');
-const ownership = require('../model//ownership');
-const stamp = require('../model/stamp');
-const _ = require('lodash');
+import extend from 'node.extend';
+import PersistentCollection from './persistent-collection.js';
+import EntityManagement from './entity-management.js';
+import dataTranslator from './mysql-translator.js';
+import album from '../model/album.js';
+import ownership from '../model/ownership.js';
+import stamp from '../model/stamp.js';
+import _ from 'lodash';
+import Logger from '../util/logger.js';
 
-const albums = extend(true, {}, new EntityManagement(), new PersistentCollection(), function () {
-    const Logger = require('../util/logger');
-    const sqlTrace = Logger.getLogger('sql');
+const sqlTrace = Logger.getLogger('sql');
 
-    function mergeCountries(connection, obj) {
-        return new Promise((resolve, reject) => {
-            if (obj.COUNTRIES && obj.COUNTRIES.length === 0) {
-                let clear_link = "DELETE FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=?";
-                connection.query(clear_link, [obj.ID], (err) => {
-                    if (err) {
-                        reject(dataTranslator.getErrorMessage(err));
-                    } else {
+function mergeCountries(connection, obj) {
+    return new Promise((resolve, reject) => {
+        if (obj.COUNTRIES && obj.COUNTRIES.length === 0) {
+            let clear_link = "DELETE FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=?";
+            connection.query(clear_link, [obj.ID], (err) => {
+                if (err) {
+                    reject(dataTranslator.getErrorMessage(err));
+                } else {
+                    resolve(obj);
+                }
+            });
+        } else {
+            let existing_links = "SELECT COUNTRY_ID AS id FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=?";
+            connection.query(existing_links, [obj.ID], (err, results) => {
+                if (err) {
+                    reject(dataTranslator.getErrorMessage(err));
+                } else {
+                    let remove_ids = [];
+                    let current = _.clone(obj.COUNTRIES);
+                    for (let i = 0; i < results.length; i++) {
+                        let result = results[i];
+                        let indx = _.indexOf(current, result.id);
+                        if (indx < 0) {
+                            remove_ids.push(result.id);
+                        } else {
+                            current.splice(indx, 1);
+                        }
+                    }
+                    let totalUpdates = remove_ids.length + current.length;
+                    if (totalUpdates === 0) {
                         resolve(obj);
                     }
-                });
-            } else {
-                let existing_links = "SELECT COUNTRY_ID AS id FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=?";
-                connection.query(existing_links, [obj.ID], (err, results) => {
-                    if (err) {
-                        reject(dataTranslator.getErrorMessage(err));
-                    } else {
-                        let remove_ids = [];
-                        let current = _.clone(obj.COUNTRIES);
-                        for (let i = 0; i < results.length; i++) {
-                            let result = results[i];
-                            let indx = _.indexOf(current, result.id);
-                            if (indx < 0) {
-                                remove_ids.push(result.id);
-                            } else {
-                                current.splice(indx, 1);
+                    let updates = 0;
+
+                    if (remove_ids.length > 0) {
+                        let qs = "DELETE FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=? AND COUNTRY_ID IN (";
+                        for (let i = 0; i < remove_ids.length; i++) {
+                            qs += remove_ids[i];
+                            if (i < remove_ids.length - 1) {
+                                qs += ",";
                             }
                         }
-                        let totalUpdates = remove_ids.length + current.length;
-                        if (totalUpdates === 0) {
-                            resolve(obj);
-                        }
-                        let updates = 0;
-
-                        if (remove_ids.length > 0) {
-                            let qs = "DELETE FROM ALBUMS_COUNTRIES WHERE ALBUM_ID=? AND COUNTRY_ID IN (";
-                            for (let i = 0; i < remove_ids.length; i++) {
-                                qs += remove_ids[i];
-                                if (i < remove_ids.length - 1) {
-                                    qs += ",";
+                        qs += ")";
+                        connection.query(qs, [obj.ID], (err) => {
+                            if (err) {
+                                reject(dataTranslator.getErrorMessage(err));
+                            } else {
+                                updates += remove_ids.length;
+                                if (totalUpdates === updates) {
+                                    resolve(obj);
                                 }
                             }
-                            qs += ")";
-                            connection.query(qs, [obj.ID], (err) => {
+
+                        });
+                    }
+                    if (current.length > 0) {
+                        let qs = "INSERT INTO ALBUMS_COUNTRIES (ALBUM_ID,COUNTRY_ID) VALUES(?,?)";
+                        for (let i = 0; i < current.length; i++) {
+                            connection.query(qs, [obj.ID, current[i]], (err) => {
                                 if (err) {
                                     reject(dataTranslator.getErrorMessage(err));
                                 } else {
-                                    updates += remove_ids.length;
+                                    updates++;
                                     if (totalUpdates === updates) {
                                         resolve(obj);
                                     }
@@ -66,30 +80,16 @@ const albums = extend(true, {}, new EntityManagement(), new PersistentCollection
 
                             });
                         }
-                        if (current.length > 0) {
-                            let qs = "INSERT INTO ALBUMS_COUNTRIES (ALBUM_ID,COUNTRY_ID) VALUES(?,?)";
-                            for (let i = 0; i < current.length; i++) {
-                                connection.query(qs, [obj.ID, current[i]], (err) => {
-                                    if (err) {
-                                        reject(dataTranslator.getErrorMessage(err));
-                                    } else {
-                                        updates++;
-                                        if (totalUpdates === updates) {
-                                            resolve(obj);
-                                        }
-                                    }
-
-                                });
-                            }
-                        }
-
                     }
-                });
-            }
-        });
 
-    }
+                }
+            });
+        }
+    });
 
+}
+
+const albums = extend(true, {}, new EntityManagement(), new PersistentCollection(), function () {
     return {
         collectionName: 'albums',
         fieldDefinition: album,
@@ -178,4 +178,4 @@ const albums = extend(true, {}, new EntityManagement(), new PersistentCollection
     };
 }());
 
-module.exports = albums;
+export default albums;

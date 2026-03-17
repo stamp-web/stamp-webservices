@@ -1,13 +1,18 @@
-const passport = require('passport');
-const BasicStrategy = require('passport-http').BasicStrategy;
-const nconf = require('nconf');
-const _ = require('lodash');
-const session = require('express-session');
-const cookieParser = require('cookie-parser');
-const Logger = require('./logger');
-const Level = require('./level');
+import passport from 'passport';
+import { BasicStrategy } from 'passport-http';
+import nconf from 'nconf';
+import _ from 'lodash';
+import session from 'express-session';
+import cookieParser from 'cookie-parser';
+import Logger from './logger.js';
+import Level from './level.js';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
-nconf.argv().env().file(__dirname + '/../../config/application.json');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+nconf.argv().env().file(path.join(__dirname, '../../config/application.json'));
 
 const logger = Logger.getLogger('user-auth');
 
@@ -21,7 +26,7 @@ const BasicValidation = {};
 
 BasicValidation.validator = function(username, password, done) {
     const user = _.find(BasicValidation.getUserCache(), {username: username});
-    if(logger.isEnabled(Level.DEBUG)) {
+    if (logger.isEnabled(Level.DEBUG)) {
         logger.debug(`For username '${username}' found user : '${user}'`);
     }
 
@@ -34,28 +39,29 @@ BasicValidation.validator = function(username, password, done) {
     return done(null, user);
 };
 
-BasicValidation.getUserCache = function( ) {
-    if( !UserCache ) {
+BasicValidation.getUserCache = async function() {
+    if (!UserCache) {
         let file = nconf.get("password_file");
-        if( !file ) {
-            file = '../../config/users.json';
+        if (!file) {
+            file = path.join(__dirname, '../../config/users.json');
         }
-        UserCache = require(file);
+        // Dynamic import for JSON file
+        UserCache = await import(file, { assert: { type: 'json' } }).then(m => m.default);
     }
     return UserCache;
-}
+};
 
-BasicValidation.serializeUser = function(user,done) {
+BasicValidation.serializeUser = function(user, done) {
     done(null, user.id);
 };
 
-BasicValidation.deserializeUser = function(id,done) {
-    done(null,_.find(BasicValidation.getUserCache(), {id: id}));
+BasicValidation.deserializeUser = function(id, done) {
+    done(null, _.find(BasicValidation.getUserCache(), {id: id}));
 };
 
 Authenticator.initialize = function(app) {
-    const result  = {configured: false, authType: authType};
-    if( authType !== null && authType !== 'none') {
+    const result = {configured: false, authType: authType};
+    if (authType !== null && authType !== 'none') {
         const sessionSecret = nconf.get("authentication-session-secret");
         if (!sessionSecret) {
             throw new Error('Session secret must be configured via "authentication-session-secret" in config');
@@ -73,7 +79,7 @@ Authenticator.initialize = function(app) {
         app.use(passport.initialize());
         app.use(passport.session());
 
-        switch(authType) {
+        switch (authType) {
             case 'basic':
                 try {
                     passport.serializeUser(BasicValidation.serializeUser);
@@ -96,8 +102,8 @@ Authenticator.initialize = function(app) {
 };
 
 Authenticator.applyAuthentication = function() {
-    if( authType !== null ) {
-        switch(authType) {
+    if (authType !== null) {
+        switch (authType) {
             case 'basic':
                 return passport.authenticate('basic', { session: true });
             default:
@@ -105,7 +111,7 @@ Authenticator.applyAuthentication = function() {
                 break;
         }
     }
-    return function(req,res,next) { next(); };
+    return function(req, res, next) { next(); };
 };
 
-module.exports = Authenticator;
+export default Authenticator;

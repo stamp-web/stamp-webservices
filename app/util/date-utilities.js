@@ -4,4 +4,4 @@ Date.prototype.isDST = Date.prototype.isDST || function() { //t is the date obje
     return Math.min(jan.getTimezoneOffset(),jul.getTimezoneOffset()) == this.getTimezoneOffset();
 };
 
-exports.DataUtilities = {};
+export const DataUtilities = {};

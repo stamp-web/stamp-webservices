@@ -1,5 +1,5 @@
-const extend = require('node.extend');
-const fieldDefinition = require('./field-definition');
+import extend from 'node.extend';
+import fieldDefinition from './field-definition.js';
 
 const country = extend({}, fieldDefinition, function () {
     return {
@@ -25,4 +25,4 @@ const country = extend({}, fieldDefinition, function () {
     };
 }());
 
-module.exports = country;
+export default country;

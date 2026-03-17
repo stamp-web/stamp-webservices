@@ -1,10 +1,12 @@
-const connectionMgr = require('../../pom/connection-mysql');
-const catalogueNumberService = require('../../services/catalogue-numbers');
-const catalogueService = require('../../services/catalogues');
-const catalogueNumberHelper = require('../catalogue-number-helper');
-const catalogueNumber = require('../catalogue-number');
-const _ = require('lodash');
-let Logger = require('../../util/logger');
+import connectionMgr from '../../pom/connection-mysql.js';
+import catalogueNumberService from '../../services/catalogue-numbers.js';
+import catalogueService from '../../services/catalogues.js';
+import catalogueNumberHelper from '../catalogue-number-helper.js';
+import catalogueNumber from '../catalogue-number.js';
+import _ from 'lodash';
+import Logger from '../../util/logger.js';
+
+const logger = Logger.getLogger("server");
 
 const converter = function() {
     return {
@@ -19,10 +21,10 @@ const converter = function() {
                     let catalogues = values[1];
                     if (numbers && catalogues) {
                         let updates = [];
-                        _.forEach(numbers.rows, number => {
+                        _.forEach(numbers.rows, async number => {
                             let val = catalogueNumberHelper.serialize(number, catalogues.rows);
                             number.NUMBERSORT = val;
-                            let num = catalogueNumber.externalize(number);
+                            let num = await catalogueNumber.externalize(number);
                             num.numberSort = val;
                             updates.push(num);
                         });
@@ -43,9 +45,8 @@ const converter = function() {
         }
     }
 }();
-module.exports = converter;
 
-let logger = Logger.getLogger("server");
+export default converter;
 
 connectionMgr.startup().then(() => {
     converter.convertAll(100000).then(() => {

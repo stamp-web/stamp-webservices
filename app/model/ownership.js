@@ -1,6 +1,6 @@
-const extend = require('node.extend');
-const fieldDefinition = require('./field-definition');
-const NumericUtilities = require('../util/numeric-utilities');
+import extend from 'node.extend';
+import fieldDefinition from './field-definition.js';
+import NumericUtilities from '../util/numeric-utilities.js';
 
 const ownership = extend({}, fieldDefinition, function() {
     return {
@@ -95,4 +95,4 @@ const ownership = extend({}, fieldDefinition, function() {
     };
 }());
 
-module.exports = ownership;
+export default ownership;

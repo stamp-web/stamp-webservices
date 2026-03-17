@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     "modulePaths": [
         "<rootDir>/app",
         "<rootDir>/node_modules"
@@ -33,4 +33,4 @@ module.exports = {
         "html",
         "cobertura"
     ]
-}
+};

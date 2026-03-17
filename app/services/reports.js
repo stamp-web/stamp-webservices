@@ -1,15 +1,14 @@
-﻿const _ = require('lodash');
-
-const connectionManager = require('../pom/connection-mysql');
-const dataTranslator = require('./mysql-translator');
-const stamp = require('../model/stamp');
-const catalogue = require('../model/catalogue');
-const ownership = require('../model/ownership');
-const catalogueNumber = require('../model/catalogue-number');
-const Logger = require('../util/logger');
-const ExchangeRates = require('../util/exchange-rates');
-const fx = require('money');
-const accounting = require('accounting');
+﻿import _ from 'lodash';
+import connectionManager from '../pom/connection-mysql.js';
+import dataTranslator from './mysql-translator.js';
+import stamp from '../model/stamp.js';
+import catalogue from '../model/catalogue.js';
+import ownership from '../model/ownership.js';
+import catalogueNumber from '../model/catalogue-number.js';
+import Logger from '../util/logger.js';
+import ExchangeRates from '../util/exchange-rates.js';
+import fx from 'money';
+import accounting from 'accounting';
 
 const report = function () {
     const sqlTrace = Logger.getLogger("sql");
@@ -163,4 +162,4 @@ const report = function () {
     };
 }();
 
-module.exports = report;
+export default report;

@@ -1,8 +1,8 @@
-const _ = require('lodash');
-const superagent = require('superagent');
-const session = require('./util/integration-session');
-const stampUtil = require('./util/stamp-utilities');
-const NamedCollectionVerifications = require('./util/named-collection-verifier');
+import _ from 'lodash';
+import superagent from 'superagent';
+import session from './util/integration-session.js';
+import stampUtil from './util/stamp-utilities.js';
+import NamedCollectionVerifications from './util/named-collection-verifier.js';
 
 describe('REST Services for Stamps', () => {
 

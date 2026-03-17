@@ -1,12 +1,11 @@
-const _ = require('lodash');
+import _ from 'lodash';
+import connectionManager from '../pom/connection-mysql.js';
+import dataTranslator from './mysql-translator.js';
+import odata from 'odata-filter-parser';
+import Logger from '../util/logger.js';
 
-const connectionManager = require('../pom/connection-mysql');
-const dataTranslator = require('./mysql-translator');
-const odata = require('odata-filter-parser')
 const Operators = odata.Operators;
 const Predicate = odata.Predicate;
-const Logger = require('../util/logger');
-
 
 function PersistentCollection() {
     let sqlTrace = Logger.getLogger("sql");
@@ -34,8 +33,8 @@ function PersistentCollection() {
         },
 
         update: function (obj, id, params) {
-            return new Promise((resolve, reject) => {
-                let provided = this.fieldDefinition.internalize(obj);
+            return new Promise(async (resolve, reject) => {
+                let provided = await this.fieldDefinition.internalize(obj);
                 this.findById(id).then(storedObj => {
                     if(storedObj === null ) {
                         reject({ message: "The object was not found", code: "NOT_FOUND", processed: true });
@@ -46,7 +45,7 @@ function PersistentCollection() {
                             if( qs !== null ) {
                                 sqlTrace.debug(qs);
                                 connection.beginTransaction(() => {
-                                    connection.query(qs, (err, rows) => {
+                                    connection.query(qs, async (err, rows) => {
                                         if (!PersistentCollection.rollbackOnError(connection, reject, err)) {
                                             if (rows.changedRows === 0 && rows.affectedRows === 0) {
                                                 connection.rollback(function () {
@@ -54,7 +53,7 @@ function PersistentCollection() {
                                                     reject({ message: "No changes made during update.", code: "NO_CHANGES", processed: true });
                                                 });
                                             } else {
-                                                let merged = this.fieldDefinition.merge(provided, storedObj);
+                                                let merged = await this.fieldDefinition.merge(provided, storedObj);
                                                 this.preCommitUpdate(connection, merged, storedObj, params).then(output => {
                                                     connection.commit(err => {
                                                         connection.release();
@@ -96,8 +95,8 @@ function PersistentCollection() {
         },
 
         create: function(obj) {
-            return new Promise((resolve, reject) => {
-                const provided = this.fieldDefinition.internalize(obj);
+            return new Promise(async (resolve, reject) => {
+                const provided = await this.fieldDefinition.internalize(obj);
                 connectionManager.getConnection().then(connection => {
                     connection.beginTransaction(err => {
                         if (!PersistentCollection.rollbackOnError(connection, reject, err)) {
@@ -298,7 +297,7 @@ function PersistentCollection() {
                                 this.postFind(connection, result).then(() => {
                                     connection.release();
                                     if( this.collectionName === 'stamps') {
-                                        console.log("query time: " + ((new Date()).getTime() - t) + "ms");
+                                        logger.info(`query time: ${((new Date()).getTime() - t)}ms`);
                                     }
                                     return resolve(result);
                                 }, err => {
@@ -411,5 +410,4 @@ PersistentCollection.updateSequence = (_id, fieldDefinition) => {
 
 };
 
-
-module.exports = PersistentCollection;
+export default PersistentCollection;

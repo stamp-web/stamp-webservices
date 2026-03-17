@@ -11,4 +11,4 @@ Level.INFO = Level.levels[2];
 Level.DEBUG = Level.levels[3];
 Level.TRACE = Level.levels[4];
 
-module.exports = Level;
+export default Level;
