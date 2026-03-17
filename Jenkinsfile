@@ -72,7 +72,7 @@ pipeline {
                 port = '9008'
             }
             steps {
-                sh 'npm install && npx jest --runInBand --testTimeout 30000'
+                sh 'npm install && npm run test'
             }
             post {
                 always {

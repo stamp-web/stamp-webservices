@@ -38,7 +38,7 @@
     "zpad": "^0.5.0"
   },
   "scripts": {
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand --testTimeout 15000",
     "eslint": "npx eslint"
   },
   "license": "Apache-2.0",
