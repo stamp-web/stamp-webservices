@@ -24,8 +24,8 @@ function Authenticator() {}
 
 const BasicValidation = {};
 
-BasicValidation.validator = function(username, password, done) {
-    const user = _.find(BasicValidation.getUserCache(), {username: username});
+BasicValidation.validator = async function(username, password, done) {
+    const user = _.find(await BasicValidation.getUserCache(), {username: username});
     if (logger.isEnabled(Level.DEBUG)) {
         logger.debug(`For username '${username}' found user : '${user}'`);
     }
@@ -45,8 +45,9 @@ BasicValidation.getUserCache = async function() {
         if (!file) {
             file = path.join(__dirname, '../../config/users.json');
         }
+        const fileUrl = new URL(`file://${path.resolve(file)}`).href;
         // Dynamic import for JSON file
-        UserCache = await import(file, { assert: { type: 'json' } }).then(m => m.default);
+        UserCache = await import(fileUrl, { with: { type: 'json' } }).then(m => m.default);
     }
     return UserCache;
 };
@@ -55,8 +56,14 @@ BasicValidation.serializeUser = function(user, done) {
     done(null, user.id);
 };
 
-BasicValidation.deserializeUser = function(id, done) {
-    done(null, _.find(BasicValidation.getUserCache(), {id: id}));
+BasicValidation.deserializeUser = async function(id, done) {
+    try {
+        const users = await BasicValidation.getUserCache();
+        const user = _.find(users, {id: id});
+        done(null, user);
+    } catch (err) {
+        done(err);
+    }
 };
 
 Authenticator.initialize = function(app) {
