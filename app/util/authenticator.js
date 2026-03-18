@@ -103,8 +103,9 @@ Authenticator.initialize = function(app) {
                 break;
         }
         result.configured = true;
+    } else if (authType === 'none') {
+        result.configured = true;
     }
-
     return result;
 };
 
@@ -113,6 +114,8 @@ Authenticator.applyAuthentication = function() {
         switch (authType) {
             case 'basic':
                 return passport.authenticate('basic', { session: true });
+            case 'none':
+                break;
             default:
                 logger.warn(`Unknown authentication type in applyAuthentication: ${authType}`);
                 break;
