@@ -34,6 +34,8 @@ const SERVICES_PATH = 'rest';
 const BASEPATH = nconf.get('basePath') ? nconf.get('basePath') : '/stamp-webservices/';
 const CERT_CONFIG = nconf.get('Certificates');
 
+let alive = false;
+
 function configureLogger(aLogger, name) {
     let silenceConsole = nconf.get('silenceConsole');
     if (silenceConsole) {
@@ -170,6 +172,10 @@ app.use(
 app.get(`${BASEPATH}config/logger`, showLoggers);
 app.get(`${BASEPATH}config/logger/:logger`, configureLoggerRemotely);
 
+app.get('/', (req, res) => {
+    res.redirect('/stampweb/index.html');
+});
+
 const AURELIA_PATH = path.resolve(__dirname, `..${path.sep}..${path.sep}www/aurelia/`);
 const WWW_PATH = path.resolve(__dirname, `..${path.sep}..${path.sep}www/`);
 const VUEJS_PATH = path.resolve(__dirname, `..${path.sep}..${path.sep}www/stamp-web/`);
@@ -177,10 +183,6 @@ const VUEJS_PATH = path.resolve(__dirname, `..${path.sep}..${path.sep}www/stamp-
 app.use('/stamp-web', serveStatic(VUEJS_PATH));
 app.use('/stamp-webservices', serveStatic(WWW_PATH));
 app.use('/stamp-aurelia', serveStatic(AURELIA_PATH));
-
-app.get('/', (req, res) => {
-    res.redirect('/stampweb/index.html');
-});
 
 app.use(serveStatic(WWW_PATH));
 
@@ -204,15 +206,31 @@ restSellers.configure(app, BASEPATH + SERVICES_PATH);
 restStamps.configure(app, BASEPATH + SERVICES_PATH);
 reports.configure(app, BASEPATH + SERVICES_PATH);
 
+const checkHealth = () => {
+    return alive;
+};
+
+app.get(`${BASEPATH}health`, (req, res) => {
+    if (checkHealth()) {
+        res.status(200).json({ status: 'UP' });
+    } else {
+        res.status(500).json({ status: 'DOWN' });
+    }
+});
+
 connectionMgr.startup().then(() => {
     process.on('exit', () => {
         connectionMgr.shutdown();
+        alive = false;
     });
     process.on('uncaughtException', err => {
         console.log(err.stack); // should update to use domains/clusters
+        alive = false;
     });
     if (process.send) {
         process.send('SERVER_STARTED');
+        alive = true;
+
     }
 }, err => {
     logger.error(err);
