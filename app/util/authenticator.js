@@ -74,15 +74,6 @@ Authenticator.initialize = function(app) {
             throw new Error('Session secret must be configured via "authentication-session-secret" in config');
         }
         app.use(cookieParser());
-        app.use(session({
-            name: 'stamp-webservices',
-            secret: sessionSecret,
-            resave: false,
-            saveUninitialized: true,
-            cookie: {
-                maxAge: 3600000 // one hour
-            }
-        }));
         app.use(passport.initialize());
         app.use(passport.session());
 
