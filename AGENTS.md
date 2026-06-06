@@ -70,8 +70,14 @@ npm run eslint
 ```
 The recommended Jest lint rules are fully enabled. Avoid introducing `done` callbacks or conditional expects.
 
+## 4. Database & Query Safety (SQL Injection Prevention)
+When translating and building SQL queries from client-supplied filters (such as OData filters translated in `mysql-translator.js`), ensure all user inputs are properly escaped to prevent SQL injection.
+- Use `mysql.escape()` from the `mysql` library for all string or other parameters embedded into SQL statements.
+- Convert wildcard placeholders (e.g., `*` to `%` for `LIKE` clauses) before passing strings to `mysql.escape()`.
+- Special types like date/timestamp parameters should be parsed and reformatted explicitly rather than raw-concatenated.
+
 ---
 
-## 4. Maintenance of AGENTS.md
+## 5. Maintenance of AGENTS.md
 After completing any development or debugging task, the agent must evaluate whether to update this document (`AGENTS.md`) with new patterns, learnings, environment details, or best practices discovered during the activity, without needing explicit instructions from the user.
 

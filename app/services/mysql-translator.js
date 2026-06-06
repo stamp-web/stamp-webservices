@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import Logger from '../util/logger.js';
 import moment from 'moment';
-import dataTranslator from './mysql-translator.js';
+import mysql from 'mysql';
 import Constants from '../util/constants.js';
 import odata from "odata-filter-parser";
 
@@ -211,9 +211,9 @@ function DataTranslator() {
                         validateBinaryOperation(el);
                         const subject = el.subject;
                         let value;
-                        if (typeof el.value !== 'undefined') {
-                            const val = el.value;
-                            value = (_.isNumber(val)) ? +val : _.isString(val) ? '\'' + val.replace(/\*/g, '%') + '\'' : '' + val;
+                        const val = el.value;
+                        if (typeof val !== 'undefined') {
+                            value = _.isString(val) ? mysql.escape(val.replace(/\*/g, '%')) : mysql.escape(val);
                         }
                         let predicate = subject;
                         for (let i = 0; i < fieldDefinitions.length; i++) {
@@ -222,11 +222,12 @@ function DataTranslator() {
                             if (field && field.column && !field.nonPersistent) {
                                 predicate = ((definition.getAlias()) ? definition.getAlias() + '.' : '') + field.column;
                                 if (field.type === 'date') {
-                                    if (value.startsWith('\'' + Constants.DATEOFFSET_STARTING)) {
-                                        value = value.substring(Constants.DATEOFFSET_STARTING.length + 1, value.length - 2);
+                                    let dateVal = val;
+                                    if (_.isString(dateVal) && dateVal.startsWith(Constants.DATEOFFSET_STARTING)) {
+                                        dateVal = dateVal.substring(Constants.DATEOFFSET_STARTING.length, dateVal.length - 1);
                                     }
-                                    value = (_.isDate(value)) ? value.toISOString() : new Date(Date.parse(value)).toISOString();
-                                    value = "'" + moment(value).format(Constants.MYSQL_DATEFORMAT) + "'";
+                                    const parsedDate = (_.isDate(dateVal)) ? dateVal : new Date(Date.parse(dateVal));
+                                    value = "'" + moment(parsedDate.toISOString()).format(Constants.MYSQL_DATEFORMAT) + "'";
                                 }
                                 expression += predicate + op + value;
                                 break;
