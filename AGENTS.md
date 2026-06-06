@@ -81,3 +81,11 @@ When translating and building SQL queries from client-supplied filters (such as 
 ## 5. Maintenance of AGENTS.md
 After completing any development or debugging task, the agent must evaluate whether to update this document (`AGENTS.md`) with new patterns, learnings, environment details, or best practices discovered during the activity, without needing explicit instructions from the user.
 
+---
+
+## 6. Cluster Worker Restart and Rate Limiting
+When running clustered servers (e.g. `server-manager.js` using Node.js `cluster` module), crashes/failures on startup can trigger infinite restart loops if not throttled.
+- **Rate-limit Restarts:** Use a sliding window rate limiter (such as `RestartTracker`) to count the number of worker failures/restarts within a given time window (e.g. max 10 restarts in 60 seconds). If exceeded, exit the primary process (`process.exit(1)`) to avoid infinite loops and 100% CPU usage.
+- **Prevent Double-Forking:** When a worker crashes, Node's cluster module can emit both `disconnect` and `exit` events. To prevent duplicate workers from being created, track worker replacement status on the worker object (e.g., setting a `worker.hasBeenReplaced = true` flag) so that only one new worker is spawned per crash.
+
+

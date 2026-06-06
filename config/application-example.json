@@ -1,4 +1,4 @@
-﻿{
+{
     "openexchangerates.org": {
         "app_id": "YOUR_APP_ID_HERE"
     },
@@ -9,6 +9,8 @@
     "authentication": "none",
     "authentication-session-secret" : "a9d4c7f2e6b1a3d8c5e0f9b2a7c6d1e4",
     "database": "mysql",
+    "maxRestarts": 10,
+    "restartWindow": 60,
     "databases": {
         "mysql": {
             "host": "localhost",
