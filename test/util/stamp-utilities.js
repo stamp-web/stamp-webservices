@@ -16,7 +16,7 @@ if (nconf.get("hostname")) {
 
 const StampUtilities = {
 
-    create: (stamp, fn) => {
+    create: function(stamp, fn) {
         const v = (new Date()).getTime() % 1024;
         const s = {
             countryRef: 1,
@@ -49,14 +49,19 @@ const StampUtilities = {
             stamp.stampOwnerships.push(owner);
         }
 
-        superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
-            .send(stamp)
-            .end((e, res) => {
-                expect(e).toEqual(null);
-                expect(res.status).toEqual(201);
-                fn(e, res);
-            });
-        return stamp;
+        const run = async () => {
+            const res = await superagent.post('http://' + hostname + ':' + server_port + '/rest/stamps')
+                .send(stamp);
+            expect(res.status).toEqual(201);
+            return res;
+        };
+
+        if (fn) {
+            run().then(res => fn(null, res), err => fn(err));
+            return stamp;
+        } else {
+            return run();
+        }
     }
 };
 

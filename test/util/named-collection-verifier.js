@@ -1,4 +1,4 @@
-﻿import superagent from 'superagent';
+import superagent from 'superagent';
 import nconf from 'nconf';
 
 nconf.argv().env();
@@ -19,122 +19,96 @@ const randomId = () => {
 
 
 const NamedCollectionVerifications = {
-    verifyCollection: function (collectionName, done, fn) {
-        superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName)
-            .end(function (e, res) {
-                expect(e).toEqual(null);
-                expect(res.status).toEqual(200);
-                expect(res.body.total).toBeGreaterThan(0);
-                expect(res.body[collectionName]).not.toBe(undefined);
-                const obj = res.body[collectionName][0];
-                if (obj) {
-                    expect(obj.name).not.toBe(undefined);
-                    expect(obj.id).toBeGreaterThan(0);
-                    if (fn) {
-                        fn(obj);
-                    }
-                } else {
-                    throw Error("No data present.");
-                }
-                if (done) {
-                    done();
-                }
-            });
+    verifyCollection: async function (collectionName, fn) {
+        const res = await superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName);
+        expect(res.status).toEqual(200);
+        expect(res.body.total).toBeGreaterThan(0);
+        expect(res.body[collectionName]).not.toBe(undefined);
+        const obj = res.body[collectionName][0];
+        if (obj) {
+            expect(obj.name).not.toBe(undefined);
+            expect(obj.id).toBeGreaterThan(0);
+            if (fn) {
+                await fn(obj);
+            }
+        } else {
+            throw Error("No data present.");
+        }
     },
 
 
-    verifySingleItem: function (collectionName, props, done, fn) {
-        superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + props.id)
-            .end(function (e, res) {
-                expect(e).toEqual(null);
-                expect(res.status).toEqual(200);
-                expect(res.body).not.toEqual(null);
-                expect(res.body.name).toEqual(props.name);
-                expect(res.body.id).toEqual(props.id);
-                if (props.description) {
-                    expect(res.body.description).toEqual(props.description);
-                }
-                expect(res.body.createTimestamp).toBe(undefined);
-                expect(res.body.modifyTimestamp).toBe(undefined);
-                if (fn) {
-                    fn(res.body);
-                }
-                if (done) {
-                    done();
-                }
-            });
+    verifySingleItem: async function (collectionName, props, fn) {
+        const res = await superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + props.id);
+        expect(res.status).toEqual(200);
+        expect(res.body).not.toEqual(null);
+        expect(res.body.name).toEqual(props.name);
+        expect(res.body.id).toEqual(props.id);
+        if (props.description) {
+            expect(res.body.description).toEqual(props.description);
+        }
+        expect(res.body.createTimestamp).toBe(undefined);
+        expect(res.body.modifyTimestamp).toBe(undefined);
+        if (fn) {
+            await fn(res.body);
+        }
     },
-    verifyNotFound: function (collectionName, done) {
-        superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + randomId())
-            .end(function (e, res) {
-                expect(res.status).toBe(404);
-                done();
-            });
+    verifyNotFound: async function (collectionName) {
+        try {
+            await superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + randomId());
+            throw new Error('Expected 404 but request succeeded');
+        } catch (e) {
+            expect(e.status || e.response?.status).toBe(404);
+        }
     },
-    verifyPutNotFound: function (collectionName, props, done) {
-        superagent.put('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + randomId())
-            .send(props)
-            .end(function (e, res) {
-                expect(e).not.toBe(null);
-                expect(res.status).toBe(404);
-                done();
-            });
+    verifyPutNotFound: async function (collectionName, props) {
+        try {
+            await superagent.put('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + randomId())
+                .send(props);
+            throw new Error('Expected 404 but request succeeded');
+        } catch (e) {
+            expect(e.status || e.response?.status).toBe(404);
+        }
     },
-    verifyPost: function (collectionName, props, done, fn) {
-        superagent.post('http://' + hostname + ':' + server_port + '/rest/' + collectionName)
-            .send(props)
-            .end(function (e, res) {
-                expect(e).toEqual(null);
-                expect(res.status).toEqual(201);
-                const body = res.body;
-                expect(body.id).not.toEqual(null);
-                expect(body.id).toBeGreaterThan(1000);
-                expect(body.name).toEqual(props.name);
-                if (props.description) {
-                    expect(body.description).toEqual(props.description);
-                }
-                if (fn) {
-                    fn(body);
-                }
-                if (done) {
-                    done();
-                }
-            });
+    verifyPost: async function (collectionName, props, fn) {
+        const res = await superagent.post('http://' + hostname + ':' + server_port + '/rest/' + collectionName)
+            .send(props);
+        expect(res.status).toEqual(201);
+        const body = res.body;
+        expect(body.id).not.toEqual(null);
+        expect(body.id).toBeGreaterThan(1000);
+        expect(body.name).toEqual(props.name);
+        if (props.description) {
+            expect(body.description).toEqual(props.description);
+        }
+        if (fn) {
+            await fn(body);
+        }
     },
-    verifyDeleteNotFound: function (collectionName, done) {
-        superagent.del('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + randomId())
-            .end((msg, res) => {
-                expect(msg).not.toEqual(null);
-                expect(res.status).toEqual(404);
-                done();
-            })
+    verifyDeleteNotFound: async function (collectionName) {
+        try {
+            await superagent.del('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + randomId());
+            throw new Error('Expected 404 but request succeeded');
+        } catch (e) {
+            expect(e.status || e.response?.status).toBe(404);
+        }
     },
 
-    verifyDelete: function (collectionName, props, done, fn) {
-        "use strict";
-        superagent.post('http://' + hostname + ':' + server_port + '/rest/' + collectionName)
-            .send(props)
-            .end(function (e, res) {
-                expect(e).toEqual(null);
-                expect(res.status).toEqual(201);
-                const id = res.body.id;
-                superagent.del('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + id)
-                    .end(function (e, res) {
-                        expect(e).toEqual(null);
-                        expect(res.status).toEqual(204);
-                        // Now verify it is not found.
-                        superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + id)
-                            .end(function (e, res) {
-                                expect(e).not.toEqual(null);
-                                expect(res.status).toEqual(404);
-                                if (fn) {
-                                    fn(done);
-                                } else if (done) {
-                                    done();
-                                }
-                            });
-                    });
-            });
+    verifyDelete: async function (collectionName, props, fn) {
+        const res = await superagent.post('http://' + hostname + ':' + server_port + '/rest/' + collectionName)
+            .send(props);
+        expect(res.status).toEqual(201);
+        const id = res.body.id;
+        const delRes = await superagent.del('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + id);
+        expect(delRes.status).toEqual(204);
+        try {
+            await superagent.get('http://' + hostname + ':' + server_port + '/rest/' + collectionName + '/' + id);
+            throw new Error('Expected 404 but request succeeded');
+        } catch (e) {
+            expect(e.status || e.response?.status).toBe(404);
+            if (fn) {
+                await fn();
+            }
+        }
     }
 };
 

@@ -1,4 +1,4 @@
-﻿import _ from 'lodash';
+import _ from 'lodash';
 import Logger from '../../app/util/logger.js';
 import Level from '../../app/util/level.js';
 import child_process from 'child_process';
@@ -129,52 +129,72 @@ const fn = function () {
            return connection;
         },
         initialize: function(callback) {
-
-            if( !executed ) {
-                logger.setLevel(Level.INFO);
-                logger.setTarget('file', __dirname + '/../../logs/output.log').then( function() {
-                    logger.info( 'Reading SQL contents...');
-                });
-                if (!ready_for_test) {
-                    const file = ((process.cwd().indexOf('\\test') > 0) ? '../' : '') + 'test/dbscript/initial-data.sql';
-                    const contents = fs.readFileSync(file, {encoding: 'utf-8'}).toString();
-                    let count = 0;
-                    this.totalCount = loadFromFile(this.getConnection(), contents, (err) => {
-                        if (err) {
-                            callback(err);
-                            return;
-                        }
-                        if (++count === this.totalCount) {
-                            notifyStatementsComplete();
-                            childFork = forkProcess(callback);
-                            executed = true;
-                        }
+            const self = this;
+            const run = (cb) => {
+                if( !executed ) {
+                    logger.setLevel(Level.INFO);
+                    logger.setTarget('file', __dirname + '/../../logs/output.log').then( function() {
+                        logger.info( 'Reading SQL contents...');
                     });
+                    if (!ready_for_test) {
+                        const file = ((process.cwd().indexOf('\\test') > 0) ? '../' : '') + 'test/dbscript/initial-data.sql';
+                        const contents = fs.readFileSync(file, {encoding: 'utf-8'}).toString();
+                        let count = 0;
+                        self.totalCount = loadFromFile(self.getConnection(), contents, (err) => {
+                            if (err) {
+                                cb(err);
+                                return;
+                            }
+                            if (++count === self.totalCount) {
+                                notifyStatementsComplete();
+                                childFork = forkProcess(cb);
+                                executed = true;
+                            }
+                        });
+                    } else {
+                        self.getConnection();
+                        childFork = forkProcess(cb);
+                        executed = true;
+                    }
                 } else {
-                    this.getConnection();
-                    childFork = forkProcess(callback);
-                    executed = true;
+                    logger.info('SQL statements already bootstrapped');
+                    cb();
                 }
+            };
+            if (callback) {
+                run(callback);
             } else {
-                logger.info('SQL statements already bootstrapped');
-                callback();
+                return new Promise((resolve, reject) => {
+                    run(err => {
+                        if (err) reject(err);
+                        else resolve();
+                    });
+                });
             }
-
-
         },
-        cleanup: callback => {
-            connection.end();
-            connection = undefined;
-            if (childFork) {
-                _.delay(() => {
-                    executed = false;
-                    childFork.kill();
-                    callback();
-                }, 500);
+        cleanup: function(callback) {
+            const run = (cb) => {
+                if (connection) {
+                    connection.end();
+                    connection = undefined;
+                }
+                if (childFork) {
+                    _.delay(() => {
+                        executed = false;
+                        childFork.kill();
+                        cb();
+                    }, 500);
+                } else {
+                    cb();
+                }
+            };
+            if (callback) {
+                run(callback);
             } else {
-                callback();
+                return new Promise(resolve => {
+                    run(resolve);
+                });
             }
-
         }
 
     };

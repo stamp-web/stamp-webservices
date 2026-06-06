@@ -1,0 +1,77 @@
+# Guidelines for AI Agents
+
+Welcome! This document outlines the patterns, best practices, and guidelines for agentic development in the `stamp-webservices` repository.
+
+---
+
+## 1. Test Execution with ESM
+
+This project is configured as an ES Module (`"type": "module"` in `package.json`). Jest requires specific environment options to run ES Modules.
+
+### How to Run Tests
+- **All tests:**
+  ```bash
+  npm test
+  ```
+- **Single test file:**
+  Always specify the `NODE_OPTIONS` environment variable with `--experimental-vm-modules`:
+  ```bash
+  npx cross-env NODE_OPTIONS=--experimental-vm-modules jest test/services-albums-test.js --runInBand
+  ```
+
+---
+
+## 2. Asynchronous Testing Guidelines
+
+All tests must be written using **async/await** and **Promises**. Do not use `done` callbacks in tests or hook blocks (`beforeAll`, `afterAll`).
+
+### Session Lifecycle in Hooks
+The integration session helper (`test/util/integration-session.js`) supports promise-based setup and cleanup:
+```javascript
+import session from './util/integration-session.js';
+
+beforeAll(async () => {
+    await session.initialize();
+});
+
+afterAll(async () => {
+    await session.cleanup();
+});
+```
+
+### Asserting API Failures (No Try/Catch)
+To assert that an API request fails with a specific HTTP status code, **do not** use try/catch blocks with conditional `expect` calls (this violates the `jest/no-conditional-expect` ESLint rule).
+
+Instead, assert directly on the returned Promise:
+```javascript
+// Correct pattern:
+await expect(superagent.post('http://localhost:9002/rest/albums').send(body))
+    .rejects.toHaveProperty('status', 409);
+```
+
+### Direct Database Queries in Tests
+When executing direct database queries in tests using the raw connection, wrap them in a Promise to prevent async race conditions:
+```javascript
+const rows = await new Promise((resolve, reject) => {
+    session.getConnection().query('SELECT * FROM ALBUMS_COUNTRIES WHERE ALBUMS_ID=?', [albumId], (err, result) => {
+        if (err) return reject(err);
+        resolve(result);
+    });
+});
+expect(rows.length).toEqual(0);
+```
+
+---
+
+## 3. ESLint Rules
+Ensure all ESLint checks pass by running:
+```bash
+npm run eslint
+```
+The recommended Jest lint rules are fully enabled. Avoid introducing `done` callbacks or conditional expects.
+
+---
+
+## 4. Maintenance of AGENTS.md
+After completing any development or debugging task, the agent must evaluate whether to update this document (`AGENTS.md`) with new patterns, learnings, environment details, or best practices discovered during the activity, without needing explicit instructions from the user.
+

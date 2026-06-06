@@ -6,21 +6,17 @@ describe('REST Services for Catalogue Numbers', () => {
 
     let hostname, server_port;
 
-    afterAll(done => {
-        session.cleanup(() => {
-            done();
-        });
+    afterAll(async () => {
+        await session.cleanup();
     });
 
-    beforeAll(done => {
-        session.initialize(() => {
-            hostname = session.getHostname();
-            server_port = session.getPort();
-            done();
-        });
+    beforeAll(async () => {
+        await session.initialize();
+        hostname = session.getHostname();
+        server_port = session.getPort();
     });
 
-    it('Make active changes successfully', done => {
+    it('Make active changes successfully', async () => {
         const stamp = {
             countryRef: 1,
             rate: "1d",
@@ -43,27 +39,19 @@ describe('REST Services for Catalogue Numbers', () => {
                 }
             ]
         };
-        superagent.post(`http://${hostname}:${server_port}/rest/stamps`)
-            .send(stamp)
-            .end((e, res) => {
-                expect(e).toEqual(null);
-                expect(res.status).toEqual(201);
-                let catalogueNumbers = res.body.catalogueNumbers;
-                const activate = _.find(catalogueNumbers, {active: false});
-                expect(activate).not.toBe(undefined);
-                superagent.post(`http://${hostname}:${server_port}/rest/catalogueNumbers/${activate.id}/makeActive`)
-                    .end((e, res) => {
-                        catalogueNumbers = res.body.catalogueNumbers;
-                        expect(_.find(catalogueNumbers, {active: true}).id).toEqual(activate.id);
-                        expect(_.filter(catalogueNumbers, {active: true}).length).toBe(1);
-                        done();
-                    });
-
-
-            });
+        const res = await superagent.post(`http://${hostname}:${server_port}/rest/stamps`)
+            .send(stamp);
+        expect(res.status).toEqual(201);
+        let catalogueNumbers = res.body.catalogueNumbers;
+        const activate = _.find(catalogueNumbers, {active: false});
+        expect(activate).not.toBe(undefined);
+        const resActive = await superagent.post(`http://${hostname}:${server_port}/rest/catalogueNumbers/${activate.id}/makeActive`);
+        catalogueNumbers = resActive.body.catalogueNumbers;
+        expect(_.find(catalogueNumbers, {active: true}).id).toEqual(activate.id);
+        expect(_.filter(catalogueNumbers, {active: true}).length).toBe(1);
     });
 
-    it('Make active already active', done => {
+    it('Make active already active', async () => {
         const stamp = {
             countryRef: 1,
             rate: "1d",
@@ -79,35 +67,25 @@ describe('REST Services for Catalogue Numbers', () => {
                 }
             ]
         };
-        superagent.post(`http://${hostname}:${server_port}/rest/stamps`)
-            .send(stamp)
-            .end((e, res) => {
-                expect(e).toEqual(null);
-                expect(res.status).toEqual(201);
-                let catalogueNumbers = res.body.catalogueNumbers;
-                const activate = _.find(catalogueNumbers, {active: true});
-                expect(activate).not.toBe(undefined);
-                superagent.post(`http://${hostname}:${server_port}/rest/catalogueNumbers/${activate.id}/makeActive`)
-                    .end((e, res) => {
-                        expect(res.statusCode).toBe(200);
-                        catalogueNumbers = res.body.catalogueNumbers;
-                        expect(_.find(catalogueNumbers, {active: true}).id).toEqual(activate.id);
-                        expect(_.filter(catalogueNumbers, {active: true}).length).toBe(1);
-                        done();
-                    });
-
-
-            });
+        const res = await superagent.post(`http://${hostname}:${server_port}/rest/stamps`)
+            .send(stamp);
+        expect(res.status).toEqual(201);
+        let catalogueNumbers = res.body.catalogueNumbers;
+        const activate = _.find(catalogueNumbers, {active: true});
+        expect(activate).not.toBe(undefined);
+        const resActive = await superagent.post(`http://${hostname}:${server_port}/rest/catalogueNumbers/${activate.id}/makeActive`);
+        expect(resActive.statusCode).toBe(200);
+        catalogueNumbers = resActive.body.catalogueNumbers;
+        expect(_.find(catalogueNumbers, {active: true}).id).toEqual(activate.id);
+        expect(_.filter(catalogueNumbers, {active: true}).length).toBe(1);
     });
 
-    it('DELETE no existing ID', done => {
-        superagent.del(`http://${hostname}:${server_port}/rest/catalogueNumbers/800020`)
-            .end((e, res) => {
-                expect(res.statusCode).toBe(404);
-                done();
-            });
+    it('DELETE no existing ID', async () => {
+        await expect(superagent.del(`http://${hostname}:${server_port}/rest/catalogueNumbers/800020`))
+            .rejects.toHaveProperty('status', 404);
     });
-    it('DELETE catalogue number directly', done => {
+
+    it('DELETE catalogue number directly', async () => {
         const stamp = {
             countryRef: 1,
             rate: "1d",
@@ -130,24 +108,16 @@ describe('REST Services for Catalogue Numbers', () => {
                 }
             ]
         };
-        superagent.post(`http://${hostname}:${server_port}/rest/stamps`)
-            .send(stamp)
-            .end((e, res) => {
-                expect(e).toEqual(null);
-                expect(res.status).toEqual(201);
-                const catalogueNumbers = res.body.catalogueNumbers;
-                const nonActive = _.find(catalogueNumbers, {active: false});
-                const stampId = res.body.id;
-                expect(nonActive).not.toBe(undefined);
-                superagent.del(`http://${hostname}:${server_port}/rest/catalogueNumbers/${nonActive.id}`)
-                    .end((e, res) => {
-                        expect(res.statusCode).toBe(204);
-                        superagent.get(`http://${hostname}:${server_port}/rest/stamps/${stampId}`)
-                            .end((e, res) => {
-                                expect(res.body.catalogueNumbers.length).toBe(1);
-                            });
-                        done();
-                    });
-            });
+        const res = await superagent.post(`http://${hostname}:${server_port}/rest/stamps`)
+            .send(stamp);
+        expect(res.status).toEqual(201);
+        const catalogueNumbers = res.body.catalogueNumbers;
+        const nonActive = _.find(catalogueNumbers, {active: false});
+        const stampId = res.body.id;
+        expect(nonActive).not.toBe(undefined);
+        const resDel = await superagent.del(`http://${hostname}:${server_port}/rest/catalogueNumbers/${nonActive.id}`);
+        expect(resDel.statusCode).toBe(204);
+        const resGet = await superagent.get(`http://${hostname}:${server_port}/rest/stamps/${stampId}`);
+        expect(resGet.body.catalogueNumbers.length).toBe(1);
     });
 });

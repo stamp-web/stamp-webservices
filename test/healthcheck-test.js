@@ -6,26 +6,19 @@ describe('Verify health check', () => {
 
     let hostname, server_port;
 
-    afterAll(done => {
-        session.cleanup(() => {
-            done();
-        });
+    afterAll(async () => {
+        await session.cleanup();
     });
 
-    beforeAll(done => {
-        session.initialize( () => {
-            hostname = session.getHostname();
-            server_port = session.getPort();
-            done();
-        });
+    beforeAll(async () => {
+        await session.initialize();
+        hostname = session.getHostname();
+        server_port = session.getPort();
     });
 
-    it('Verify health end point is reachable', done => {
-        superagent.get(`http://${hostname}:${server_port}/health`)
-            .end((e, res) => {
-                expect(res.status).toEqual(200);
-                done()
-            });
+    it('Verify health end point is reachable', async () => {
+        const res = await superagent.get(`http://${hostname}:${server_port}/health`);
+        expect(res.status).toEqual(200);
     });
 
 });

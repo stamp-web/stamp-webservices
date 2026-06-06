@@ -10,7 +10,6 @@ export default [
       'jest/prefer-expect-assertions': 'off',
       'jest/no-disabled-tests': 'off',
       'jest/expect-expect': 'off',
-      'jest/no-done-callback': 'off'
     }},
   {languageOptions: { globals: globals.node }},
   pluginJs.configs.recommended,
