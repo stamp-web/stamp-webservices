@@ -1203,6 +1203,221 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  # CATALOGUE NUMBERS ENDPOINTS
+  /rest/catalogueNumbers:
+    get:
+      summary: Get all catalogue numbers
+      operationId: getCatalogueNumbers
+      tags:
+        - Catalogue Numbers
+      parameters:
+        - $ref: '#/components/parameters/FilterParam'
+        - $ref: '#/components/parameters/TopParam'
+        - $ref: '#/components/parameters/SkipParam'
+        - $ref: '#/components/parameters/OrderByParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  catalogueNumbers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CatalogueNumber'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Create a new catalogue number
+      operationId: createCatalogueNumber
+      tags:
+        - Catalogue Numbers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - catalogueRef
+                - number
+                - value
+                - stampRef
+              properties:
+                catalogueRef:
+                  type: integer
+                  format: int64
+                  description: Reference to catalogue
+                number:
+                  type: string
+                  example: "23a"
+                  description: Catalogue number
+                value:
+                  type: number
+                  format: float
+                  example: 0.65
+                  description: Catalogue value
+                condition:
+                  type: integer
+                  example: 1
+                  description: Condition code
+                active:
+                  type: boolean
+                  example: true
+                stampRef:
+                  type: integer
+                  format: int64
+                  description: Reference to stamp
+      responses:
+        '201':
+          description: Catalogue number created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogueNumber'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /rest/catalogueNumbers/{id}:
+    get:
+      summary: Get catalogue number by ID
+      operationId: getCatalogueNumberById
+      tags:
+        - Catalogue Numbers
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogueNumber'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      summary: Update catalogue number
+      operationId: updateCatalogueNumber
+      tags:
+        - Catalogue Numbers
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                catalogueRef:
+                  type: integer
+                  format: int64
+                  description: Reference to catalogue
+                number:
+                  type: string
+                  description: Catalogue number
+                value:
+                  type: number
+                  format: float
+                  description: Catalogue value
+                condition:
+                  type: integer
+                  description: Condition code
+                active:
+                  type: boolean
+                stampRef:
+                  type: integer
+                  format: int64
+                  description: Reference to stamp
+      responses:
+        '200':
+          description: Catalogue number updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogueNumber'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: Delete catalogue number
+      operationId: deleteCatalogueNumber
+      tags:
+        - Catalogue Numbers
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '204':
+          description: Catalogue number deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /rest/catalogueNumbers/{id}/makeActive:
+    post:
+      summary: Set a catalogue number to active
+      description: Sets the specified catalogue number as active and deactivates any other active catalogue numbers for the same stamp. Returns the updated stamp object.
+      operationId: makeCatalogueNumberActive
+      tags:
+        - Catalogue Numbers
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Catalogue number made active successfully, returning the updated stamp
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stamp'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /rest/catalogueNumbers/!count:
+    get:
+      summary: Count catalogue numbers
+      operationId: countCatalogueNumbers
+      tags:
+        - Catalogue Numbers
+      parameters:
+        - $ref: '#/components/parameters/FilterParam'
+        - $ref: '#/components/parameters/TopParam'
+        - $ref: '#/components/parameters/SkipParam'
+        - $ref: '#/components/parameters/OrderByParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+            text/plain:
+              schema:
+                type: string
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   # PREFERENCES ENDPOINTS
   /rest/preferences:
     get:
