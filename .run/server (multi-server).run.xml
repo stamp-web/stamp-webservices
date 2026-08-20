@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="server (multi-server)" type="NodeJSConfigurationType" application-parameters="--database mysql --cpu 3 --authentication basic --session_type redis" path-to-js-file="app/server/server-manager.js" working-dir="$PROJECT_DIR$">
+    <method v="2" />
+  </configuration>
+</component>

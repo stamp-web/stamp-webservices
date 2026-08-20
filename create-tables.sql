@@ -1,3 +1,6 @@
+SET GLOBAL time_zone = 'America/New_York';
+SET time_zone = 'America/New_York';
+
 CREATE TABLE `COUNTRIES` (
   `ID` bigint(20) NOT NULL,
   `NAME` varchar(150) NOT NULL,
@@ -165,6 +168,7 @@ INSERT INTO `SEQUENCE_GEN` (`ID_NAME`, `ID_VAL`) VALUES ('SELLER_ID', 0);
 DELIMITER $$
 CREATE TRIGGER `SELLERS_BDEL` BEFORE DELETE ON `SELLERS` FOR EACH ROW
 BEGIN
+    SET @trigger_updated = 0;
 	SET @modifyStamp=NOW();
     UPDATE `OWNERSHIP` AS o SET o.MODIFYSTAMP=@modifyStamp WHERE o.SELLER_ID=OLD.ID;
 END$$
