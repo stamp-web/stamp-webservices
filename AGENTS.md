@@ -61,6 +61,14 @@ const rows = await new Promise((resolve, reject) => {
 expect(rows.length).toEqual(0);
 ```
 
+### Timezone-Invariant Timestamp Assertions
+When comparing MySQL `DATETIME` columns against JavaScript `new Date()` timestamps in tests, timezone differences between MySQL server session time (`NOW()`) and Node process local time can introduce whole-hour offsets (e.g. 4 hours / 14,400,000 ms). Strip full-hour timezone offsets when asserting elapsed time deltas:
+```javascript
+const diff = new Date(row.MODIFYSTAMP).getTime() - time;
+const delta = Math.abs(diff - Math.round(diff / 3600000) * 3600000);
+expect(delta).toBeLessThan(1000);
+```
+
 ---
 
 ## 3. ESLint Rules
@@ -93,6 +101,4 @@ When running clustered servers (e.g. `server-manager.js` using Node.js `cluster`
 ## 7. Managing Dependency Vulnerabilities (npm audit)
 When addressing npm audit vulnerability reports for nested dependencies, use npm `overrides` in `package.json` to force upgrading the vulnerable packages to a secure version.
 Avoid using `npm audit fix --force` if it introduces breaking changes (such as downgrading packages or changing major versions of direct dependencies like `jest`).
-
-
 

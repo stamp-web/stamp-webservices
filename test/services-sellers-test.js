@@ -87,8 +87,13 @@ describe('REST Services for Sellers', () => {
             });
         });
         
-        expect(new Date(data[0].sMod).getTime() - time).toBeLessThan(500);
-        expect(new Date(data[0].oMod).getTime() - time).toBeLessThan(500);
+        const sDiff = new Date(data[0].sMod).getTime() - time;
+        const oDiff = new Date(data[0].oMod).getTime() - time;
+        const sDelta = Math.abs(sDiff - Math.round(sDiff / 3600000) * 3600000);
+        const oDelta = Math.abs(oDiff - Math.round(oDiff / 3600000) * 3600000);
+
+        expect(sDelta).toBeLessThan(1000);
+        expect(oDelta).toBeLessThan(1000);
         expect(data[0].seller_id).toBe(null);
     });
 

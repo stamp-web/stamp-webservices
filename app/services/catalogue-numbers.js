@@ -47,26 +47,36 @@ const catalogueNumberService = extend(true, {}, new PersistentCollection(), func
         /**
          * Bulk update the catalogue numbers based on a number sort change
          *
-         * @param cns
-         * @returns {Promise}
+         * @param {Array<{id: number, number: string, numberSort: string}>} cns
+         * @returns {Promise<number>} Number of changed rows
          */
         bulkUpdate: cns => {
-            let sql = 'INSERT INTO CATALOGUENUMBERS (ID,NUMBER,NUMBERSORT) VALUES ';
-            _.each(cns, (cn, i) => {
-                sql += '(' + cn.id + ', \'' + cn.number + '\', \'' + cn.numberSort + '\')' + (i < cns.length -1 ? ', ': '');
-            });
-            sql += ' ON DUPLICATE KEY UPDATE ID=VALUES(ID), NUMBER=VALUES(NUMBER), NUMBERSORT=VALUES(NUMBERSORT)';
+            if (!Array.isArray(cns) || cns.length === 0) {
+                return Promise.reject({
+                    message: "No changes made during update.",
+                    code: "NO_CHANGES",
+                    processed: true
+                });
+            }
+
+            const values = cns.map(cn => [cn.id, cn.number, cn.numberSort]);
+            const sql = 'INSERT INTO CATALOGUENUMBERS (ID, NUMBER, NUMBERSORT) VALUES ? ON DUPLICATE KEY UPDATE NUMBER=VALUES(NUMBER), NUMBERSORT=VALUES(NUMBERSORT)';
+            sqlTrace.debug(sql + ' Bind params: ' + JSON.stringify(values));
+
             return new Promise((resolve, reject) => {
                 connectionManager.getConnection().then(connection => {
-                    connection.beginTransaction(() => {
-                        connection.query(sql, (err, rows) => {
+                    connection.beginTransaction(err => {
+                        if (PersistentCollection.rollbackOnError(connection, reject, err)) {
+                            return;
+                        }
+                        connection.query(sql, [values], (err, rows) => {
                             if (!PersistentCollection.rollbackOnError(connection, reject, err)) {
                                 if (rows.changedRows === 0 && rows.affectedRows === 0) {
                                     connection.rollback(() => {
                                         connection.release();
                                         reject({
-                                            message:   "No changes made during update.",
-                                            code:      "NO_CHANGES",
+                                            message: "No changes made during update.",
+                                            code: "NO_CHANGES",
                                             processed: true
                                         });
                                     });
@@ -83,6 +93,8 @@ const catalogueNumberService = extend(true, {}, new PersistentCollection(), func
                             }
                         });
                     });
+                }, err => {
+                    reject(dataTranslator.getErrorMessage(err));
                 });
             });
 
@@ -91,56 +103,83 @@ const catalogueNumberService = extend(true, {}, new PersistentCollection(), func
         /**
          * Set the catalogue number identified by id to be the active catalogue number.
          *
-         * @param id The id to set as active
-         * @returns {Promise|*}
+         * @param {number|string} id The id to set as active
+         * @returns {Promise<Object|null>} The updated stamp object or null if not found
          */
-        makeActive: function(id) {
-            return new Promise((resolve, reject) => {
-                this.findById(id).then(catNum => {
-                    stamps.findById(catNum.STAMP_ID).then(stamp => {
-                        catNum = _.find(stamp.CATALOGUENUMBER, {ID: +id});
-                        let activeCN = _.find(stamp.CATALOGUENUMBER, {ACTIVE:1});
-                        if( !activeCN || +activeCN.ID !== +id ) {
-                            let count = 0;
-                            let total = activeCN ? 2 : 1;
-                            connectionManager.getConnection().then(connection => {
-                                connection.beginTransaction(() => {
-                                    let updateFn = (connection,id,isActive) => {
-                                        let sql = "UPDATE " + catalogueNumber.getTableName() + " SET ACTIVE=" + (isActive ? 1 : 0) + ",MODIFYSTAMP=CURDATE() WHERE ID=" + id;
-                                        sqlTrace.debug(sql);
-                                        connection.query(sql, (err) => {
-                                            if (!PersistentCollection.rollbackOnError(connection, reject, err)) {
-                                                count++;
-                                                if( count === total ) {
-                                                    connection.commit(err => {
-                                                        connection.release();
-                                                        if (err) {
-                                                            reject(dataTranslator.getErrorMessage(err));
-                                                        }
-                                                        resolve(stamp);
-                                                    });
-                                                }
-                                            }
-                                        });
-                                    };
-                                    catNum.ACTIVE = 1;
-                                    updateFn(connection,+id,true);
-                                    if( activeCN) {
-                                        activeCN.ACTIVE = 0;
-                                        updateFn(connection,+activeCN.ID,false);
+        makeActive: async function(id) {
+            const catNumRow = await this.findById(id);
+            if (!catNumRow) {
+                return null;
+            }
+
+            const stampObj = await stamps.findById(catNumRow.STAMP_ID);
+            if (!stampObj) {
+                return null;
+            }
+
+            const targetCatNum = _.find(stampObj.CATALOGUENUMBER, { ID: +id });
+            const activeCN = _.find(stampObj.CATALOGUENUMBER, { ACTIVE: 1 });
+
+            if (!activeCN || +activeCN.ID !== +id) {
+                let connection;
+                try {
+                    connection = await connectionManager.getConnection();
+                } catch (err) {
+                    throw dataTranslator.getErrorMessage(err);
+                }
+
+                const sql = `UPDATE ${catalogueNumber.getTableName()} SET ACTIVE=?, MODIFYSTAMP=CURDATE() WHERE ID=?`;
+
+                await new Promise((resolve, reject) => {
+                    connection.beginTransaction(err => {
+                        if (PersistentCollection.rollbackOnError(connection, reject, err)) {
+                            return;
+                        }
+                        sqlTrace.debug(`${sql} Bind params: [1, ${id}]`);
+                        connection.query(sql, [1, +id], err => {
+                            if (PersistentCollection.rollbackOnError(connection, reject, err)) {
+                                return;
+                            }
+                            if (activeCN) {
+                                sqlTrace.debug(`${sql} Bind params: [0, ${activeCN.ID}]`);
+                                connection.query(sql, [0, +activeCN.ID], err => {
+                                    if (PersistentCollection.rollbackOnError(connection, reject, err)) {
+                                        return;
+                                    }
+                                    connection.commit(err => {
+                                        connection.release();
+                                        if (err) {
+                                            reject(dataTranslator.getErrorMessage(err));
+                                        } else {
+                                            resolve();
+                                        }
+                                    });
+                                });
+                            } else {
+                                connection.commit(err => {
+                                    connection.release();
+                                    if (err) {
+                                        reject(dataTranslator.getErrorMessage(err));
+                                    } else {
+                                        resolve();
                                     }
                                 });
-                            });
-                        } else {
-                            logger.warn("The catalogue number with ID " + id + " was already active.");
-                            resolve(stamp);
-                        }
+                            }
+                        });
                     });
-                }).catch(err => {
-                    reject(dataTranslator.getErrorMessage(err));
                 });
-            });
 
+                if (targetCatNum) {
+                    targetCatNum.ACTIVE = 1;
+                }
+                if (activeCN) {
+                    activeCN.ACTIVE = 0;
+                }
+            } else {
+                logger.warn(`The catalogue number with ID ${id} was already active.`);
+            }
+
+            return stampObj;
         },
         collectionName: 'catalogueNumbers',
         fieldDefinition: catalogueNumber
