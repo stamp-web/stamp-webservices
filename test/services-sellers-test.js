@@ -76,24 +76,22 @@ describe('REST Services for Sellers', () => {
             });
         });
         
-        const time = new Date().getTime();
         const resDel = await superagent.del(`http://${hostname}:${server_port}/rest/sellers/${seller.id}`);
         expect(resDel.status).toEqual(204);
         
         const data = await new Promise((resolve, reject) => {
-            connection.query('SELECT s.MODIFYSTAMP AS sMod, o.MODIFYSTAMP AS oMod, o.SELLER_ID AS seller_id FROM STAMPS AS s LEFT OUTER JOIN OWNERSHIP AS o ON s.ID=o.STAMP_ID WHERE s.ID=80200', (err, rows) => {
+            connection.query('SELECT s.MODIFYSTAMP AS sMod, o.MODIFYSTAMP AS oMod, o.SELLER_ID AS seller_id, NOW() AS dbNow FROM STAMPS AS s LEFT OUTER JOIN OWNERSHIP AS o ON s.ID=o.STAMP_ID WHERE s.ID=80200', (err, rows) => {
                 if (err) return reject(err);
                 resolve(rows);
             });
         });
         
-        const sDiff = new Date(data[0].sMod).getTime() - time;
-        const oDiff = new Date(data[0].oMod).getTime() - time;
-        const sDelta = Math.abs(sDiff - Math.round(sDiff / 900000) * 900000);
-        const oDelta = Math.abs(oDiff - Math.round(oDiff / 900000) * 900000);
+        const dbTime = new Date(data[0].dbNow).getTime();
+        const sDelta = Math.abs(new Date(data[0].sMod).getTime() - dbTime);
+        const oDelta = Math.abs(new Date(data[0].oMod).getTime() - dbTime);
 
-        expect(sDelta).toBeLessThan(1000);
-        expect(oDelta).toBeLessThan(1000);
+        expect(sDelta).toBeLessThan(5000);
+        expect(oDelta).toBeLessThan(5000);
         expect(data[0].seller_id).toBe(null);
     });
 

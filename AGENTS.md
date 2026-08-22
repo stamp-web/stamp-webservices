@@ -61,13 +61,27 @@ const rows = await new Promise((resolve, reject) => {
 expect(rows.length).toEqual(0);
 ```
 
-### Timezone-Invariant Timestamp Assertions
-When comparing MySQL `DATETIME` columns against JavaScript `new Date()` timestamps in tests, timezone differences between MySQL server session time (`NOW()`) and Node process local time can introduce non-standard or half-hour offsets (e.g. 3.5, 4, or 5.5 hours). Strip timezone offsets by rounding to 15-minute (900,000 ms) intervals when asserting elapsed time deltas:
-```javascript
-const diff = new Date(row.MODIFYSTAMP).getTime() - time;
-const delta = Math.abs(diff - Math.round(diff / 900000) * 900000);
-expect(delta).toBeLessThan(1000);
-```
+### Clock-Skew & Timezone-Invariant Timestamp Assertions
+When comparing MySQL `DATETIME` columns (such as `MODIFYSTAMP`) in integration tests, container clock skew between Node process time (`new Date()`) and MySQL server time (`NOW()`), as well as timezone differences, can introduce unexpected offsets. 
+
+To ensure assertions are 100% resilient across containerized CI environments:
+- **Best Practice**: Include `NOW() AS dbNow` in the SQL verification query and compare column timestamps directly against `dbNow`:
+  ```javascript
+  const rows = await new Promise((resolve, reject) => {
+      connection.query('SELECT MODIFYSTAMP, NOW() AS dbNow FROM ALBUMS WHERE ID=?', [id], (err, r) => {
+          if (err) return reject(err);
+          resolve(r);
+      });
+  });
+  const delta = Math.abs(new Date(rows[0].MODIFYSTAMP).getTime() - new Date(rows[0].dbNow).getTime());
+  expect(delta).toBeLessThan(5000);
+  ```
+- **Alternative**: If comparing against Node process `new Date().getTime()`, strip timezone offsets by rounding to 15-minute (`900,000` ms) intervals:
+  ```javascript
+  const diff = new Date(row.MODIFYSTAMP).getTime() - time;
+  const delta = Math.abs(diff - Math.round(diff / 900000) * 900000);
+  expect(delta).toBeLessThan(1000);
+  ```
 
 ---
 
