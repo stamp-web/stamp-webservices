@@ -61,16 +61,22 @@ describe('REST Services for Sellers', () => {
         }, (s) => {
             seller = s;
         });
+
+        await new Promise((resolve) => {
+            connection.query('DELETE FROM OWNERSHIP WHERE ID=80200', () => {
+                connection.query('DELETE FROM STAMPS WHERE ID=80200', () => resolve());
+            });
+        });
         
         await new Promise((resolve, reject) => {
-            connection.query('INSERT INTO STAMPS (ID,COUNTRY_ID,DENOMINATION) VALUES(80200,1,"1d")', (err) => {
+            connection.query('INSERT INTO STAMPS (ID,COUNTRY_ID,DENOMINATION,MODIFYSTAMP) VALUES(80200,1,"1d",NULL)', (err) => {
                 if (err) return reject(err);
                 resolve();
             });
         });
 
         await new Promise((resolve, reject) => {
-            connection.query('INSERT INTO OWNERSHIP (ID,SELLER_ID,STAMP_ID) VALUES(80200,' + seller.id + ',80200)', (err) => {
+            connection.query('INSERT INTO OWNERSHIP (ID,SELLER_ID,STAMP_ID,MODIFYSTAMP) VALUES(80200,' + seller.id + ',80200,NULL)', (err) => {
                 if (err) return reject(err);
                 resolve();
             });
@@ -86,6 +92,7 @@ describe('REST Services for Sellers', () => {
             });
         });
         
+        expect(data[0]).not.toBe(undefined);
         expect(data[0].sMod).not.toBeNull();
         expect(data[0].oMod).not.toBeNull();
         
@@ -96,6 +103,12 @@ describe('REST Services for Sellers', () => {
 
         expect(Math.abs(sTime - oTime)).toBeLessThan(1000);
         expect(data[0].seller_id).toBe(null);
+
+        await new Promise((resolve) => {
+            connection.query('DELETE FROM OWNERSHIP WHERE ID=80200', () => {
+                connection.query('DELETE FROM STAMPS WHERE ID=80200', () => resolve());
+            });
+        });
     });
 
 });
