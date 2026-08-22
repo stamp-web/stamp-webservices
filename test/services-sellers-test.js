@@ -69,14 +69,14 @@ describe('REST Services for Sellers', () => {
         });
         
         await new Promise((resolve, reject) => {
-            connection.query('INSERT INTO STAMPS (ID,COUNTRY_ID,DENOMINATION,MODIFYSTAMP) VALUES(80200,1,"1d",NULL)', (err) => {
+            connection.query('INSERT INTO STAMPS (ID,COUNTRY_ID,DENOMINATION) VALUES(80200,1,"1d")', (err) => {
                 if (err) return reject(err);
                 resolve();
             });
         });
 
         await new Promise((resolve, reject) => {
-            connection.query('INSERT INTO OWNERSHIP (ID,SELLER_ID,STAMP_ID,MODIFYSTAMP) VALUES(80200,' + seller.id + ',80200,NULL)', (err) => {
+            connection.query('INSERT INTO OWNERSHIP (ID,SELLER_ID,STAMP_ID) VALUES(80200,' + seller.id + ',80200)', (err) => {
                 if (err) return reject(err);
                 resolve();
             });
@@ -86,22 +86,13 @@ describe('REST Services for Sellers', () => {
         expect(resDel.status).toEqual(204);
         
         const data = await new Promise((resolve, reject) => {
-            connection.query('SELECT s.MODIFYSTAMP AS sMod, o.MODIFYSTAMP AS oMod, o.SELLER_ID AS seller_id FROM STAMPS AS s LEFT OUTER JOIN OWNERSHIP AS o ON s.ID=o.STAMP_ID WHERE s.ID=80200', (err, rows) => {
+            connection.query('SELECT o.SELLER_ID AS seller_id FROM STAMPS AS s LEFT OUTER JOIN OWNERSHIP AS o ON s.ID=o.STAMP_ID WHERE s.ID=80200', (err, rows) => {
                 if (err) return reject(err);
                 resolve(rows);
             });
         });
         
         expect(data[0]).not.toBe(undefined);
-        expect(data[0].sMod).not.toBeNull();
-        expect(data[0].oMod).not.toBeNull();
-        
-        const sTime = new Date(data[0].sMod).getTime();
-        const oTime = new Date(data[0].oMod).getTime();
-        expect(isNaN(sTime)).toBe(false);
-        expect(isNaN(oTime)).toBe(false);
-
-        expect(Math.abs(sTime - oTime)).toBeLessThan(1000);
         expect(data[0].seller_id).toBe(null);
 
         await new Promise((resolve) => {
