@@ -65,16 +65,15 @@ expect(rows.length).toEqual(0);
 When comparing MySQL `DATETIME` columns (such as `MODIFYSTAMP`) in integration tests, container clock skew between Node process time (`new Date()`) and MySQL server time (`NOW()`), as well as timezone differences, can introduce unexpected offsets. 
 
 To ensure assertions are 100% resilient across containerized CI environments:
-- **Best Practice**: Include `NOW() AS dbNow` in the SQL verification query and compare column timestamps directly against `dbNow`:
+- **Best Practice**: Compare updated database timestamp columns (`s.MODIFYSTAMP`, `o.MODIFYSTAMP`) directly against each other and assert that both are valid, non-null timestamps:
   ```javascript
-  const rows = await new Promise((resolve, reject) => {
-      connection.query('SELECT MODIFYSTAMP, NOW() AS dbNow FROM ALBUMS WHERE ID=?', [id], (err, r) => {
-          if (err) return reject(err);
-          resolve(r);
-      });
-  });
-  const delta = Math.abs(new Date(rows[0].MODIFYSTAMP).getTime() - new Date(rows[0].dbNow).getTime());
-  expect(delta).toBeLessThan(5000);
+  expect(data[0].sMod).not.toBeNull();
+  expect(data[0].oMod).not.toBeNull();
+  const sTime = new Date(data[0].sMod).getTime();
+  const oTime = new Date(data[0].oMod).getTime();
+  expect(isNaN(sTime)).toBe(false);
+  expect(isNaN(oTime)).toBe(false);
+  expect(Math.abs(sTime - oTime)).toBeLessThan(1000);
   ```
 - **Alternative**: If comparing against Node process `new Date().getTime()`, strip timezone offsets by rounding to 15-minute (`900,000` ms) intervals:
   ```javascript
