@@ -89,8 +89,8 @@ describe('REST Services for Sellers', () => {
         
         const sDiff = new Date(data[0].sMod).getTime() - time;
         const oDiff = new Date(data[0].oMod).getTime() - time;
-        const sDelta = Math.abs(sDiff - Math.round(sDiff / 3600000) * 3600000);
-        const oDelta = Math.abs(oDiff - Math.round(oDiff / 3600000) * 3600000);
+        const sDelta = Math.abs(sDiff - Math.round(sDiff / 900000) * 900000);
+        const oDelta = Math.abs(oDiff - Math.round(oDiff / 900000) * 900000);
 
         expect(sDelta).toBeLessThan(1000);
         expect(oDelta).toBeLessThan(1000);

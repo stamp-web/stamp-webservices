@@ -62,10 +62,10 @@ expect(rows.length).toEqual(0);
 ```
 
 ### Timezone-Invariant Timestamp Assertions
-When comparing MySQL `DATETIME` columns against JavaScript `new Date()` timestamps in tests, timezone differences between MySQL server session time (`NOW()`) and Node process local time can introduce whole-hour offsets (e.g. 4 hours / 14,400,000 ms). Strip full-hour timezone offsets when asserting elapsed time deltas:
+When comparing MySQL `DATETIME` columns against JavaScript `new Date()` timestamps in tests, timezone differences between MySQL server session time (`NOW()`) and Node process local time can introduce non-standard or half-hour offsets (e.g. 3.5, 4, or 5.5 hours). Strip timezone offsets by rounding to 15-minute (900,000 ms) intervals when asserting elapsed time deltas:
 ```javascript
 const diff = new Date(row.MODIFYSTAMP).getTime() - time;
-const delta = Math.abs(diff - Math.round(diff / 3600000) * 3600000);
+const delta = Math.abs(diff - Math.round(diff / 900000) * 900000);
 expect(delta).toBeLessThan(1000);
 ```
 

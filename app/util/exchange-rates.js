@@ -1,4 +1,4 @@
-﻿import Logger from './logger.js';
+import Logger from './logger.js';
 import fx from 'money';
 import https from 'https';
 import fs from 'fs';
@@ -72,7 +72,7 @@ ExchangeRates.loadExchangeDataFromFile = async (filename) => {
         const data = await fs.promises.readFile(filename, { encoding: 'UTF-8' });
         const exchangeData = JSON.parse(data);
         return exchangeData;
-    } catch (err) {
+    } catch {
         return null;
     }
 };
@@ -82,10 +82,18 @@ ExchangeRates.initialize = async (callback) => {
     try {
         let exchangeData = await ExchangeRates.loadExchangeDataFromFile(filename);
         if (!exchangeData || ExchangeRates.isExchangeDataExpired(exchangeData)) {
-            exchangeData = await ExchangeRates.retrieveExchangeData();
+            try {
+                exchangeData = await ExchangeRates.retrieveExchangeData();
+            } catch (fetchErr) {
+                logger.warn("Could not refresh exchange rates from remote API, falling back to cached file data: " + fetchErr);
+            }
         }
-        ExchangeRates.configureFx(exchangeData);
-        callback();
+        if (exchangeData) {
+            ExchangeRates.configureFx(exchangeData);
+            callback();
+        } else {
+            throw new Error("No exchange rate data available.");
+        }
     } catch (err) {
         logger.error(err);
         callback(err);
